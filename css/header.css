@@ -1,0 +1,136 @@
+/* Блок: header */
+.header {
+    background-color: #2c3e50;
+    color: white;
+    padding: 15px 0;
+}
+
+.header__container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Элемент: logo внутри header */
+.header__logo {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: white;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.logo__image {
+    height: 40px;
+    margin-right: 10px;
+}
+
+.header__phone {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #2c3e50;
+    text-decoration: none;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header__phone:hover {
+    color: #e74c3c;
+}
+
+/* Блок: search */
+.search {
+    display: flex;
+    flex-grow: 1;
+    max-width: 500px;
+    margin: 0 20px;
+}
+
+.search__input {
+    flex-grow: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 4px 0 0 4px;
+}
+
+.search__button {
+    border-radius: 0 4px 4px 0;
+}
+
+/* Блок: cart */
+.cart {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: white;
+    background-color: #e74c3c;
+    padding: 8px 15px;
+    border-radius: 4px;
+}
+
+.cart__icon {
+    margin-right: 5px;
+}
+
+.cart__count {
+    background-color: white;
+    color: #e74c3c;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+}
+
+/* Блок: nav */
+.nav {
+    background-color: #34495e;
+    margin-top: 10px;
+}
+
+.nav__list {
+    display: flex;
+    list-style: none;
+}
+
+.nav__item {
+    padding: 15px 20px;
+}
+
+.nav__link {
+    color: white;
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.nav__link:hover {
+    color: #1abc9c;
+}
+
+.nav__link--active {
+    color: #1abc9c;
+    font-weight: bold;
+}
+
+/* Адаптивность для header */
+@media (max-width: 768px) {
+    .header__container {
+        flex-direction: column;
+    }
+    
+    .search {
+        margin: 15px 0;
+        max-width: 100%;
+    }
+    
+    .nav__list {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
