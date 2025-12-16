@@ -313,7 +313,7 @@ class Catalog {
     this.updatePriceRangeTrack();
   }
 
-  // Обновление трека ползунка цены
+  // Обновление трек
   updatePriceRangeTrack() {
     const min = this.filters.minPrice;
     const max = this.filters.maxPrice;
@@ -508,7 +508,13 @@ class Catalog {
   createProductCard(product) {
     const card = document.createElement("div");
     card.className = "product-card";
+    
+    // ВСЕ НЕОБХОДИМЫЕ DATA-АТРИБУТЫ ДЛЯ КОРЗИНЫ:
     card.dataset.id = product.id;
+    card.dataset.title = product.title;
+    card.dataset.price = product.price;
+    card.dataset.image = product.image;
+    card.dataset.category = product.category;
 
     // Форматирование цены
     const formattedPrice = product.price.toLocaleString("ru-RU");
@@ -532,6 +538,7 @@ class Catalog {
                   product.category
                 )}</div>
                 <h3 class="product-card__title">${product.title}</h3>
+                <p class="product-card__description">${product.description}</p>
                 <div class="product-card__rating">
                     <span class="product-card__stars">${stars}</span>
                     <span class="product-card__reviews">(${
@@ -701,25 +708,11 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-  // Обработчики для кнопок "В корзину"
+  // Обработчики для кнопок "В корзину" - ИНТЕГРАЦИЯ С КОРЗИНОЙ
   document.addEventListener("click", function (e) {
     if (e.target.classList.contains("add-to-cart")) {
       const productCard = e.target.closest(".product-card");
       if (productCard && !e.target.disabled) {
-        const productId = productCard.dataset.id;
-        const productTitle = productCard.querySelector(
-          ".product-card__title"
-        ).textContent;
-        const productPrice = parseInt(
-          productCard
-            .querySelector(".product-card__price")
-            .textContent.replace(/\s/g, "")
-        );
-
-        alert(`Товар "${productTitle}" добавлен в корзину!`);
-
-        // Здесь можно добавить логику добавления в корзину
-        // addToCart(productId, productTitle, productPrice);
       }
     }
   });

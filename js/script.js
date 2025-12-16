@@ -7,13 +7,17 @@ class Cart {
 
     // Добавить товар в корзину
     addItem(product) {
-        const existingItem = this.items.find(item => item.id === product.id);
+        // Преобразуем ID в строку для надежности
+        const productId = String(product.id);
+        
+        const existingItem = this.items.find(item => String(item.id) === productId);
         
         if (existingItem) {
             existingItem.quantity += product.quantity || 1;
         } else {
             this.items.push({
                 ...product,
+                id: productId, // Сохраняем как строку
                 quantity: product.quantity || 1
             });
         }
@@ -25,14 +29,14 @@ class Cart {
 
     // Удалить товар из корзины
     removeItem(productId) {
-        this.items = this.items.filter(item => item.id !== productId);
+        this.items = this.items.filter(item => String(item.id) !== String(productId));
         this.saveCart();
         this.updateCartDisplay();
     }
 
     // Изменить количество
     updateQuantity(productId, change) {
-        const item = this.items.find(item => item.id === productId);
+        const item = this.items.find(item => String(item.id) === String(productId));
         
         if (item) {
             item.quantity += change;
@@ -200,6 +204,51 @@ class ModalManager {
     }
 }
 
+// ========== ОБРАБОТЧИК ДЛЯ КНОПОК "В КОРЗИНУ" ==========
+function handleAddToCartClick(e) {
+    if (e.target.classList.contains('add-to-cart') && window.cart) {
+        const productCard = e.target.closest('.product-card');
+        
+        if (productCard && !e.target.disabled) {
+            // Получаем данные из data-атрибутов
+            const productId = productCard.dataset.id;
+            const productTitle = productCard.dataset.title;
+            const productPrice = parseInt(productCard.dataset.price);
+            const productImage = productCard.dataset.image || 'images/no-image.jpg';
+            
+            // Проверяем, что все данные есть
+            if (!productId || !productTitle || isNaN(productPrice)) {
+                console.error('Недостаточно данных для добавления в корзину:', {
+                    id: productId,
+                    title: productTitle,
+                    price: productPrice,
+                    image: productImage
+                });
+                return;
+            }
+            
+            const product = {
+                id: productId,
+                title: productTitle,
+                price: productPrice,
+                image: productImage,
+                quantity: 1
+            };
+            
+            console.log('Добавляем товар в корзину:', product);
+            window.cart.addItem(product);
+            
+            // Открываем модальное окно корзины, если оно есть
+            if (window.modals && document.getElementById('cart-modal')) {
+                window.modals.openModal('cart-modal');
+            }
+            
+            // Предотвращаем всплытие события
+            e.stopPropagation();
+        }
+    }
+}
+
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
 document.addEventListener('DOMContentLoaded', () => {
     // Инициализируем корзину
@@ -248,27 +297,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.cart.removeItem(id);
                     break;
             }
-        }
-
-        // Кнопки "В корзину" на карточках товаров
-        if (e.target.classList.contains('add-to-cart') && window.cart) {
-            const productCard = e.target.closest('.product-card');
-            if (productCard) {
-                const product = {
-                    id: productCard.dataset.id,
-                    title: productCard.dataset.title,
-                    price: parseInt(productCard.dataset.price),
-                    image: productCard.dataset.image
-                };
-                window.cart.addItem(product);
-                
-                // Открываем модальное окно, если оно есть
-                if (window.modals && document.getElementById('cart-modal')) {
-                    window.modals.openModal('cart-modal');
-                }
-            }
+            
+            // Предотвращаем всплытие
+            e.stopPropagation();
         }
     });
+
+    // Добавляем глобальный обработчик для кнопок "В корзину" на ВСЕХ страницах
+    document.addEventListener('click', handleAddToCartClick);
 
     console.log('Скрипт инициализирован');
 });
