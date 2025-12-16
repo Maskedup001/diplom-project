@@ -707,15 +707,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 300)
     );
   }
-
-  // Обработчики для кнопок "В корзину" - ИНТЕГРАЦИЯ С КОРЗИНОЙ
-  document.addEventListener("click", function (e) {
-    if (e.target.classList.contains("add-to-cart")) {
-      const productCard = e.target.closest(".product-card");
-      if (productCard && !e.target.disabled) {
-      }
-    }
-  });
 });
 
 // Вспомогательная функция для задержки
