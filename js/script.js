@@ -206,10 +206,30 @@ class ModalManager {
 
 // ========== ОБРАБОТЧИК ДЛЯ КНОПОК "В КОРЗИНУ" ==========
 function handleAddToCartClick(e) {
+    // ПРОВЕРЯЕМ, что клик по кнопке "В корзину" 
+    // И мы не на странице корзины
+    // И не в модальном окне корзины
     if (e.target.classList.contains('add-to-cart') && window.cart) {
+        // Проверяем, где мы
+        const isCartPage = window.location.href.includes('cart.html');
+        const isCartModal = e.target.closest('#cart-modal');
+        
+        if (isCartPage || isCartModal) {
+            // Не обрабатываем клики на странице корзины или в модальном окне
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }
+        
         const productCard = e.target.closest('.product-card');
         
         if (productCard && !e.target.disabled) {
+            // Защита от быстрых повторных кликов
+            if (e.target.hasAttribute('data-adding')) {
+                return;
+            }
+            e.target.setAttribute('data-adding', 'true');
+            
             // Получаем данные из data-атрибутов
             const productId = productCard.dataset.id;
             const productTitle = productCard.dataset.title;
@@ -224,6 +244,7 @@ function handleAddToCartClick(e) {
                     price: productPrice,
                     image: productImage
                 });
+                e.target.removeAttribute('data-adding');
                 return;
             }
             
@@ -245,6 +266,11 @@ function handleAddToCartClick(e) {
             
             // Предотвращаем всплытие события
             e.stopPropagation();
+            
+            // Через секунду разрешаем снова кликать
+            setTimeout(() => {
+                e.target.removeAttribute('data-adding');
+            }, 1000);
         }
     }
 }
@@ -280,12 +306,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Обработка событий корзины (делегирование)
+    // Обработка событий корзины в МОДАЛЬНОМ ОКНЕ (делегирование)
     document.addEventListener('click', (e) => {
         const action = e.target.dataset.action;
         const id = e.target.dataset.id;
 
-        if (action && id && window.cart) {
+        // Проверяем, что клик внутри модального окна корзины
+        const isInCartModal = e.target.closest('#cart-modal');
+        
+        if (action && id && window.cart && isInCartModal) {
             switch(action) {
                 case 'increase':
                     window.cart.updateQuantity(id, 1);
