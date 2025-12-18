@@ -314,7 +314,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Проверяем, что клик внутри модального окна корзины
         const isInCartModal = e.target.closest('#cart-modal');
         
-        if (action && id && window.cart && isInCartModal) {
+        // ДОБАВЛЯЕМ ПРОВЕРКУ: если мы на странице корзины - не обрабатываем
+        const isOnCartPage = window.location.pathname.includes('cart.html');
+        
+        if (action && id && window.cart && isInCartModal && !isOnCartPage) {
             switch(action) {
                 case 'increase':
                     window.cart.updateQuantity(id, 1);

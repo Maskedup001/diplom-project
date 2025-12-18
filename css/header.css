@@ -70,22 +70,36 @@
     background-color: #e74c3c;
     padding: 8px 15px;
     border-radius: 4px;
+    position: relative; /* Добавляем для позиционирования счетчика */
 }
 
 .cart__icon {
     margin-right: 5px;
+    font-size: 1.2rem;
 }
 
+/* Исправленный .cart__count */
 .cart__count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
     background-color: white;
     color: #e74c3c;
     border-radius: 50%;
-    width: 24px;
-    height: 24px;
-    display: flex;
+    width: 20px;
+    height: 20px;
+    display: flex !important; /* !important чтобы перебить инлайн стили */
     align-items: center;
     justify-content: center;
-    margin-right: 8px;
+    font-size: 11px;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    line-height: 1;
+}
+
+.cart__text {
+    font-weight: 500;
+    font-size: 0.95rem;
 }
 
 /* Блок: nav */
