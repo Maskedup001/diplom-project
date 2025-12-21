@@ -138,8 +138,9 @@
 
 .cart-empty {
     text-align: center;
-    padding: 40px;
-    color: #7f8c8d;
+    padding: 40px 20px;
+    color: #666;
+    font-size: 18px;
     font-style: italic;
 }
 

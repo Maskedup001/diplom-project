@@ -79,21 +79,43 @@ class Cart {
     renderCartModal() {
         const cartItemsContainer = document.getElementById('cart-items');
         const cartTotal = document.getElementById('cart-total');
-        const cartEmpty = document.getElementById('cart-empty');
         
         // Если модального окна нет на странице - выходим
         if (!cartItemsContainer || !cartTotal) return;
 
-        // Очищаем контейнер
-        cartItemsContainer.innerHTML = '';
+        // Получаем или создаем элемент сообщения о пустой корзине
+        let cartEmpty = document.getElementById('cart-empty');
+        if (!cartEmpty) {
+            cartEmpty = document.createElement('div');
+            cartEmpty.id = 'cart-empty';
+            cartEmpty.className = 'cart-empty';
+            cartEmpty.textContent = 'Корзина пуста';
+            cartItemsContainer.appendChild(cartEmpty);
+        }
 
         if (this.items.length === 0) {
-            if (cartEmpty) cartEmpty.style.display = 'block';
-            if (cartTotal) cartTotal.querySelector('.cart-total__price').textContent = '0';
+            // Корзина пуста - показываем сообщение и скрываем блок с товарами
+            cartEmpty.style.display = 'block';
+            cartTotal.querySelector('.cart-total__price').textContent = '0';
+            
+            // Удаляем все товары кроме сообщения о пустой корзине
+            Array.from(cartItemsContainer.children).forEach(child => {
+                if (child !== cartEmpty && child.classList.contains('cart-item')) {
+                    child.remove();
+                }
+            });
             return;
         }
 
-        if (cartEmpty) cartEmpty.style.display = 'none';
+        // Корзина не пуста - скрываем сообщение
+        cartEmpty.style.display = 'none';
+        
+        // Очищаем контейнер (но оставляем сообщение о пустой корзине)
+        Array.from(cartItemsContainer.children).forEach(child => {
+            if (child.classList.contains('cart-item')) {
+                child.remove();
+            }
+        });
 
         // Добавляем каждый товар
         this.items.forEach(item => {
@@ -183,6 +205,11 @@ class ModalManager {
             modal.classList.add('modal--active');
             this.overlay.classList.add('overlay--active');
             document.body.style.overflow = 'hidden';
+            
+            // При открытии модального окна корзины обновляем его содержимое
+            if (modalId === 'cart-modal' && window.cart) {
+                window.cart.renderCartModal();
+            }
         }
     }
 
