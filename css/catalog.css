@@ -438,6 +438,38 @@
     font-size: 1.1rem;
 }
 
+/* Сообщение о поиске */
+.search-message {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #dee2e6;
+}
+
+.search-message h3 {
+    margin-top: 0;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.search-message p {
+    color: #666;
+    margin-bottom: 15px;
+}
+
+#clear-search {
+    margin-top: 10px;
+    background: #fff;
+    border: 1px solid #dc3545;
+    color: #dc3545;
+}
+
+#clear-search:hover {
+    background: #dc3545;
+    color: #fff;
+}
+
 /* Адаптивность */
 @media (max-width: 992px) {
     .catalog__content {

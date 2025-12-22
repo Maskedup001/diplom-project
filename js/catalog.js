@@ -22,6 +22,9 @@ class Catalog {
       availability: "all",
     };
     this.sortBy = "default";
+    
+    // Добавляем свойство для поиска
+    this.searchQuery = "";
 
     this.init();
   }
@@ -30,6 +33,9 @@ class Catalog {
     // Загружаем товары
     await this.loadProducts();
 
+    // Проверяем поисковый запрос
+    this.checkSearchQuery();
+    
     // Инициализируем фильтры
     this.initFilters();
 
@@ -44,6 +50,115 @@ class Catalog {
     
     // Обновляем счетчик товаров
     this.updateProductsCount();
+  }
+
+  // Проверяем поисковый запрос
+  checkSearchQuery() {
+    // Проверяем параметр в URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchParam = urlParams.get('search');
+    
+    // Проверяем localStorage
+    const savedQuery = localStorage.getItem('searchQuery');
+    
+    if (searchParam || savedQuery) {
+      this.searchQuery = searchParam || savedQuery;
+      this.filterBySearch(this.searchQuery);
+      
+      // Устанавливаем значение в поле поиска в хедере
+      const searchInput = document.querySelector('.search__input');
+      if (searchInput) {
+        searchInput.value = this.searchQuery;
+      }
+    }
+  }
+
+  // Фильтрация по поиску
+  filterBySearch(query) {
+    if (!query || query.trim() === '') {
+      // Если запрос пустой, сбрасываем поиск
+      this.clearSearch();
+      return;
+    }
+    
+    this.searchQuery = query.toLowerCase().trim();
+    
+    // Фильтруем товары по поисковому запросу
+    this.filteredProducts = this.products.filter(product => {
+      return product.title.toLowerCase().includes(this.searchQuery) ||
+             product.description.toLowerCase().includes(this.searchQuery) ||
+             product.brand.toLowerCase().includes(this.searchQuery) ||
+             this.getCategoryName(product.category).toLowerCase().includes(this.searchQuery);
+    });
+    
+    // Обновляем интерфейс
+    this.currentPage = 1;
+    this.updateProductsCount();
+    this.renderProducts();
+    this.updatePagination();
+    
+    // Показываем сообщение о поиске
+    this.showSearchMessage(query);
+  }
+
+  // Показать сообщение о поиске
+  showSearchMessage(query) {
+    const grid = document.getElementById("products-grid");
+    if (!grid) return;
+    
+    // Удаляем предыдущее сообщение если есть
+    const existingMessage = document.querySelector('.search-message');
+    if (existingMessage) {
+      existingMessage.remove();
+    }
+    
+    const resultsCount = this.filteredProducts.length;
+    
+    // Добавляем сообщение о поиске
+    const searchMessage = document.createElement('div');
+    searchMessage.className = 'search-message';
+    searchMessage.innerHTML = `
+      <h3>Результаты поиска: "${query}"</h3>
+      <p>Найдено товаров: ${resultsCount}</p>
+      <button class="button button--outline" id="clear-search">Очистить поиск</button>
+    `;
+    
+    // Вставляем перед списком товаров
+    grid.parentNode.insertBefore(searchMessage, grid);
+    
+    // Обработчик кнопки очистки
+    const clearBtn = document.getElementById('clear-search');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        this.clearSearch();
+      });
+    }
+  }
+
+  // Очистка поиска
+  clearSearch() {
+    this.searchQuery = '';
+    localStorage.removeItem('searchQuery');
+    
+    // Очищаем URL без перезагрузки
+    const url = new URL(window.location);
+    url.searchParams.delete('search');
+    window.history.replaceState({}, '', url);
+    
+    // Очищаем поле ввода в хедере
+    const searchInput = document.querySelector('.search__input');
+    if (searchInput) {
+      searchInput.value = '';
+    }
+    
+    // Удаляем сообщение о поиске
+    const searchMessage = document.querySelector('.search-message');
+    if (searchMessage) {
+      searchMessage.remove();
+    }
+    
+    // Сбрасываем фильтры
+    this.resetFilters();
   }
 
   // Загрузка товаров (в реальном проекте - с сервера)
@@ -208,7 +323,13 @@ class Catalog {
       }
     ];
 
+    // Сначала копируем все товары
     this.filteredProducts = [...this.products];
+    
+    // Если есть поисковый запрос, применяем его
+    if (this.searchQuery) {
+      this.filterBySearch(this.searchQuery);
+    }
   }
 
   // Инициализация фильтров
@@ -327,9 +448,22 @@ class Catalog {
     }
   }
 
-  // Применение фильтров
+  // Применение фильтров (обновленная версия с учетом поиска)
   applyFilters() {
-    this.filteredProducts = this.products.filter((product) => {
+    // Сначала фильтруем по поисковому запросу (если есть)
+    let filtered = [...this.products];
+    
+    if (this.searchQuery) {
+      filtered = filtered.filter(product => {
+        return product.title.toLowerCase().includes(this.searchQuery) ||
+               product.description.toLowerCase().includes(this.searchQuery) ||
+               product.brand.toLowerCase().includes(this.searchQuery) ||
+               this.getCategoryName(product.category).toLowerCase().includes(this.searchQuery);
+      });
+    }
+    
+    // Затем применяем остальные фильтры
+    this.filteredProducts = filtered.filter((product) => {
       // Фильтр по цене
       if (
         product.price < this.filters.minPrice ||
@@ -484,12 +618,16 @@ class Catalog {
       grid.innerHTML = `
                 <div class="no-products">
                     <h3>${
-                      this.filters.categories.length === 0
+                      this.searchQuery
+                        ? "По вашему запросу ничего не найдено"
+                        : this.filters.categories.length === 0
                         ? "Выберите категории"
                         : "Товары не найдены"
                     }</h3>
                     <p>${
-                      this.filters.categories.length === 0
+                      this.searchQuery
+                        ? "Попробуйте изменить поисковый запрос или параметры фильтрации"
+                        : this.filters.categories.length === 0
                         ? "Выберите категории товаров для отображения"
                         : "Попробуйте изменить параметры фильтрации"
                     }</p>
@@ -681,32 +819,6 @@ class Catalog {
 // Инициализация каталога при загрузке страницы
 document.addEventListener("DOMContentLoaded", () => {
   window.catalog = new Catalog();
-
-  // Быстрый поиск в каталоге
-  const searchInput = document.getElementById("catalog-search");
-  if (searchInput) {
-    searchInput.addEventListener(
-      "input",
-      debounce((e) => {
-        const searchTerm = e.target.value.toLowerCase();
-
-        if (searchTerm.length >= 2) {
-          window.catalog.filteredProducts = window.catalog.products.filter(
-            (product) =>
-              product.title.toLowerCase().includes(searchTerm) ||
-              product.description.toLowerCase().includes(searchTerm)
-          );
-          window.catalog.currentPage = 1;
-          window.catalog.renderProducts();
-          window.catalog.updatePagination();
-        } else if (searchTerm.length === 0) {
-          window.catalog.filteredProducts = [...window.catalog.products];
-          window.catalog.currentPage = 1;
-          window.catalog.applyFilters();
-        }
-      }, 300)
-    );
-  }
 });
 
 // Вспомогательная функция для задержки
