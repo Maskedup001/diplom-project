@@ -67,20 +67,28 @@
 			<section class="categories">
 				<h2 class="categories__title section-title">Популярные категории</h2>
 				<div class="categories__grid">
-					<a href="catalog/phones.html" class="category-card">
-						<img src="images/phone_photo.png" alt="Смартфоны" class="category-card__image">
+					<a href="catalog.html?category=smartphone" class="category-card">
+						<div class="category-card__image-container">
+							<img src="images/phone_photo.png" alt="Смартфоны" class="category-card__image">
+						</div>
 						<h3 class="category-card__title">Смартфоны</h3>
 					</a>
-					<a href="catalog/laptops.html" class="category-card">
-						<img src="images/laptops_photo.png" alt="Ноутбуки" class="category-card__image">
+					<a href="catalog.html?category=laptop" class="category-card">
+						<div class="category-card__image-container">
+							<img src="images/laptops_photo.png" alt="Ноутбуки" class="category-card__image">
+						</div>
 						<h3 class="category-card__title">Ноутбуки</h3>
 					</a>
-					<a href="catalog/tv.html" class="category-card">
-						<img src="images/television_photo.png" alt="Телевизоры" class="category-card__image">
+					<a href="catalog.html?category=tv" class="category-card">
+						<div class="category-card__image-container">
+							<img src="images/television_photo.png" alt="Телевизоры" class="category-card__image">
+						</div>
 						<h3 class="category-card__title">Телевизоры</h3>
 					</a>
-					<a href="catalog/appliances.html" class="category-card">
-						<img src="images/appliances_photo.png" alt="Бытовая техника" class="category-card__image">
+					<a href="catalog.html?category=appliances" class="category-card">
+						<div class="category-card__image-container">
+							<img src="images/appliances_photo.png" alt="Бытовая техника" class="category-card__image">
+						</div>
 						<h3 class="category-card__title">Бытовая техника</h3>
 					</a>
 				</div>
@@ -90,6 +98,7 @@
 			<section class="products">
 				<h2 class="products__title section-title">Хиты продаж</h2>
 				<div class="products__grid">
+					<!-- 1 -->
 					<div class="product-card" data-id="1" data-title="iPhone 15 Pro" data-price="99990"
 						data-image="images/iphone.jpg">
 						<img src="images/iphone.jpg" alt="iPhone 15 Pro" class="product-card__image">
@@ -100,6 +109,7 @@
 							<button class="button add-to-cart">В корзину</button>
 						</div>
 					</div>
+					<!-- 2 -->
 					<div class="product-card" data-id="2" data-title="MacBook Air M2" data-price="129990"
 						data-image="images/macbook.jpg">
 						<img src="images/macbook.jpg" alt="MacBook Air M2" class="product-card__image">
@@ -107,6 +117,108 @@
 						<p class="product-card__description">Ультратонкий ноутбук с чипом Apple M2</p>
 						<div class="product-card__footer">
 							<span class="product-card__price">129 990 ₽</span>
+							<button class="button add-to-cart">В корзину</button>
+						</div>
+					</div>
+					<!-- 3 -->
+					<div class="product-card" data-id="3" data-title="Samsung Galaxy S23 Ultra" data-price="89990"
+						data-image="images/samsung.jpg">
+						<img src="images/samsung.jpg" alt="Samsung Galaxy S23 Ultra" class="product-card__image">
+						<h3 class="product-card__title">Samsung Galaxy S23 Ultra</h3>
+						<p class="product-card__description">Смартфон с лучшей камерой на рынке</p>
+						<div class="product-card__footer">
+							<span class="product-card__price">89 990 ₽</span>
+							<button class="button add-to-cart">В корзину</button>
+						</div>
+					</div>
+					<!-- 4 -->
+					<div class="product-card" data-id="7" data-title="AirPods Pro 2" data-price="24990"
+						data-image="images/airpods.jpg">
+						<img src="images/airpods.jpg" alt="AirPods Pro 2" class="product-card__image">
+						<h3 class="product-card__title">AirPods Pro 2</h3>
+						<p class="product-card__description">Наушники с активным шумоподавлением</p>
+						<div class="product-card__footer">
+							<span class="product-card__price">24 990 ₽</span>
+							<button class="button add-to-cart">В корзину</button>
+						</div>
+					</div>
+					<!-- 5 -->
+					<div class="product-card" data-id="8" data-title="PlayStation 5" data-price="59990"
+						data-image="images/ps5.jpg">
+						<img src="images/ps5.jpg" alt="PlayStation 5" class="product-card__image">
+						<h3 class="product-card__title">PlayStation 5</h3>
+						<p class="product-card__description">Игровая консоль нового поколения</p>
+						<div class="product-card__footer">
+							<span class="product-card__price">59 990 ₽</span>
+							<button class="button add-to-cart">В корзину</button>
+						</div>
+					</div>
+					<!-- 6 -->
+					<div class="product-card" data-id="5" data-title="Sony Bravia XR-55A80L" data-price="159990"
+						data-image="images/sony-tv.jpg">
+						<img src="images/sony-tv.jpg" alt="Sony Bravia XR-55A80L" class="product-card__image">
+						<h3 class="product-card__title">Sony Bravia XR-55A80L</h3>
+						<p class="product-card__description">OLED телевизор 55" с процессором Cognitive Processor XR</p>
+						<div class="product-card__footer">
+							<span class="product-card__price">159 990 ₽</span>
+							<button class="button add-to-cart">В корзину</button>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			<!-- Секция: Акции -->
+<section class="promo">
+    <h2 class="promo__title section-title">Специальные предложения</h2>
+    <div class="promo__grid">
+        <div class="promo-card promo-card--main">
+            <div class="promo-card__content">
+                <h3 class="promo-card__title">Распродажа техники</h3>
+                <p class="promo-card__text">Скидки до 30% на прошлогодние модели</p>
+                <a href="catalog.html?promo=sale" class="button promo-card__button">Смотреть</a>
+            </div>
+        </div>
+        <div class="promo-card promo-card--secondary">
+            <div class="promo-card__content">
+                <h3 class="promo-card__title">Рассрочка 0%</h3>
+                <p class="promo-card__text">Покупайте технику без переплат</p>
+                <a href="#credit" class="button promo-card__button">Подробнее</a> <!-- Убрал button--outline -->
+            </div>
+        </div>
+    </div>
+</section>
+
+			<!-- Секция: Новинки -->
+			<section class="products">
+				<h2 class="products__title section-title">Новинки</h2>
+				<div class="products__grid">
+					<div class="product-card" data-id="11" data-title="Samsung Galaxy Watch 6" data-price="29990"
+						data-image="images/watch.jpg">
+						<img src="images/watch.jpg" alt="Samsung Galaxy Watch 6" class="product-card__image">
+						<h3 class="product-card__title">Samsung Galaxy Watch 6</h3>
+						<p class="product-card__description">Смарт-часы с функцией отслеживания здоровья</p>
+						<div class="product-card__footer">
+							<span class="product-card__price">29 990 ₽</span>
+							<button class="button add-to-cart">В корзину</button>
+						</div>
+					</div>
+					<div class="product-card" data-id="12" data-title="iPad Air 5" data-price="59990"
+						data-image="images/ipad.jpg">
+						<img src="images/ipad.jpg" alt="iPad Air 5" class="product-card__image">
+						<h3 class="product-card__title">iPad Air 5</h3>
+						<p class="product-card__description">Планшет с чипом M1 и дисплеем Liquid Retina</p>
+						<div class="product-card__footer">
+							<span class="product-card__price">59 990 ₽</span>
+							<button class="button add-to-cart">В корзину</button>
+						</div>
+					</div>
+					<div class="product-card" data-id="13" data-title="Nintendo Switch OLED" data-price="32990"
+						data-image="images/switch.jpg">
+						<img src="images/switch.jpg" alt="Nintendo Switch OLED" class="product-card__image">
+						<h3 class="product-card__title">Nintendo Switch OLED</h3>
+						<p class="product-card__description">Гибридная игровая консоль с OLED-экраном</p>
+						<div class="product-card__footer">
+							<span class="product-card__price">32 990 ₽</span>
 							<button class="button add-to-cart">В корзину</button>
 						</div>
 					</div>
@@ -131,6 +243,11 @@
 						<div class="feature__icon">💳</div>
 						<h3 class="feature__title">Любые способы оплаты</h3>
 						<p class="feature__text">Картой, наличными, переводом или в кредит.</p>
+					</div>
+					<div class="feature">
+						<div class="feature__icon">📞</div>
+						<h3 class="feature__title">Поддержка 24/7</h3>
+						<p class="feature__text">Консультанты всегда на связи для помощи.</p>
 					</div>
 				</div>
 			</section>
@@ -184,7 +301,7 @@
 	<!-- Затемнение фона для модальных окон -->
 	<div class="overlay" id="overlay"></div>
 
-		<!-- Подключение JavaScript -->
+	<!-- Подключение JavaScript -->
 	<script src="js/script.js"></script>
 	<script src="js/search.js"></script>
 </body>

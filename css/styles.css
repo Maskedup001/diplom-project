@@ -66,7 +66,11 @@ body {
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s;
-		text-decoration: none;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    font-family: inherit;
+    font-size: 14px;
 }
 
 .button:hover {
@@ -75,10 +79,33 @@ body {
 
 .button--outline {
     background-color: transparent;
-    border: 1px solid white;
+    border: 1px solid #3498db; /* Изменил на синий цвет */
+    color: #3498db; /* Изменил на синий цвет текста */
+    transition: all 0.3s; /* Плавный переход для всех свойств */
 }
 
 .button--outline:hover {
-    background-color: white;
-    color: #2c3e50;
+    background-color: #3498db; /* Синий фон при наведении */
+    color: white; /* Белый текст при наведении */
+}
+
+/* Конкретно для кнопки "Продолжить покупки" в модальном окне корзины */
+.modal--cart .button--outline {
+    background-color: transparent;
+    border: 1px solid #3498db;
+    color: #3498db;
+}
+
+.modal--cart .button--outline:hover {
+    background-color: #3498db;
+    color: white;
+}
+
+/* Стили для кнопок в модальном окне */
+.modal__buttons .button {
+    margin: 0 5px;
+}
+
+.modal__buttons .button--outline {
+    margin-right: 10px;
 }
