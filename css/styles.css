@@ -1,111 +1,16 @@
-/* Общие сбросы и базовые стили */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
+/* Base */
+@import "base/colors.css";
+@import "base/global.css";
+@import "base/variables.css";
 
-body {
-    font-family: 'Arial', sans-serif;
-    line-height: 1.6;
-    color: #333;
-    background-color: #f9f9f9;
-}
+/* Components */
+@import "components/button.css";
+@import "components/components.css";
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
+/* Sections */
+@import "sections/header.css";
+@import "sections/footer.css";
+@import "sections/content.css";
+@import "sections/catalog.css";
+@import "sections/cart.css";
 
-/* Анимации */
-@keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-
-@keyframes slideOut {
-    from {
-        transform: translateX(0);
-        opacity: 1;
-    }
-    to {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
-    .container {
-        padding: 0 15px;
-    }
-}
-
-/* Утилитарные классы для кнопок */
-.button {
-    padding: 10px 20px;
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    text-decoration: none;
-    display: inline-block;
-    text-align: center;
-    font-family: inherit;
-    font-size: 14px;
-}
-
-.button:hover {
-    background-color: #2980b9;
-}
-
-.button--outline {
-    background-color: transparent;
-    border: 1px solid #3498db; /* Изменил на синий цвет */
-    color: #3498db; /* Изменил на синий цвет текста */
-    transition: all 0.3s; /* Плавный переход для всех свойств */
-}
-
-.button--outline:hover {
-    background-color: #3498db; /* Синий фон при наведении */
-    color: white; /* Белый текст при наведении */
-}
-
-/* Конкретно для кнопки "Продолжить покупки" в модальном окне корзины */
-.modal--cart .button--outline {
-    background-color: transparent;
-    border: 1px solid #3498db;
-    color: #3498db;
-}
-
-.modal--cart .button--outline:hover {
-    background-color: #3498db;
-    color: white;
-}
-
-/* Стили для кнопок в модальном окне */
-.modal__buttons .button {
-    margin: 0 5px;
-}
-
-.modal__buttons .button--outline {
-    margin-right: 10px;
-}

@@ -8,16 +8,7 @@ class Catalog {
     this.filters = {
       minPrice: 0,
       maxPrice: 500000,
-      categories: [
-        "smartphone",
-        "laptop",
-        "tv",
-        "headphones",
-        "console",
-        "monitor",
-        "smartwatch",
-        "tablet",
-      ],
+      categories: [],
       brands: [],
       availability: "all",
     };
@@ -341,53 +332,64 @@ class Catalog {
     const priceSliderMax = document.getElementById("price-slider-max");
 
     // Устанавливаем начальные значения цены
-    priceMinInput.value = this.filters.minPrice;
-    priceMaxInput.value = this.filters.maxPrice;
-    priceSliderMin.value = this.filters.minPrice;
-    priceSliderMax.value = this.filters.maxPrice;
+    if (priceMinInput && priceMaxInput && priceSliderMin && priceSliderMax) {
+      priceMinInput.value = this.filters.minPrice;
+      priceMaxInput.value = this.filters.maxPrice;
+      priceSliderMin.value = this.filters.minPrice;
+      priceSliderMax.value = this.filters.maxPrice;
 
-    // Обновление ползунков при вводе в инпуты
-    priceMinInput.addEventListener("input", (e) => {
-      const value = Math.min(
-        parseInt(e.target.value) || 0,
-        this.filters.maxPrice - 1000
-      );
-      priceSliderMin.value = value;
-      this.filters.minPrice = value;
-      this.applyFilters();
-    });
+      // Обновление ползунков при вводе в инпуты
+      priceMinInput.addEventListener("input", (e) => {
+        const value = Math.min(
+          parseInt(e.target.value) || 0,
+          this.filters.maxPrice - 1000
+        );
+        priceSliderMin.value = value;
+        this.filters.minPrice = value;
+        this.updatePriceRangeTrack();
+        this.applyFilters();
+      });
 
-    priceMaxInput.addEventListener("input", (e) => {
-      const value = Math.max(
-        parseInt(e.target.value) || 500000,
-        this.filters.minPrice + 1000
-      );
-      priceSliderMax.value = value;
-      this.filters.maxPrice = value;
-      this.applyFilters();
-    });
+      priceMaxInput.addEventListener("input", (e) => {
+        const value = Math.max(
+          parseInt(e.target.value) || 500000,
+          this.filters.minPrice + 1000
+        );
+        priceSliderMax.value = value;
+        this.filters.maxPrice = value;
+        this.updatePriceRangeTrack();
+        this.applyFilters();
+      });
 
-    // Обновление инпутов при движении ползунков
-    priceSliderMin.addEventListener("input", (e) => {
-      const value = parseInt(e.target.value);
-      priceMinInput.value = value;
-      this.filters.minPrice = value;
+      // Обновление инпутов при движении ползунков
+      priceSliderMin.addEventListener("input", (e) => {
+        const value = parseInt(e.target.value);
+        if (value < parseInt(priceSliderMax.value)) {
+          priceMinInput.value = value;
+          this.filters.minPrice = value;
+          this.updatePriceRangeTrack();
+          this.applyFilters();
+        }
+      });
+
+      priceSliderMax.addEventListener("input", (e) => {
+        const value = parseInt(e.target.value);
+        if (value > parseInt(priceSliderMin.value)) {
+          priceMaxInput.value = value;
+          this.filters.maxPrice = value;
+          this.updatePriceRangeTrack();
+          this.applyFilters();
+        }
+      });
+
+      // Обновляем трек при инициализации
       this.updatePriceRangeTrack();
-      this.applyFilters();
-    });
+    }
 
-    priceSliderMax.addEventListener("input", (e) => {
-      const value = parseInt(e.target.value);
-      priceMaxInput.value = value;
-      this.filters.maxPrice = value;
-      this.updatePriceRangeTrack();
-      this.applyFilters();
-    });
-
-    // КАТЕГОРИИ - СИНХРОНИЗИРУЕМ ЧЕКБОКСЫ ПРИ ЗАГРУЗКЕ
+    // КАТЕГОРИИ - ВСЕ ЧЕКБОКСЫ ВЫКЛЮЧЕНЫ
     document.querySelectorAll('input[name="category"]').forEach((checkbox) => {
-      // Устанавливаем состояние чекбокса согласно начальным фильтрам
-      checkbox.checked = this.filters.categories.includes(checkbox.value);
+      // Устанавливаем состояние чекбокса - ВСЕ false
+      checkbox.checked = false;
       
       checkbox.addEventListener("change", () => {
         const checkedCategories = Array.from(
@@ -398,10 +400,10 @@ class Catalog {
       });
     });
 
-    // БРЕНДЫ - СИНХРОНИЗИРУЕМ ЧЕКБОКСЫ ПРИ ЗАГРУЗКЕ
+    // БРЕНДЫ - ВСЕ ЧЕКБОКСЫ ВЫКЛЮЧЕНЫ
     document.querySelectorAll('input[name="brand"]').forEach((checkbox) => {
-      // Устанавливаем состояние чекбокса согласно начальным фильтрам
-      checkbox.checked = this.filters.brands.includes(checkbox.value);
+      // Устанавливаем состояние чекбокса - ВСЕ false
+      checkbox.checked = false;
       
       checkbox.addEventListener("change", () => {
         const checkedBrands = Array.from(
@@ -412,7 +414,7 @@ class Catalog {
       });
     });
 
-    // Наличие - СИНХРОНИЗИРУЕМ РАДИО-КНОПКИ ПРИ ЗАГРУЗКЕ
+    // Наличие - по умолчанию "Все товары"
     document.querySelectorAll('input[name="availability"]').forEach((radio) => {
       // Устанавливаем состояние радио-кнопки согласно начальным фильтрам
       if (radio.value === this.filters.availability) {
@@ -426,25 +428,26 @@ class Catalog {
     });
 
     // Кнопка сброса
-    document.getElementById("reset-filters").addEventListener("click", () => {
-      this.resetFilters();
-    });
-
-    // Инициализируем трек
-    this.updatePriceRangeTrack();
+    const resetBtn = document.getElementById("reset-filters");
+    if (resetBtn) {
+      resetBtn.addEventListener("click", () => {
+        this.resetFilters();
+      });
+    }
   }
 
-  // Обновление трек
+  // Обновление трека ползунка цены
   updatePriceRangeTrack() {
     const min = this.filters.minPrice;
     const max = this.filters.maxPrice;
     const track = document.querySelector(".price-range__track");
+    const maxPrice = 500000; // Максимальная цена в диапазоне
 
     if (track) {
-      const minPercent = (min / 500000) * 100;
-      const maxPercent = (max / 500000) * 100;
+      const minPercent = (min / maxPrice) * 100;
+      const maxPercent = (max / maxPrice) * 100;
       track.style.left = `${minPercent}%`;
-      track.style.width = `${maxPercent - minPercent}%`;
+      track.style.right = `${100 - maxPercent}%`;
     }
   }
 
@@ -523,10 +526,17 @@ class Catalog {
     };
 
     // Сбрасываем UI
-    document.getElementById("price-min").value = 0;
-    document.getElementById("price-max").value = 500000;
-    document.getElementById("price-slider-min").value = 0;
-    document.getElementById("price-slider-max").value = 500000;
+    const priceMinInput = document.getElementById("price-min");
+    const priceMaxInput = document.getElementById("price-max");
+    const priceSliderMin = document.getElementById("price-slider-min");
+    const priceSliderMax = document.getElementById("price-slider-max");
+
+    if (priceMinInput && priceMaxInput && priceSliderMin && priceSliderMax) {
+      priceMinInput.value = 0;
+      priceMaxInput.value = 500000;
+      priceSliderMin.value = 0;
+      priceSliderMax.value = 500000;
+    }
 
     // ВСЕ чекбоксы категорий отключаем
     document.querySelectorAll('input[name="category"]').forEach((cb) => {
@@ -561,16 +571,16 @@ class Catalog {
   initSorting() {
     const sortSelect = document.getElementById("sort-select");
     
-    // Устанавливаем начальное значение
     if (sortSelect) {
+      // Устанавливаем начальное значение
       sortSelect.value = this.sortBy;
-    }
 
-    sortSelect.addEventListener("change", (e) => {
-      this.sortBy = e.target.value;
-      this.applySorting();
-      this.renderProducts();
-    });
+      sortSelect.addEventListener("change", (e) => {
+        this.sortBy = e.target.value;
+        this.applySorting();
+        this.renderProducts();
+      });
+    }
   }
 
   // Применение сортировки

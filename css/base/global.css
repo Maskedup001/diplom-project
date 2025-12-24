@@ -1,0 +1,86 @@
+/* Общие сбросы и базовые стили */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family-base);
+    line-height: var(--line-height-normal);
+    color: var(--color-text-primary);
+    background-color: var(--color-bg-primary);
+}
+
+/* Сброс для ссылок */
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* Сброс для списков */
+ul, ol {
+    list-style: none;
+}
+
+/* Сброс для изображений */
+img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Для кнопок */
+button {
+    font-family: inherit;
+    cursor: pointer;
+    border: none;
+    background: none;
+}
+
+/* Анимации */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Контейнер */
+.container {
+    width: 100%;
+    max-width: var(--container-7xl);
+    margin: 0 auto;
+    /* padding: 0 var(--spacing-5); */
+}
+
+/* Адаптивность */
+@media (max-width: var(--breakpoint-md)) {
+    .container {
+        padding: 0 var(--spacing-4);
+    }
+}
