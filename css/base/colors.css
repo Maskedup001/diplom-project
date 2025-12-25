@@ -1,23 +1,19 @@
-/* ========================
-   ЦВЕТОВАЯ ПАЛИТРА ТЕХНОМИР - ПРИГЛУШЕННАЯ
-   ======================== */
-
 /* Основная палитра - приглушенные пастельные оттенки */
 :root {
     /* ТЕХНО-СИНЯЯ ГАММА (основная) - ПРИГЛУШЕННАЯ */
-    --color-primary: #2c387e;           /* Приглушенный темно-синий */
-    --color-primary-light: #3f4d9e;     /* Менее насыщенный синий */
-    --color-primary-dark: #1a237e;      /* Более глубокий синий */
+    --color-primary: #6c8bd6;           /* Приглушенный теплый синий */
+    --color-primary-light: #8cabf6;     /* Менее насыщенный синий */
+    --color-primary-dark: #4c6bb6;      /* Более глубокий синий */
     
     /* ТЕХНО-ГОЛУБАЯ ГАММА (акцентная) - ПРИГЛУШЕННАЯ */
-    --color-accent: #0097a7;            /* Приглушенный бирюзовый */
-    --color-accent-light: #26a69a;      /* Мятно-бирюзовый */
-    --color-accent-dark: #006978;       /* Темный бирюзовый */
+    --color-accent: #f4a261;            /* Приглушенный коралловый */
+    --color-accent-light: #ffc2a1;      /* Мятно-коралловый */
+    --color-accent-dark: #d48241;       /* Темный коралловый */
     
     /* ИНДИГО (второстепенная) - ПРИГЛУШЕННАЯ */
-    --color-secondary: #5e6bb3;
-    --color-secondary-light: #7986cb;
-    --color-secondary-dark: #4754a3;
+    --color-secondary: #9d7bd9;
+    --color-secondary-light: #bd9bf9;
+    --color-secondary-dark: #7d5bb9;
     
     /* НЕЙТРАЛЬНАЯ ГАММА - ТЕПЛЫЕ ПРИГЛУШЕННЫЕ СЕРЫЕ */
     --color-neutral-50: #f8f9fa;
@@ -38,7 +34,7 @@
     /* ПОЛУПРОЗРАЧНЫЕ */
     --color-overlay: rgba(0, 0, 0, 0.4);
     --color-overlay-light: rgba(255, 255, 255, 0.9);
-    --color-shadow: rgba(44, 56, 126, 0.15);
+    --color-shadow: rgba(108, 139, 214, 0.15);
 }
 
 /* Функциональные цвета - приглушенные версии */
@@ -64,17 +60,17 @@
     --color-border-accent: var(--color-accent);
     
     /* СТАТУСЫ - ПРИГЛУШЕННЫЕ */
-    --color-success: #2e7d32;
-    --color-success-light: #4caf50;
-    --color-success-dark: #1b5e20;
+    --color-success: #4ecdc4;
+    --color-success-light: #6eedd4;
+    --color-success-dark: #2eada4;
     
-    --color-warning: #f57c00;
-    --color-warning-light: #ff9800;
-    --color-warning-dark: #e65100;
+    --color-warning: #ffd166;
+    --color-warning-light: #fff186;
+    --color-warning-dark: #dfb146;
     
-    --color-danger: #c62828;
-    --color-danger-light: #f44336;
-    --color-danger-dark: #b71c1c;
+    --color-danger: #ff6b6b;
+    --color-danger-light: #ff8b8b;
+    --color-danger-dark: #df4b4b;
     
     --color-info: var(--color-accent-light);
     
@@ -103,7 +99,7 @@
     /* ССЫЛКИ */
     --color-link: var(--color-primary);
     --color-link-hover: var(--color-accent);
-    --color-link-visited: #6a1b9a;
+    --color-link-visited: #9d7bd9;
     --color-link-active: var(--color-primary-dark);
     
     /* ОШИБКИ И СОСТОЯНИЯ */
@@ -118,10 +114,10 @@
     --opacity-active: 0.9;
     
     /* СПЕЦИАЛЬНЫЕ ЭЛЕМЕНТЫ */
-    --color-highlight: #fff3e0;
-    --color-sale: #d32f2f;
-    --color-new: #00c853;
-    --color-bestseller: #ffb300;
+    --color-highlight: #fffacd;
+    --color-sale: #ff8a80;
+    --color-new: #80deea;
+    --color-bestseller: #ffe082;
     --color-discount: var(--color-accent);
     
     /* ИКОНКИ */
@@ -144,7 +140,7 @@
 
 /* Тени - более мягкие */
 :root {
-    --shadow-color: rgba(44, 56, 126, 0.12);
-    --shadow-color-dark: rgba(26, 35, 126, 0.18);
-    --shadow-color-light: rgba(0, 151, 167, 0.1);
+    --shadow-color: rgba(108, 139, 214, 0.12);
+    --shadow-color-dark: rgba(76, 107, 182, 0.18);
+    --shadow-color-light: rgba(244, 162, 97, 0.1);
 }

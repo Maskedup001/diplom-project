@@ -56,12 +56,55 @@
     border: none;
     border-radius: var(--radius-md) 0 0 var(--radius-md);
     font-size: var(--font-size-sm);
+    background-color: var(--color-white);
+    color: var(--color-text-primary);
+    border: 2px solid var(--color-white);
+    border-right: none;
+    transition: all var(--transition-fast);
+}
+
+.search__input:focus {
+    outline: none;
+    border-color: var(--color-accent);
+    background-color: var(--color-white);
 }
 
 .search__button {
     border-radius: 0 var(--radius-md) var(--radius-md) 0;
     padding: var(--spacing-2) var(--spacing-4);
     font-size: var(--font-size-sm);
+    background-color: var(--color-accent);
+    color: var(--color-white);
+    border: 2px solid var(--color-accent);
+    border-left: none;
+    cursor: pointer;
+    font-weight: var(--font-weight-medium);
+    transition: all var(--transition-fast);
+    min-width: 80px;
+    /* Чтобы кнопка и инпут были на одном уровне */
+    margin: 0;
+    line-height: 1.5;
+}
+
+.search__button:hover {
+    background-color: var(--color-accent-dark);
+    border-color: var(--color-accent-dark);
+    /* Убрал transform чтобы не подпрыгивала */
+    /* transform: translateY(-1px); */
+}
+
+/* .search__button:active {
+     Тоже убрал 
+     transform: translateY(0); 
+} */
+
+/* Альтернативный ховер-эффект без смещения */
+.search__button:hover {
+    background-color: var(--color-accent-dark);
+    border-color: var(--color-accent-dark);
+    /* Вместо смещения - изменение тени или яркости */
+    filter: brightness(1.1);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
 }
 
 /* Блок: cart */
@@ -74,6 +117,13 @@
     padding: var(--spacing-2) var(--spacing-4);
     border-radius: var(--radius-md);
     position: relative;
+    transition: all var(--transition-fast);
+}
+
+.cart:hover {
+    background-color: var(--color-accent-light);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
 }
 
 .cart__icon {
@@ -125,28 +175,52 @@
     text-decoration: none;
     transition: color var(--transition-normal);
     font-size: var(--font-size-sm);
+    padding: var(--spacing-1) var(--spacing-2);
+    border-radius: var(--radius-sm);
 }
 
 .nav__link:hover {
     color: var(--color-accent);
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .nav__link--active {
     color: var(--color-accent);
     font-weight: var(--font-weight-bold);
+    background-color: rgba(255, 255, 255, 0.15);
 }
 
 /* Адаптивность для header */
 @media (max-width: var(--breakpoint-md)) {
     .header__container {
         flex-direction: column;
+        gap: var(--spacing-4);
+    }
+    
+    .header__logo {
+        order: 1;
+        margin-bottom: var(--spacing-2);
+    }
+    
+    .header__contacts {
+        order: 2;
     }
     
     .search {
-        margin: var(--spacing-4) 0;
+        margin: var(--spacing-3) 0;
         max-width: 100%;
-        order: 3;
+        order: 4;
         width: 100%;
+    }
+    
+    .cart {
+        order: 3;
+    }
+    
+    .nav {
+        order: 5;
+        width: 100%;
+        margin-top: var(--spacing-3);
     }
     
     .nav__list {
@@ -156,5 +230,29 @@
     
     .nav__item {
         padding: var(--spacing-2) var(--spacing-3);
+    }
+    
+    .search__input,
+    .search__button {
+        padding: var(--spacing-2) var(--spacing-3);
+    }
+}
+
+@media (max-width: var(--breakpoint-sm)) {
+    .header__phone {
+        font-size: var(--font-size-sm);
+    }
+    
+    .cart__text {
+        display: none;
+    }
+    
+    .cart {
+        padding: var(--spacing-2);
+    }
+    
+    .nav__link {
+        font-size: var(--font-size-xs);
+        padding: var(--spacing-1);
     }
 }
