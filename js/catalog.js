@@ -120,7 +120,8 @@ class Catalog {
     // Обработчик кнопки очистки
     const clearBtn = document.getElementById('clear-search');
     if (clearBtn) {
-      clearBtn.addEventListener('click', () => {
+      clearBtn.addEventListener('click', (e) => {
+        e.preventDefault();
         this.clearSearch();
       });
     }
@@ -338,12 +339,42 @@ class Catalog {
       priceSliderMin.value = this.filters.minPrice;
       priceSliderMax.value = this.filters.maxPrice;
 
+      // Функция для предотвращения пересечения ползунков
+      const preventOverlap = () => {
+        const minVal = parseInt(priceSliderMin.value);
+        const maxVal = parseInt(priceSliderMax.value);
+        
+        // Если min ползунок пытается пройти через max
+        if (minVal >= maxVal) {
+          const newMinVal = maxVal - 1000;
+          priceSliderMin.value = newMinVal;
+          priceMinInput.value = newMinVal;
+          this.filters.minPrice = newMinVal;
+        }
+        
+        // Если max ползунок пытается пройти через min
+        if (maxVal <= minVal) {
+          const newMaxVal = minVal + 1000;
+          priceSliderMax.value = newMaxVal;
+          priceMaxInput.value = newMaxVal;
+          this.filters.maxPrice = newMaxVal;
+        }
+      };
+
       // Обновление ползунков при вводе в инпуты
       priceMinInput.addEventListener("input", (e) => {
-        const value = Math.min(
-          parseInt(e.target.value) || 0,
-          this.filters.maxPrice - 1000
-        );
+        let value = parseInt(e.target.value) || 0;
+        
+        // Ограничиваем минимальное значение
+        value = Math.max(value, 0);
+        
+        // Проверяем чтобы не было больше max
+        const maxValue = parseInt(priceMaxInput.value);
+        if (value >= maxValue) {
+          value = maxValue - 1000;
+          e.target.value = value;
+        }
+        
         priceSliderMin.value = value;
         this.filters.minPrice = value;
         this.updatePriceRangeTrack();
@@ -351,35 +382,55 @@ class Catalog {
       });
 
       priceMaxInput.addEventListener("input", (e) => {
-        const value = Math.max(
-          parseInt(e.target.value) || 500000,
-          this.filters.minPrice + 1000
-        );
+        let value = parseInt(e.target.value) || 500000;
+        
+        // Ограничиваем максимальное значение
+        value = Math.min(value, 500000);
+        
+        // Проверяем чтобы не было меньше min
+        const minValue = parseInt(priceMinInput.value);
+        if (value <= minValue) {
+          value = minValue + 1000;
+          e.target.value = value;
+        }
+        
         priceSliderMax.value = value;
         this.filters.maxPrice = value;
         this.updatePriceRangeTrack();
         this.applyFilters();
       });
 
-      // Обновление инпутов при движении ползунков
+      // Обновление инпутов при движении ползунков с проверкой пересечения
       priceSliderMin.addEventListener("input", (e) => {
-        const value = parseInt(e.target.value);
-        if (value < parseInt(priceSliderMax.value)) {
-          priceMinInput.value = value;
-          this.filters.minPrice = value;
-          this.updatePriceRangeTrack();
-          this.applyFilters();
+        let value = parseInt(e.target.value);
+        const maxValue = parseInt(priceSliderMax.value);
+        
+        // Если пытаемся пройти через max ползунок
+        if (value >= maxValue) {
+          value = maxValue - 1;
+          priceSliderMin.value = value;
         }
+        
+        priceMinInput.value = value;
+        this.filters.minPrice = value;
+        this.updatePriceRangeTrack();
+        this.applyFilters();
       });
 
       priceSliderMax.addEventListener("input", (e) => {
-        const value = parseInt(e.target.value);
-        if (value > parseInt(priceSliderMin.value)) {
-          priceMaxInput.value = value;
-          this.filters.maxPrice = value;
-          this.updatePriceRangeTrack();
-          this.applyFilters();
+        let value = parseInt(e.target.value);
+        const minValue = parseInt(priceSliderMin.value);
+        
+        // Если пытаемся пройти через min ползунок
+        if (value <= minValue) {
+          value = minValue + 1;
+          priceSliderMax.value = value;
         }
+        
+        priceMaxInput.value = value;
+        this.filters.maxPrice = value;
+        this.updatePriceRangeTrack();
+        this.applyFilters();
       });
 
       // Обновляем трек при инициализации
@@ -512,6 +563,27 @@ class Catalog {
     this.updateProductsCount();
     this.renderProducts();
     this.updatePagination();
+    
+    // Скроллим к началу каталога
+    this.scrollToCatalog();
+  }
+
+  // Скролл к началу каталога
+  scrollToCatalog() {
+    const catalogSection = document.querySelector('.catalog');
+    if (catalogSection) {
+      // Плавный скролл к началу каталога
+      catalogSection.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+      });
+    } else {
+      // Если не нашли каталог, скроллим просто наверх
+      window.scrollTo({ 
+        top: 0, 
+        behavior: 'smooth' 
+      });
+    }
   }
 
   // Сброс фильтров
@@ -579,6 +651,7 @@ class Catalog {
         this.sortBy = e.target.value;
         this.applySorting();
         this.renderProducts();
+        this.scrollToCatalog(); // Скроллим в начало при сортировке
       });
     }
   }
@@ -748,6 +821,7 @@ class Catalog {
           this.currentPage--;
           this.renderProducts();
           this.updatePaginationButtons();
+          this.scrollToCatalog(); // Скроллим в начало
         }
       });
     }
@@ -761,6 +835,7 @@ class Catalog {
           this.currentPage++;
           this.renderProducts();
           this.updatePaginationButtons();
+          this.scrollToCatalog(); // Скроллим в начало
         }
       });
     }
@@ -800,6 +875,7 @@ class Catalog {
         this.currentPage = i;
         this.renderProducts();
         this.updatePaginationButtons();
+        this.scrollToCatalog(); // Скроллим в начало
       });
 
       pagesContainer.appendChild(pageBtn);
