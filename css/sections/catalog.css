@@ -149,12 +149,11 @@
     margin: var(--spacing-6) 0;
 }
 
-/* Фильтр по цене - УБРАЛ ГРАДИЕНТ, ПРОСТО ЦВЕТ */
 .price-range__track {
     position: absolute;
     height: 100%;
-    background: var(--color-primary); /* ПРОСТО ЦВЕТ */
-    border-radius: 3px;
+    background: var(--color-primary); /* Просто синий цвет */
+    border-radius: 4px;
     left: 0%;
     right: 0%;
 }
@@ -571,5 +570,4 @@
         padding: var(--spacing-4);
     }
 }
-
 
