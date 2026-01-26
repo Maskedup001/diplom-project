@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Корзина | ТехноМир</title>
+    <meta name="description" content="Ваша корзина товаров в интернет-магазине ТехноМир">
+    <link rel="stylesheet" href="css/styles.css">    
+</head>
+
+<body class="page">
+    <!-- ШАПКА САЙТА -->
+    <header class="header">
+        <div class="container header__container">
+            <a href="index.html" class="logo header__logo">
+                <img src="images/favicon.png" alt="Логотип ТехноМир" class="logo__image">
+                <span class="logo__text">ТехноМир</span>
+            </a>
+
+            <form class="search header__search" action="/catalog/find/" method="get">
+                <input type="text" class="search__input" placeholder="Найти товар..." name="find">
+                <button type="submit" class="button search__button">Найти</button>
+            </form>
+
+            <div class="header__contacts">
+                <a href="tel:+74950000000" class="header__phone">📞 +7 (495) 000-00-00</a>
+            </div>
+
+            <a href="cart.html" class="cart header__cart">
+                <span class="cart__icon">🛒</span>
+                <span class="cart__count">0</span>
+                <span class="cart__text">Корзина</span>
+            </a>
+        </div>
+
+        <nav class="nav container">
+            <ul class="nav__list">
+                <li class="nav__item"><a href="index.html" class="nav__link">Главная</a></li>
+                <li class="nav__item"><a href="catalog.html" class="nav__link">Каталог</a></li>
+                <li class="nav__item"><a href="#actions" class="nav__link">Акции</a></li>
+                <li class="nav__item"><a href="#delivery" class="nav__link">Доставка</a></li>
+                <li class="nav__item"><a href="#about" class="nav__link">О нас</a></li>
+                <li class="nav__item"><a href="#contacts" class="nav__link">Контакты</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <!-- Хлебные крошки -->
+            <nav class="breadcrumbs">
+                <a href="index.html" class="breadcrumbs__link">Главная</a>
+                <span class="breadcrumbs__separator">/</span>
+                <span class="breadcrumbs__current">Корзина</span>
+            </nav>
+
+            <h1 class="cart__title">Корзина покупок</h1>
+
+            <div class="cart__content">
+                <!-- Левая колонка: Товары в корзине -->
+                <div class="cart-items-section">
+                    <div class="cart-items-section__header">
+                        <h2 class="cart-items-section__title">Ваши товары</h2>
+                        <span class="cart-items-section__count">Товаров: <span id="cart-total-count">0</span></span>
+                    </div>
+
+                    <div class="cart-items-list" id="cart-items-list">
+                        <!-- Товары будут добавляться сюда через JS -->
+                        <div class="cart-empty" id="cart-empty">
+                            <div class="cart-empty__icon">🛒</div>
+                            <h3 class="cart-empty__title">Ваша корзина пуста</h3>
+                            <p class="cart-empty__text">Добавьте товары из каталога, чтобы сделать заказ</p>
+                            <a href="catalog.html" class="button cart-empty__button">Перейти в каталог</a>
+                        </div>
+                    </div>
+
+                    <!-- УБИРАЕМ КНОПКУ "ПРОДОЛЖИТЬ ПОКУПКИ" -->
+                    <!-- <div class="cart-continue-shopping">
+                        <a href="catalog.html" class="button button--outline">← Продолжить покупки</a>
+                    </div> -->
+                </div>
+
+                <!-- Правая колонка: Итоги заказа -->
+                <aside class="cart-summary">
+                    <div class="cart-summary__content">
+                        <h2 class="cart-summary__title">Итоги заказа</h2>
+
+                        <div class="cart-summary__details">
+                            <div class="cart-summary__row">
+                                <span>Товаров:</span>
+                                <span id="summary-items-count">0</span>
+                            </div>
+                            <div class="cart-summary__row">
+                                <span>Стоимость товаров:</span>
+                                <span id="summary-items-price">0 ₽</span>
+                            </div>
+                            <div class="cart-summary__row">
+                                <span>Доставка:</span>
+                                <span id="summary-delivery">0 ₽</span>
+                            </div>
+                            <div class="cart-summary__row cart-summary__row--total">
+                                <span>Итого к оплате:</span>
+                                <span id="summary-total">0 ₽</span>
+                            </div>
+                        </div>
+
+                        <!-- Способ доставки -->
+                        <div class="delivery-method">
+                            <h3 class="delivery-method__title">Способ доставки</h3>
+                            <div class="delivery-method__options">
+                                <label class="delivery-option">
+                                    <input type="radio" name="delivery" value="courier" class="delivery-option__input" checked>
+                                    <div class="delivery-option__content">
+                                        <div class="delivery-option__title">Курьером</div>
+                                        <div class="delivery-option__price">300 ₽</div>
+                                        <div class="delivery-option__desc">Доставка за 2-3 часа</div>
+                                    </div>
+                                </label>
+                                <label class="delivery-option">
+                                    <input type="radio" name="delivery" value="pickup" class="delivery-option__input">
+                                    <div class="delivery-option__content">
+                                        <div class="delivery-option__title">Самовывоз</div>
+                                        <div class="delivery-option__price">0 ₽</div>
+                                        <div class="delivery-option__desc">Из магазина</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Промокод -->
+                        <div class="promo-code">
+                            <h3 class="promo-code__title">Промокод</h3>
+                            <div class="promo-code__input-group">
+                                <input type="text" class="promo-code__input" placeholder="Введите промокод" id="promo-code-input">
+                                <button type="button" class="button promo-code__button" id="apply-promo">Применить</button>
+                            </div>
+                            <div class="promo-code__message" id="promo-message"></div>
+                        </div>
+
+                        <!-- Кнопка оформления -->
+                        <button class="button cart-summary__checkout" id="checkout-button" disabled>
+                            Оформить заказ
+                        </button>
+
+                        <!-- ФОРМА ОФОРМЛЕНИЯ ЗАКАЗА (изначально скрыта) -->
+                        <div class="order-form" id="order-form">
+                            <h3 class="order-form__title">Данные для оформления</h3>
+                            
+                            <div class="order-form__group">
+                                <label for="order-name" class="order-form__label">Имя *</label>
+                                <input type="text" id="order-name" class="order-form__input" placeholder="Ваше имя" required>
+                            </div>
+                            
+                            <div class="order-form__group">
+                                <label for="order-phone" class="order-form__label">Телефон *</label>
+                                <input type="tel" id="order-phone" class="order-form__input" placeholder="+7 (999) 999-99-99" required>
+                            </div>
+                            
+                            <div class="order-form__group">
+                                <label for="order-email" class="order-form__label">Email</label>
+                                <input type="email" id="order-email" class="order-form__input" placeholder="email@example.com">
+                            </div>
+                            
+                            <div class="order-form__group">
+                                <label for="order-address" class="order-form__label">Адрес доставки</label>
+                                <textarea id="order-address" class="order-form__textarea" placeholder="Улица, дом, квартира" rows="3"></textarea>
+                            </div>
+                            
+                            <div class="order-form__group">
+                                <label for="order-comment" class="order-form__label">Комментарий к заказу</label>
+                                <textarea id="order-comment" class="order-form__textarea" placeholder="Ваши пожелания..." rows="3"></textarea>
+                            </div>
+                            
+                            <div class="order-form__agreement">
+                                <input type="checkbox" id="order-agreement" class="order-form__checkbox" required>
+                                <label for="order-agreement" class="order-form__checkbox-label">
+                                    Я соглашаюсь с <a href="#" target="_blank">правилами обработки персональных данных</a>
+                                </label>
+                            </div>
+                            
+                            <button type="submit" class="button order-form__submit" id="order-submit">
+                                Подтвердить заказ
+                            </button>
+                        </div>
+
+                        <div class="cart-summary__agreement">
+                            Нажимая на кнопку, вы соглашаетесь с <a href="#">правилами обработки персональных данных</a>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <!-- Футер -->
+    <footer class="footer">
+        <div class="container footer__container">
+            <div class="footer__section">
+                <h3 class="footer__title">О магазине</h3>
+                <p class="footer__text">«ТехноМир» — современный интернет-магазин электроники и бытовой техники с 2015 года.</p>
+            </div>
+            <div class="footer__section">
+                <h3 class="footer__title">Контакты</h3>
+                <p class="footer__text">📞 +7 (495) 000-00-00<br>📍 Москва, ул. Техническая, д. 10<br>✉️ info@technomir.ru</p>
+            </div>
+            <div class="footer__section">
+                <h3 class="footer__title">Мы в соцсетях</h3>
+                <div class="social footer__social">
+                    <a href="#" class="social__link">VK</a>
+                    <a href="#" class="social__link">TG</a>
+                    <a href="#" class="social__link">YouTube</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer__copyright">© 2023 ТехноМир. Все права защищены.</div>
+    </footer>
+
+    <!-- Подключаем скрипты -->
+    <script src="js/script.js"></script>
+		<script src="js/search.js"></script>
+    <script src="js/cart.js"></script>
+</body>
+
+</html>
