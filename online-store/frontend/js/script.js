@@ -68,7 +68,7 @@ class Cart {
         
         if (cartCount) {
             cartCount.textContent = totalItems;
-            cartCount.style.display = totalItems > 0 ? 'flex' : 'none';
+            // cartCount.style.display = totalItems > 0 ? 'flex' : 'none';               ###### БЫЛ БАГ С ОТОБРАЖЕНИЕМ ТОВАРОВ ###### 
         }
 
         // Обновить модальное окно корзины (если оно открыто)

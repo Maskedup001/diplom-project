@@ -1,10 +1,19 @@
 // ========== УПРАВЛЕНИЕ КОРЗИНОЙ НА СТРАНИЦЕ ==========
+// cart.js - ТОЛЬКО для страницы cart.html
+// Использует window.cart из script.js
+
 class CartPage {
     constructor() {
         console.log('CartPage: Инициализация для страницы корзины');
         
-        // Создаем свою корзину
-        this.cart = this.createLocalCart();
+        // ИСПРАВЛЕНО: Используем существующую корзину из script.js
+        if (!window.cart) {
+            console.error('CartPage: window.cart не найден! Проверь подключение script.js перед cart.js');
+            return;
+        }
+        
+        this.cart = window.cart; // Используем уже существующую корзину
+        console.log('CartPage: Используем корзину из script.js');
         
         this.deliveryPrice = 300;
         this.promoCode = null;
@@ -12,62 +21,6 @@ class CartPage {
         this.orderFormVisible = false;
         
         this.init();
-    }
-    
-    createLocalCart() {
-        console.log('CartPage: Создание локальной корзины');
-        
-        const items = JSON.parse(localStorage.getItem('cart')) || [];
-        
-        const cartInstance = {
-            items: items,
-            
-            getTotalPrice: function() {
-                return this.items.reduce((total, item) => total + (item.price * item.quantity), 0);
-            },
-            
-            updateCartDisplay: function() {
-                const cartCount = document.querySelector('.cart__count');
-                const totalItems = this.items.reduce((sum, item) => sum + item.quantity, 0);
-                
-                if (cartCount) {
-                    cartCount.textContent = totalItems;
-                    cartCount.style.display = totalItems > 0 ? 'flex' : 'none';
-                }
-            },
-            
-            updateQuantity: function(productId, change) {
-                const itemIndex = this.items.findIndex(item => String(item.id) === String(productId));
-                
-                if (itemIndex !== -1) {
-                    this.items[itemIndex].quantity += change;
-                    
-                    if (this.items[itemIndex].quantity < 1) {
-                        this.items.splice(itemIndex, 1);
-                    }
-                    
-                    localStorage.setItem('cart', JSON.stringify(this.items));
-                    this.updateCartDisplay();
-                    return true;
-                }
-                return false;
-            },
-            
-            removeItem: function(productId) {
-                const initialLength = this.items.length;
-                this.items = this.items.filter(item => String(item.id) !== String(productId));
-                
-                if (this.items.length !== initialLength) {
-                    localStorage.setItem('cart', JSON.stringify(this.items));
-                    this.updateCartDisplay();
-                    return true;
-                }
-                return false;
-            }
-        };
-        
-        cartInstance.updateCartDisplay();
-        return cartInstance;
     }
     
     init() {
@@ -85,7 +38,10 @@ class CartPage {
         const cartItemsList = document.getElementById('cart-items-list');
         const cartEmpty = document.getElementById('cart-empty');
         
-        if (!cartItemsList) return;
+        if (!cartItemsList) {
+            console.error('CartPage: Не найден элемент #cart-items-list');
+            return;
+        }
         
         // Всегда скрываем сообщение о пустой корзине на время
         if (cartEmpty) {
@@ -95,11 +51,13 @@ class CartPage {
         // Очищаем список
         cartItemsList.innerHTML = '';
         
+        // Получаем товары из корзины (используем метод из script.js)
+        const items = this.cart.items || [];
+        
         // ЕСЛИ КОРЗИНА ПУСТА - ПОКАЗЫВАЕМ СООБЩЕНИЕ
-        if (this.cart.items.length === 0) {
+        if (items.length === 0) {
             console.log('CartPage: Корзина пуста, показываем сообщение');
             
-            // Создаем новый элемент сообщения (на всякий случай)
             const emptyMessage = document.createElement('div');
             emptyMessage.className = 'cart-empty';
             emptyMessage.id = 'cart-empty';
@@ -121,17 +79,17 @@ class CartPage {
             return;
         }
         
-        console.log('CartPage: Отображаем', this.cart.items.length, 'товаров');
+        console.log('CartPage: Отображаем', items.length, 'товаров');
         
         // Обновляем счетчик товаров
-        const totalItems = this.cart.items.reduce((sum, item) => sum + item.quantity, 0);
+        const totalItems = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
         const cartTotalCount = document.getElementById('cart-total-count');
         if (cartTotalCount) {
             cartTotalCount.textContent = totalItems;
         }
         
         // Создаем элементы для каждого товара
-        this.cart.items.forEach(item => {
+        items.forEach(item => {
             const cartItemElement = this.createCartItemElement(item);
             cartItemsList.appendChild(cartItemElement);
         });
@@ -142,7 +100,8 @@ class CartPage {
         cartItem.className = 'cart-item-card';
         cartItem.setAttribute('data-cart-item-id', item.id);
         
-        const totalPrice = item.price * item.quantity;
+        const quantity = item.quantity || 1;
+        const totalPrice = item.price * quantity;
         
         cartItem.innerHTML = `
             <img src="${item.image || 'images/no-image.jpg'}" alt="${item.title}" class="cart-item-card__image">
@@ -154,7 +113,7 @@ class CartPage {
             <div class="cart-item-card__controls">
                 <div class="cart-item-card__quantity">
                     <button type="button" class="quantity-btn" data-page-action="decrease" data-page-id="${item.id}">-</button>
-                    <span class="quantity-value">${item.quantity}</span>
+                    <span class="quantity-value">${quantity}</span>
                     <button type="button" class="quantity-btn" data-page-action="increase" data-page-id="${item.id}">+</button>
                 </div>
                 <button type="button" class="cart-item-card__remove" data-page-action="remove" data-page-id="${item.id}">🗑️ Удалить</button>
@@ -170,7 +129,6 @@ class CartPage {
         
         // Обработчик для кнопок на странице корзины
         document.addEventListener('click', (e) => {
-            // Используем УНИКАЛЬНЫЕ атрибуты data-page-*
             const action = e.target.getAttribute('data-page-action');
             const id = e.target.getAttribute('data-page-id');
             
@@ -181,26 +139,21 @@ class CartPage {
                 
                 switch(action) {
                     case 'increase':
-                        if (this.cart.updateQuantity(id, 1)) {
-                            console.log('Товар увеличен, перерисовываем корзину');
-                            this.renderCartItems();
-                            this.updateSummary();
-                        }
+                        // Используем метод из корзины script.js
+                        this.cart.updateQuantity(id, 1);
+                        this.renderCartItems();
+                        this.updateSummary();
                         break;
                     case 'decrease':
-                        if (this.cart.updateQuantity(id, -1)) {
-                            console.log('Товар уменьшен, перерисовываем корзину');
-                            this.renderCartItems();
-                            this.updateSummary();
-                        }
+                        this.cart.updateQuantity(id, -1);
+                        this.renderCartItems();
+                        this.updateSummary();
                         break;
                     case 'remove':
                         if (confirm('Удалить товар из корзины?')) {
-                            if (this.cart.removeItem(id)) {
-                                console.log('Товар удален, перерисовываем корзину');
-                                this.renderCartItems();
-                                this.updateSummary();
-                            }
+                            this.cart.removeItem(id);
+                            this.renderCartItems();
+                            this.updateSummary();
                         }
                         break;
                 }
@@ -208,13 +161,14 @@ class CartPage {
             }
         });
         
-        // Остальные обработчики...
+        // Обработчики доставки
         document.querySelectorAll('input[name="delivery"]').forEach(radio => {
             radio.addEventListener('change', () => {
                 this.updateSummary();
             });
         });
         
+        // Промокоды
         const applyPromoBtn = document.getElementById('apply-promo');
         if (applyPromoBtn) {
             applyPromoBtn.addEventListener('click', (e) => {
@@ -233,12 +187,13 @@ class CartPage {
             });
         }
         
+        // Кнопка оформления заказа
         const checkoutButton = document.getElementById('checkout-button');
         if (checkoutButton) {
             checkoutButton.addEventListener('click', (e) => {
                 e.preventDefault();
                 
-                if (this.cart.items.length === 0) {
+                if (!this.cart.items || this.cart.items.length === 0) {
                     alert('Корзина пуста! Добавьте товары для оформления заказа.');
                     return;
                 }
@@ -247,6 +202,7 @@ class CartPage {
             });
         }
         
+        // Отправка формы заказа
         const orderSubmit = document.getElementById('order-submit');
         if (orderSubmit) {
             orderSubmit.addEventListener('click', (e) => {
@@ -259,8 +215,10 @@ class CartPage {
     }
     
     updateSummary() {
-        const totalItems = this.cart.items.reduce((sum, item) => sum + item.quantity, 0);
-        const itemsPrice = this.cart.getTotalPrice();
+        const items = this.cart.items || [];
+        const totalItems = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
+        const itemsPrice = this.cart.getTotalPrice ? this.cart.getTotalPrice() : 
+                          items.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0);
         
         const deliveryInput = document.querySelector('input[name="delivery"]:checked');
         const deliveryPrice = deliveryInput && deliveryInput.value === 'pickup' ? 0 : this.deliveryPrice;
@@ -275,7 +233,11 @@ class CartPage {
         this.updateElement('summary-total', `${total.toLocaleString()} ₽`);
         
         this.updateCheckoutButton(total, totalItems);
-        this.cart.updateCartDisplay();
+        
+        // Обновляем счетчик в хедере (через метод корзины)
+        if (this.cart.updateCartDisplay) {
+            this.cart.updateCartDisplay();
+        }
     }
     
     updateElement(id, value) {
@@ -298,7 +260,6 @@ class CartPage {
         }
     }
     
-    // Остальные методы без изменений...
     applyPromoCode() {
         const promoInput = document.getElementById('promo-code-input');
         const applyPromoBtn = document.getElementById('apply-promo');
@@ -398,7 +359,9 @@ class CartPage {
     }
     
     calculateTotal() {
-        const itemsPrice = this.cart.getTotalPrice();
+        const items = this.cart.items || [];
+        const itemsPrice = this.cart.getTotalPrice ? this.cart.getTotalPrice() : 
+                          items.reduce((total, item) => total + (item.price * (item.quantity || 1)), 0);
         const deliveryInput = document.querySelector('input[name="delivery"]:checked');
         const deliveryPrice = deliveryInput && deliveryInput.value === 'pickup' ? 0 : this.deliveryPrice;
         const subtotal = itemsPrice + deliveryPrice;
@@ -411,8 +374,9 @@ class CartPage {
             return;
         }
         
+        const items = this.cart.items || [];
         const orderData = {
-            items: this.cart.items,
+            items: [...items], // копируем массив
             total: this.calculateTotal(),
             customer: {
                 name: document.getElementById('order-name').value.trim(),
@@ -429,8 +393,13 @@ class CartPage {
         
         this.showOrderConfirmation(orderData);
         
+        // Очищаем корзину через метод из script.js
         this.cart.items = [];
-        localStorage.setItem('cart', JSON.stringify(this.cart.items));
+        if (this.cart.saveCart) {
+            this.cart.saveCart();
+        } else {
+            localStorage.setItem('cart', JSON.stringify([]));
+        }
         
         // Перерисовываем корзину после оформления заказа
         this.renderCartItems();
@@ -480,7 +449,7 @@ class CartPage {
     }
     
     showOrderConfirmation(orderData) {
-        const totalItems = orderData.items.reduce((sum, item) => sum + item.quantity, 0);
+        const totalItems = orderData.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
         const orderNumber = Math.floor(Math.random() * 9000) + 1000;
         
         const confirmationMessage = `
@@ -505,17 +474,32 @@ ${orderData.promoCode ? `🎁 Промокод: ${orderData.promoCode} (скид
     }
 }
 
-// Инициализация
-console.log('cart.js загружен');
-
+// Инициализация CartPage ТОЛЬКО на странице корзины
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM загружен, проверяем страницу корзины');
+    console.log('cart.js загружен');
     
-    if (window.location.pathname.includes('cart.html') || 
-        document.querySelector('.cart__content')) {
+    // Проверяем что мы на странице корзины
+    const isCartPage = window.location.pathname.includes('cart.html') || 
+                       document.querySelector('.cart-page') ||
+                       document.querySelector('.cart__content') ||
+                       document.getElementById('cart-items-list');
+    
+    if (isCartPage) {
         console.log('На странице корзины, инициализируем CartPage...');
-        window.cartPage = new CartPage();
+        
+        // Ждем пока script.js загрузит window.cart
+        if (window.cart) {
+            window.cartPage = new CartPage();
+        } else {
+            console.error('CartPage: window.cart не инициализирован. Проверь порядок подключения скриптов!');
+            console.log('Подключены скрипты:', document.querySelectorAll('script[src]'));
+        }
     } else {
         console.log('Не страница корзины, CartPage не инициализируется');
     }
 });
+
+// Экспорт для тестирования
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { CartPage };
+}
