@@ -7,7 +7,7 @@
 	<title>Каталог электроники | ТехноМир</title>
 	<meta name="description"
 		content="Каталог электроники и бытовой техники в интернет-магазине ТехноМир. Более 1000 товаров в наличии.">
-	  <link rel="stylesheet" href="css/styles.css">
+	<link rel="stylesheet" href="css/styles.css">
 </head>
 
 <body class="page">
@@ -15,13 +15,13 @@
 	<header class="header">
 		<div class="container header__container">
 			<!-- Логотип (Элемент блока header) -->
-			<a href="/" class="logo header__logo">
+			<a href="index.html" class="logo header__logo">
 				<img src="images/favicon.png" alt="Логотип ТехноМир" class="logo__image">
 				<span class="logo__text">ТехноМир</span>
 			</a>
 
 			<!-- Поиск (Блок search внутри header) -->
-			<form class="search header__search" action="/catalog/find/" method="get">
+			<form class="search header__search" action="catalog.html" method="get">
 				<input type="text" class="search__input" placeholder="Найти товар..." name="find">
 				<button type="submit" class="button search__button">Найти</button>
 			</form>
@@ -48,8 +48,24 @@
 				<li class="nav__item"><a href="#delivery" class="nav__link">Доставка</a></li>
 				<li class="nav__item"><a href="#about" class="nav__link">О нас</a></li>
 				<li class="nav__item"><a href="#contacts" class="nav__link">Контакты</a></li>
-				<li class="nav__item"><a href="login.html" class="nav__link">Войти</a></li>
-				<li class="nav__item"><a href="register.html" class="nav__link">Регистрация</a></li>
+
+				<!-- Войти -->
+				<li class="nav__item"><a href="login.html" class="nav__link" id="login-nav-link">Войти</a></li>
+
+				<!-- Регистрация -->
+				<li class="nav__item"><a href="register.html" class="nav__link" id="register-nav-link">Регистрация</a></li>
+
+				<!-- Личный кабинет (скрыт по умолчанию) -->
+				<li class="nav__item" style="display: none;">
+					<a href="profile.html" class="nav__link" id="profile-nav-link">Личный кабинет</a>
+				</li>
+
+				<!-- Выйти (скрыт по умолчанию) -->
+				<li class="nav__item" style="display: none;">
+					<button class="nav__link" id="logout-nav-link">
+						Выйти
+					</button>
+				</li>
 			</ul>
 		</nav>
 	</header>
@@ -261,8 +277,9 @@
 
 	<!-- Подключаем скрипты -->
 	<script src="js/script.js"></script>
-	<script src="js/search.js"></script>    <!-- поиск в хедере -->
-	<script src="js/catalog.js"></script>   <!-- специфика каталога -->
+	<script src="js/search.js"></script> <!-- поиск в хедере -->
+	<script src="js/catalog.js"></script> <!-- специфика каталога -->
+	<script src="js/header-auth.js"></script>
 </body>
 
 </html>
