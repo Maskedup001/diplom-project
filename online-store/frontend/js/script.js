@@ -150,7 +150,7 @@ class Cart {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: #2ecc71;
+            background: var(--color-success);															
             color: white;
             padding: 15px 25px;
             border-radius: 6px;
