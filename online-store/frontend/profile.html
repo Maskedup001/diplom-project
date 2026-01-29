@@ -40,10 +40,10 @@
                 <li class="nav__item"><a href="#delivery" class="nav__link">Доставка</a></li>
                 <li class="nav__item"><a href="#about" class="nav__link">О нас</a></li>
                 <li class="nav__item"><a href="#contacts" class="nav__link">Контакты</a></li>
-                <li class="nav__item"><a href="login.html" class="nav__link" id="login-nav-link">Войти</a></li>
-                <li class="nav__item"><a href="register.html" class="nav__link" id="register-nav-link">Регистрация</a></li>
-                <li class="nav__item" style="display: none;"><a href="profile.html" class="nav__link nav__link--active" id="profile-nav-link">Личный кабинет</a></li>
-                <li class="nav__item" style="display: none;"><button class="nav__link nav__link--logout" id="logout-nav-link">Выйти</button></li>
+                <li class="nav__item nav__item--hidden" id="login-nav-item"><a href="login.html" class="nav__link" id="login-nav-link">Войти</a></li>
+                <li class="nav__item nav__item--hidden" id="register-nav-item"><a href="register.html" class="nav__link" id="register-nav-link">Регистрация</a></li>
+                <li class="nav__item" id="profile-nav-item"><a href="profile.html" class="nav__link nav__link--active" id="profile-nav-link">Личный кабинет</a></li>
+                <li class="nav__item" id="logout-nav-item"><button class="nav__link" id="logout-nav-link">Выйти</button></li>
             </ul>
         </nav>
     </header>
@@ -59,8 +59,8 @@
                     <h2 class="profile-card__subtitle">Данные профиля</h2>
                     <div class="profile-card__info">
                         <div class="profile-card__field">
-                            <span class="profile-card__label">Имя пользователя:</span>
-                            <span id="user-username" class="profile-card__value">Загрузка...</span>
+                            <span class="profile-card__label">Имя:</span>
+                            <span id="user-name" class="profile-card__value">Загрузка...</span>
                         </div>
                         <div class="profile-card__field">
                             <span class="profile-card__label">Email:</span>
@@ -120,21 +120,25 @@
         <div class="footer__copyright">© 2023 ТехноМир. Все права защищены.</div>
     </footer>
 
-    <!-- Модальное окно редактирования -->
+    <!-- Модальное окно редактирования профиля -->
     <div class="modal modal--profile" id="edit-modal">
         <div class="modal__content">
             <button class="modal__close" data-modal-close="edit-modal">×</button>
             <h2 class="modal__title">Редактировать профиль</h2>
             <form id="edit-profile-form" class="form">
+                <!-- Только поля из регистрации -->
                 <div class="form__group">
-                    <label for="edit-username" class="form__label">Имя пользователя:</label>
-                    <input type="text" id="edit-username" class="form__input" name="username" required>
+                    <label for="edit-name" class="form__label">Имя:</label>
+                    <input type="text" id="edit-name" class="form__input" name="name" required>
                 </div>
                 <div class="form__group">
                     <label for="edit-email" class="form__label">Email:</label>
                     <input type="email" id="edit-email" class="form__input" name="email" required>
                 </div>
-                <button type="submit" class="button button--primary button--full">Сохранить изменения</button>
+                <div class="modal__buttons">
+                    <button type="button" class="button button--outline" data-modal-close="edit-modal">Отмена</button>
+                    <button type="submit" class="button button--primary">Сохранить изменения</button>
+                </div>
             </form>
         </div>
     </div>
@@ -144,8 +148,8 @@
 
     <!-- Подключение JavaScript -->
     <script src="js/script.js"></script>
-		<script src="js/search.js"></script>
-		<script src="js/header-auth.js"></script>
-		<script src="js/profile.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/header-auth.js"></script>
+    <script src="js/profile.js"></script>
 </body>
 </html>

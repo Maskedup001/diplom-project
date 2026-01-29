@@ -451,3 +451,12 @@ input[type="password"]::-ms-clear {
 .form__group:has(.password-field) .form__input {
     padding-right: 45px;
 }
+
+/* ========== HEADER АВТОРИЗАЦИЯ ========== */
+
+/* Только этот стиль нужен */
+/* .nav__item--hidden {
+    display: none;
+} */
+
+/* Кнопка "Выйт" получит стили .nav__link автоматически */
