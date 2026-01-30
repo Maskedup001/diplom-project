@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const sql = require('mssql');
 const path = require('path');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const app = express();
 
 // Настройки
@@ -12,12 +14,15 @@ app.use(express.json());
 const frontendPath = path.join(__dirname, '..', 'frontend');
 app.use(express.static(frontendPath));
 
-// КОНФИГ ДЛЯ SQL SERVER - РАБОЧИЙ!
+// JWT секрет
+const JWT_SECRET = 'technomir_secret_key_2024';
+
+// КОНФИГ ДЛЯ SQL SERVER
 const dbConfig = {
-    server: 'localhost', // локальный сервер
+    server: 'localhost',
     database: 'OnlineShopDB',
     user: 'shop_user',
-    password: 'shop123', // пароль который мы установили
+    password: 'shop123',
     options: {
         encrypt: false,
         trustServerCertificate: true,
@@ -35,83 +40,18 @@ let pool;
 async function connectDB() {
     try {
         console.log('🔗 Подключаюсь к SQL Server...');
-        console.log(`📡 Сервер: ${dbConfig.server}`);
-        console.log(`📊 База: ${dbConfig.database}`);
-        console.log(`👤 Пользователь: ${dbConfig.user}`);
-        
         pool = await sql.connect(dbConfig);
         console.log('✅ БД подключена успешно!');
         
         // Тестовый запрос
-        const result = await pool.request().query('SELECT @@VERSION as version');
-        console.log('📋 Версия SQL Server:', result.recordset[0].version.substring(0, 50) + '...');
-        
-        // Проверяем есть ли таблица Products
-        try {
-            const checkResult = await pool.request().query(`
-                SELECT COUNT(*) as count 
-                FROM INFORMATION_SCHEMA.TABLES 
-                WHERE TABLE_NAME = 'Products'
-            `);
-            
-            if (checkResult.recordset[0].count === 0) {
-                console.log('⚠️ Таблица Products не найдена, создаем...');
-                await createProductsTable();
-            } else {
-                const prodCount = await pool.request().query('SELECT COUNT(*) as count FROM Products');
-                console.log(`📦 Товаров в БД: ${prodCount.recordset[0].count}`);
-            }
-        } catch (tableErr) {
-            console.log('ℹ️ Таблица Products еще не создана, работаем с тестовыми данными');
-        }
+        const result = await pool.request().query('SELECT 1 as test');
+        console.log('✅ Тестовый запрос выполнен');
         
         return pool;
     } catch (err) {
-        console.error('❌ Ошибка подключения к БД:', err.message);
-        console.log('💡 Проверь:');
-        console.log('   1. SQL Server запущен (services.msc)');
-        console.log('   2. Пароль правильный: shop123');
-        console.log('   3. Пользователь shop_user существует');
+        console.error('❌ ОШИБКА ПОДКЛЮЧЕНИЯ К БД:', err.message);
+        console.error('Детали ошибки:', err);
         return null;
-    }
-}
-
-// Создание таблицы Products если ее нет
-async function createProductsTable() {
-    try {
-        await pool.request().query(`
-            CREATE TABLE Products (
-                ProductID INT PRIMARY KEY IDENTITY(1,1),
-                ProductName NVARCHAR(200) NOT NULL,
-                Price DECIMAL(10,2) NOT NULL,
-                CategoryID INT,
-                Brand NVARCHAR(100),
-                Description NVARCHAR(MAX),
-                StockQuantity INT DEFAULT 0,
-                Rating DECIMAL(3,2) DEFAULT 4.0,
-                Reviews INT DEFAULT 0,
-                ImageURL NVARCHAR(500),
-                CreatedDate DATETIME DEFAULT GETDATE()
-            )
-        `);
-        
-        console.log('✅ Таблица Products создана');
-        
-        // Добавляем тестовые товары
-        await pool.request().query(`
-            INSERT INTO Products (ProductName, Price, CategoryID, Brand, Description, StockQuantity, Rating, Reviews, ImageURL)
-            VALUES 
-                ('iPhone 15 Pro', 99990, 1, 'apple', 'Новый флагман Apple с процессором A17 Pro', 10, 4.8, 128, 'images/iphone.jpg'),
-                ('Samsung Galaxy S23 Ultra', 89990, 1, 'samsung', 'Смартфон с лучшей камерой на рынке', 5, 4.7, 94, 'images/samsung.jpg'),
-                ('MacBook Air M2', 129990, 2, 'apple', 'Ультратонкий ноутбук с чипом Apple M2', 3, 4.9, 76, 'images/macbook.jpg'),
-                ('Xiaomi Redmi Note 12', 24990, 1, 'xiaomi', 'Бюджетный смартфон с AMOLED-экраном', 15, 4.3, 215, 'images/xiaomi.jpg'),
-                ('Sony Bravia XR-55A80L', 159990, 3, 'sony', 'OLED телевизор с процессором Cognitive Processor XR', 2, 4.6, 42, 'images/sony-tv.jpg')
-        `);
-        
-        console.log('✅ Добавлено 5 тестовых товаров');
-        
-    } catch (err) {
-        console.error('❌ Ошибка создания таблицы:', err.message);
     }
 }
 
@@ -120,13 +60,15 @@ async function createProductsTable() {
 // Тест подключения к БД
 app.get('/api/db-test', async (req, res) => {
     try {
-        if (!pool) await connectDB();
+        if (!pool) {
+            await connectDB();
+        }
         
         if (pool) {
             const result = await pool.request().query('SELECT @@VERSION as version');
             res.json({
                 success: true,
-                message: '✅ БД подключена через SQL Server Authentication',
+                message: '✅ БД подключена',
                 server: dbConfig.server,
                 database: dbConfig.database,
                 user: dbConfig.user,
@@ -139,30 +81,232 @@ app.get('/api/db-test', async (req, res) => {
             });
         }
     } catch (err) {
+        console.error('Ошибка в db-test:', err);
         res.json({ 
             success: false, 
             error: err.message,
-            config: {
-                server: dbConfig.server,
-                database: dbConfig.database,
-                user: dbConfig.user
-            }
+            details: err.toString()
         });
     }
 });
 
-// Получить все товары (из БД или тестовые)
+// ========== АВТОРИЗАЦИЯ ==========
+
+// Регистрация - УПРОЩЕННЫЙ ВАРИАНТ
+app.post('/api/auth/register', async (req, res) => {
+    console.log('📝 Получен запрос на регистрацию');
+    console.log('Данные:', req.body);
+    
+    try {
+        const { username, email, password, full_name, phone } = req.body;
+
+        // Валидация
+        if (!username || !email || !password) {
+            console.log('❌ Не все поля заполнены');
+            return res.status(400).json({ 
+                error: 'Заполните все обязательные поля',
+                received: req.body 
+            });
+        }
+
+        // Подключаемся к БД если нет соединения
+        if (!pool) {
+            console.log('🔄 Подключаемся к БД...');
+            await connectDB();
+            if (!pool) {
+                console.log('❌ Нет подключения к БД');
+                return res.status(500).json({ error: 'Нет подключения к базе данных' });
+            }
+        }
+
+        console.log('🔍 Проверяем существующего пользователя...');
+        
+        // Проверяем есть ли такой пользователь
+        let userCheck;
+        try {
+            userCheck = await pool.request()
+                .input('email', sql.NVarChar, email)
+                .input('username', sql.NVarChar, username)
+                .query('SELECT id FROM Users WHERE email = @email OR username = @username');
+            
+            console.log('Результат проверки:', userCheck.recordset);
+        } catch (sqlErr) {
+            console.error('❌ ОШИБКА SQL при проверке пользователя:', sqlErr.message);
+            console.error('SQL детали:', sqlErr);
+            return res.status(500).json({ 
+                error: 'Ошибка проверки пользователя',
+                sqlError: sqlErr.message 
+            });
+        }
+
+        if (userCheck.recordset.length > 0) {
+            console.log('❌ Пользователь уже существует');
+            return res.status(400).json({ 
+                error: 'Пользователь с таким email или именем уже существует',
+                existingUsers: userCheck.recordset 
+            });
+        }
+
+        console.log('🔐 Хешируем пароль...');
+        // Хешируем пароль
+        let hashedPassword;
+        try {
+            hashedPassword = await bcrypt.hash(password, 10);
+            console.log('✅ Пароль захэширован');
+        } catch (hashErr) {
+            console.error('❌ Ошибка хеширования пароля:', hashErr);
+            return res.status(500).json({ error: 'Ошибка обработки пароля' });
+        }
+
+        console.log('👤 Создаем пользователя...');
+        // Создаем пользователя
+        let result;
+        try {
+            result = await pool.request()
+                .input('username', sql.NVarChar, username)
+                .input('email', sql.NVarChar, email)
+                .input('password_hash', sql.NVarChar, hashedPassword)
+                .input('full_name', sql.NVarChar, full_name || null)
+                .input('phone', sql.NVarChar, phone || null)
+                .query(`
+                    INSERT INTO Users (username, email, password_hash, full_name, phone)
+                    OUTPUT INSERTED.id, INSERTED.username, INSERTED.email, INSERTED.full_name, INSERTED.created_at
+                    VALUES (@username, @email, @password_hash, @full_name, @phone)
+                `);
+            
+            console.log('✅ Пользователь создан:', result.recordset[0]);
+        } catch (insertErr) {
+            console.error('❌ ОШИБКА SQL при создании пользователя:', insertErr.message);
+            console.error('SQL код ошибки:', insertErr.code);
+            console.error('SQL номер ошибки:', insertErr.number);
+            console.error('SQL состояние:', insertErr.state);
+            console.error('SQL процедура:', insertErr.procName);
+            console.error('SQL текст:', insertErr.originalError?.info?.message);
+            
+            return res.status(500).json({ 
+                error: 'Ошибка создания пользователя в БД',
+                sqlError: insertErr.message,
+                sqlCode: insertErr.code,
+                sqlNumber: insertErr.number
+            });
+        }
+
+        const user = result.recordset[0];
+
+        console.log('🔑 Создаем JWT токен...');
+        // Создаем JWT токен
+        const token = jwt.sign(
+            { 
+                id: user.id, 
+                username: user.username, 
+                email: user.email 
+            }, 
+            JWT_SECRET, 
+            { expiresIn: '7d' }
+        );
+
+        console.log('✅ Регистрация успешна!');
+        console.log('Пользователь:', user);
+        console.log('Токен создан (длина:', token.length, 'символов)');
+
+        res.json({
+            success: true,
+            message: 'Регистрация успешна',
+            user: {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                full_name: user.full_name,
+                phone: user.phone,
+                created_at: user.created_at
+            },
+            token: token
+        });
+
+    } catch (err) {
+        console.error('❌ ОБЩАЯ ОШИБКА РЕГИСТРАЦИИ:', err);
+        console.error('Стек ошибки:', err.stack);
+        res.status(500).json({ 
+            error: 'Внутренняя ошибка сервера при регистрации',
+            details: err.message,
+            stack: err.stack
+        });
+    }
+});
+
+// Вход - УПРОЩЕННЫЙ
+app.post('/api/auth/login', async (req, res) => {
+    console.log('🔑 Получен запрос на вход');
+    console.log('Данные:', req.body);
+    
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Заполните все поля' });
+        }
+
+        if (!pool) await connectDB();
+
+        // Ищем пользователя
+        const result = await pool.request()
+            .input('email', sql.NVarChar, email)
+            .query('SELECT * FROM Users WHERE email = @email');
+
+        if (result.recordset.length === 0) {
+            return res.status(401).json({ error: 'Неверный email или пароль' });
+        }
+
+        const user = result.recordset[0];
+
+        // Проверяем пароль
+        const validPassword = await bcrypt.compare(password, user.password_hash);
+        if (!validPassword) {
+            return res.status(401).json({ error: 'Неверный email или пароль' });
+        }
+
+        // Создаем JWT токен
+        const token = jwt.sign(
+            { 
+                id: user.id, 
+                username: user.username, 
+                email: user.email 
+            }, 
+            JWT_SECRET, 
+            { expiresIn: '7d' }
+        );
+
+        res.json({
+            success: true,
+            message: 'Вход выполнен',
+            user: {
+                id: user.id,
+                username: user.username,
+                email: user.email,
+                full_name: user.full_name,
+                phone: user.phone,
+                created_at: user.created_at
+            },
+            token
+        });
+
+    } catch (err) {
+        console.error('Ошибка входа:', err);
+        res.status(500).json({ error: 'Ошибка сервера при входе' });
+    }
+});
+
+// ========== ТОВАРЫ ==========
+
+// Получить все товары
 app.get('/api/products', async (req, res) => {
     try {
         if (!pool) await connectDB();
         
-        // Если БД не подключена - возвращаем тестовые данные
         if (!pool) {
-            console.log('📦 БД не подключена, использую тестовые данные');
-            return res.json(getTestProducts());
+            return res.status(500).json({ error: 'База данных недоступна' });
         }
 
-        // Пробуем получить данные из БД
         const result = await pool.request().query(`
             SELECT 
                 ProductID as id,
@@ -181,7 +325,6 @@ app.get('/api/products', async (req, res) => {
         
         console.log(`📦 Загружено из БД: ${result.recordset.length} товаров`);
         
-        // Форматируем данные для фронтенда
         const products = result.recordset.map(item => ({
             id: item.id,
             title: item.title || 'Товар',
@@ -200,135 +343,8 @@ app.get('/api/products', async (req, res) => {
         
     } catch (err) {
         console.error('Ошибка при получении товаров из БД:', err.message);
-        // Если ошибка БД - возвращаем тестовые данные
-        res.json(getTestProducts());
+        res.status(500).json({ error: 'Ошибка получения товаров' });
     }
-});
-
-// Поиск товаров
-app.get('/api/products/search', async (req, res) => {
-    const { query } = req.query;
-    
-    if (!pool) await connectDB();
-    
-    if (!pool || !query) {
-        return res.json(getTestProducts().filter(p => 
-            p.title.toLowerCase().includes(query?.toLowerCase() || '') ||
-            p.description.toLowerCase().includes(query?.toLowerCase() || '')
-        ));
-    }
-    
-    try {
-        const result = await pool.request().query(`
-            SELECT * FROM Products 
-            WHERE ProductName LIKE '%' + ${query} + '%' 
-            OR Description LIKE '%' + ${query} + '%'
-        `);
-        
-        res.json(result.recordset);
-    } catch (err) {
-        console.error('Ошибка поиска:', err);
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// Получить один товар по ID
-app.get('/api/products/:id', async (req, res) => {
-    const { id } = req.params;
-    
-    if (!pool) await connectDB();
-    
-    if (!pool) {
-        const product = getTestProducts().find(p => p.id == id);
-        return res.json(product || null);
-    }
-    
-    try {
-        const result = await pool.request()
-            .input('id', sql.Int, id)
-            .query('SELECT * FROM Products WHERE ProductID = @id');
-        
-        if (result.recordset.length > 0) {
-            const item = result.recordset[0];
-            res.json({
-                id: item.ProductID,
-                title: item.ProductName,
-                price: item.Price,
-                category: getCategoryName(item.CategoryID),
-                brand: item.Brand,
-                description: item.Description,
-                stock: item.StockQuantity,
-                rating: item.Rating,
-                reviews: item.Reviews,
-                image: item.ImageURL,
-                availability: item.StockQuantity > 0 ? 'in-stock' : 'out-of-stock'
-            });
-        } else {
-            res.status(404).json({ error: 'Товар не найден' });
-        }
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
-});
-
-// Получить категории
-app.get('/api/categories', (req, res) => {
-    const categories = [
-        { id: 1, name: 'Смартфоны', slug: 'smartphone' },
-        { id: 2, name: 'Ноутбуки', slug: 'laptop' },
-        { id: 3, name: 'Телевизоры', slug: 'tv' },
-        { id: 4, name: 'Наушники', slug: 'headphones' },
-        { id: 5, name: 'Игровые консоли', slug: 'console' },
-        { id: 6, name: 'Мониторы', slug: 'monitor' },
-        { id: 7, name: 'Смарт-часы', slug: 'smartwatch' },
-        { id: 8, name: 'Планшеты', slug: 'tablet' }
-    ];
-    res.json(categories);
-});
-
-// API для корзины (пока временное хранилище в памяти)
-let cart = [];
-
-app.get('/api/cart', (req, res) => {
-    res.json(cart);
-});
-
-app.post('/api/cart', (req, res) => {
-    const { productId, quantity = 1 } = req.body;
-    
-    // Находим товар
-    const product = getTestProducts().find(p => p.id == productId);
-    if (!product) {
-        return res.status(404).json({ error: 'Товар не найден' });
-    }
-    
-    // Проверяем есть ли уже в корзине
-    const existingItem = cart.find(item => item.id == productId);
-    
-    if (existingItem) {
-        existingItem.quantity += quantity;
-    } else {
-        cart.push({
-            id: product.id,
-            title: product.title,
-            price: product.price,
-            image: product.image,
-            quantity: quantity
-        });
-    }
-    
-    res.json({ success: true, cart: cart });
-});
-
-app.delete('/api/cart/:id', (req, res) => {
-    const { id } = req.params;
-    cart = cart.filter(item => item.id != id);
-    res.json({ success: true, cart: cart });
-});
-
-app.delete('/api/cart', (req, res) => {
-    cart = [];
-    res.json({ success: true, cart: [] });
 });
 
 // Вспомогательные функции
@@ -341,7 +357,8 @@ function getCategoryName(categoryId) {
         5: 'console',
         6: 'monitor',
         7: 'smartwatch',
-        8: 'tablet'
+        8: 'tablet',
+        9: 'appliances'
     };
     return categories[categoryId] || 'other';
 }
@@ -355,131 +372,28 @@ function getDefaultImage(categoryId) {
         5: 'images/ps5.jpg',
         6: 'images/monitor.jpg',
         7: 'images/watch.jpg',
-        8: 'images/ipad.jpg'
+        8: 'images/ipad.jpg',
+        9: 'images/appliances_photo.png'
     };
     return images[categoryId] || 'images/default.jpg';
 }
 
-function getTestProducts() {
-    return [
-        {
-            id: 1,
-            title: "iPhone 15 Pro",
-            price: 99990,
-            category: "smartphone",
-            brand: "apple",
-            description: "Новый флагман Apple с процессором A17 Pro",
-            image: "images/iphone.jpg",
-            rating: 4.8,
-            reviews: 128,
-            stock: 10,
-            availability: "in-stock"
-        },
-        {
-            id: 2,
-            title: "Samsung Galaxy S23 Ultra",
-            price: 89990,
-            category: "smartphone",
-            brand: "samsung",
-            description: "Смартфон с лучшей камерой на рынке",
-            image: "images/samsung.jpg",
-            rating: 4.7,
-            reviews: 94,
-            stock: 5,
-            availability: "in-stock"
-        },
-        {
-            id: 3,
-            title: "MacBook Air M2",
-            price: 129990,
-            category: "laptop",
-            brand: "apple",
-            description: "Ультратонкий ноутбук с чипом Apple M2",
-            image: "images/macbook.jpg",
-            rating: 4.9,
-            reviews: 76,
-            stock: 3,
-            availability: "in-stock"
-        },
-        {
-            id: 4,
-            title: "Xiaomi Redmi Note 12",
-            price: 24990,
-            category: "smartphone",
-            brand: "xiaomi",
-            description: "Бюджетный смартфон с AMOLED-экраном",
-            image: "images/xiaomi.jpg",
-            rating: 4.3,
-            reviews: 215,
-            stock: 15,
-            availability: "in-stock"
-        },
-        {
-            id: 5,
-            title: "Sony Bravia XR-55A80L",
-            price: 159990,
-            category: "tv",
-            brand: "sony",
-            description: "OLED телевизор с процессором Cognitive Processor XR",
-            image: "images/sony-tv.jpg",
-            rating: 4.6,
-            reviews: 42,
-            stock: 2,
-            availability: "in-stock"
-        },
-        {
-            id: 6,
-            title: "Samsung Odyssey G7",
-            price: 64990,
-            category: "monitor",
-            brand: "samsung",
-            description: 'Игровой монитор 27" 240Hz',
-            image: "images/monitor.jpg",
-            rating: 4.5,
-            reviews: 89,
-            stock: 0,
-            availability: "out-of-stock"
-        },
-        {
-            id: 7,
-            title: "AirPods Pro 2",
-            price: 24990,
-            category: "headphones",
-            brand: "apple",
-            description: "Наушники с активным шумоподавлением",
-            image: "images/airpods.jpg",
-            rating: 4.7,
-            reviews: 312,
-            stock: 8,
-            availability: "in-stock"
-        }
-    ];
-}
+// ========== ЗАПУСК СЕРВЕРА ==========
 
-// Запуск сервера
 const PORT = 3000;
 
 app.listen(PORT, async () => {
     console.log('='.repeat(50));
-    console.log(`🚀 Сервер запущен`);
-    console.log(`📡 Порт: ${PORT}`);
+    console.log(`🚀 Сервер запущен на порту ${PORT}`);
     console.log(`🌐 Сайт: http://localhost:${PORT}`);
     console.log('='.repeat(50));
-    console.log(`📊 API тест БД: http://localhost:${PORT}/api/db-test`);
-    console.log(`📦 API товары: http://localhost:${PORT}/api/products`);
-    console.log(`🔍 API поиск: http://localhost:${PORT}/api/products/search?query=iphone`);
-    console.log(`🛒 API корзина: http://localhost:${PORT}/api/cart`);
+    console.log('📋 Доступные API:');
+    console.log(`🔐 Регистрация: POST http://localhost:${PORT}/api/auth/register`);
+    console.log(`🔑 Вход: POST http://localhost:${PORT}/api/auth/login`);
+    console.log(`📦 Товары: GET http://localhost:${PORT}/api/products`);
+    console.log(`📊 Тест БД: GET http://localhost:${PORT}/api/db-test`);
     console.log('='.repeat(50));
     
-    // Автоподключение к БД
+    // Подключаемся к БД
     await connectDB();
-});
-
-// Обработка завершения
-process.on('SIGINT', async () => {
-    if (pool) {
-        await pool.close();
-        console.log('🔌 Подключение к БД закрыто');
-    }
-    process.exit(0);
 });
