@@ -79,7 +79,7 @@
 				<span class="breadcrumbs__current">Каталог товаров</span>
 			</nav>
 
-			<h1 class="catalog__title">Каталог электроники</h1>
+			<h1 class="catalog__title">Каталог электроника</h1>
 
 			<div class="catalog__content">
 				<!-- Боковая панель с фильтрами -->
@@ -147,6 +147,7 @@
 							</label>
 						</div>
 					</div>
+					
 					<!-- Фильтр по брендам -->
 					<div class="filter-group">
 						<h3 class="filter-group__title">Бренд</h3>
@@ -167,7 +168,6 @@
 								<input type="checkbox" name="brand" value="xiaomi" class="filter-checkbox__input">
 								<span class="filter-checkbox__label">Xiaomi</span>
 							</label>
-
 							<label class="filter-checkbox">
 								<input type="checkbox" name="brand" value="lg" class="filter-checkbox__input">
 								<span class="filter-checkbox__label">LG</span>
@@ -178,21 +178,9 @@
 							</label>
 						</div>
 					</div>
-
-					<!-- Фильтр по наличию -->
-					<div class="filter-group">
-						<h3 class="filter-group__title">Наличие</h3>
-						<div class="filter-radios">
-							<label class="filter-radio">
-								<input type="radio" name="availability" value="all" class="filter-radio__input" checked>
-								<span class="filter-radio__label">Все товары</span>
-							</label>
-							<label class="filter-radio">
-								<input type="radio" name="availability" value="in-stock" class="filter-radio__input">
-								<span class="filter-radio__label">В наличии</span>
-							</label>
-						</div>
-					</div>
+					
+					<!-- УДАЛЕНО: Фильтр по наличию -->
+					
 				</aside>
 
 				<!-- Основная часть с товарами -->
@@ -200,7 +188,7 @@
 					<!-- Панель сортировки -->
 					<div class="catalog-toolbar">
 						<div class="catalog-toolbar__results">
-							Найдено: <span id="products-count">12</span> товаров
+							Найдено: <span id="products-count">0</span> товаров
 						</div>
 						<div class="catalog-toolbar__sort">
 							<label for="sort-select">Сортировка:</label>
@@ -224,10 +212,8 @@
 						<button class="pagination__button pagination__button--prev" disabled>Назад</button>
 						<div class="pagination__pages">
 							<button class="pagination__page pagination__page--active">1</button>
-							<button class="pagination__page">2</button>
-							<button class="pagination__page">3</button>
 						</div>
-						<button class="pagination__button pagination__button--next">Вперед</button>
+						<button class="pagination__button pagination__button--next" disabled>Вперед</button>
 					</div>
 				</div>
 			</div>
@@ -280,6 +266,7 @@
 	<script src="js/search.js"></script> <!-- поиск в хедере -->
 	
 	<script src="js/header-auth.js"></script>
+	<script src="js/auth.js"></script> <!-- добавлено -->
 	<script src="js/catalog.js"></script> <!-- специфика каталога -->
 </body>
 

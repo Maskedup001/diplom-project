@@ -10,7 +10,6 @@ class Catalog {
       maxPrice: 500000,
       categories: [],
       brands: [],
-      availability: "all",
     };
     this.sortBy = "default";
     
@@ -158,7 +157,7 @@ class Catalog {
     
     try {
       // Загружаем товары из нашего Node.js API
-      const response = await fetch('http://localhost:3000/api/products');
+      const response = await fetch('/api/products');
       
       if (!response.ok) {
         throw new Error(`Ошибка API: ${response.status}`);
@@ -347,19 +346,6 @@ class Catalog {
       });
     });
 
-    // Наличие - по умолчанию "Все товары"
-    document.querySelectorAll('input[name="availability"]').forEach((radio) => {
-      // Устанавливаем состояние радио-кнопки согласно начальным фильтрам
-      if (radio.value === this.filters.availability) {
-        radio.checked = true;
-      }
-      
-      radio.addEventListener("change", (e) => {
-        this.filters.availability = e.target.value;
-        this.applyFilters();
-      });
-    });
-
     // Кнопка сброса
     const resetBtn = document.getElementById("reset-filters");
     if (resetBtn) {
@@ -424,14 +410,6 @@ class Catalog {
         return false;
       }
 
-      // Фильтр по наличию
-      if (
-        this.filters.availability === "in-stock" &&
-        product.availability !== "in-stock"
-      ) {
-        return false;
-      }
-
       return true;
     });
 
@@ -478,7 +456,6 @@ class Catalog {
       maxPrice: 500000,
       categories: [], // ← ВАЖНО: пустой массив!
       brands: [],
-      availability: "all",
     };
 
     // Сбрасываем UI
@@ -502,12 +479,6 @@ class Catalog {
     document.querySelectorAll('input[name="brand"]').forEach((cb) => {
       cb.checked = false;
     });
-
-    // Устанавливаем радио-кнопку "Все товары"
-    const allRadio = document.querySelector('input[name="availability"][value="all"]');
-    if (allRadio) {
-      allRadio.checked = true;
-    }
 
     // Сбрасываем сортировку
     const sortSelect = document.getElementById("sort-select");
@@ -535,6 +506,7 @@ class Catalog {
         this.sortBy = e.target.value;
         this.applySorting();
         this.renderProducts();
+        this.updatePagination();
         // Скроллим к заголовку каталога при сортировке
         this.scrollToCatalogTitle();
       });
@@ -626,13 +598,18 @@ class Catalog {
     const formattedPrice = product.price.toLocaleString("ru-RU");
 
     // Звезды рейтинга
-    const fullStars = Math.floor(product.rating);
+    const fullStars = Math.floor(product.rating || 4.0);
     const emptyStars = 5 - fullStars;
     const stars = "★".repeat(fullStars) + "☆".repeat(emptyStars);
+    
+    // Проверяем наличие
+    const stock = product.stock || 0;
+    const availability = product.availability || (stock > 0 ? 'in-stock' : 'out-of-stock');
+    const isInStock = availability === 'in-stock';
 
     card.innerHTML = `
             ${
-              product.availability === "out-of-stock"
+              !isInStock
                 ? '<div class="product-card__badge">Нет в наличии</div>'
                 : ""
             }
@@ -644,20 +621,20 @@ class Catalog {
                   product.category
                 )}</div>
                 <h3 class="product-card__title">${product.title}</h3>
-                <p class="product-card__description">${product.description}</p>
+                <p class="product-card__description">${product.description || 'Описание товара'}</p>
                 <div class="product-card__rating">
                     <span class="product-card__stars">${stars}</span>
                     <span class="product-card__reviews">(${
-                      product.reviews
+                      product.reviews || 0
                     })</span>
                 </div>
                 <div class="product-card__availability product-card__availability--${
-                  product.availability
+                  availability
                 }">
                     ${
-                      product.availability === "in-stock"
-                        ? "✓ В наличии"
-                        : "✗ Нет в наличии"
+                      isInStock
+                        ? `✓ В наличии (${stock} шт.)`
+                        : '✗ Нет в наличии'
                     }
                 </div>
                 <div class="product-card__footer">
@@ -665,12 +642,12 @@ class Catalog {
                         <span class="product-card__price">${formattedPrice} ₽</span>
                     </div>
                     <button class="button product-card__button add-to-cart" ${
-                      product.availability === "out-of-stock" ? "disabled" : ""
+                      !isInStock ? "disabled" : ""
                     }>
                         ${
-                          product.availability === "out-of-stock"
-                            ? "Нет в наличии"
-                            : "В корзину"
+                          isInStock
+                            ? "В корзину"
+                            : "Нет в наличии"
                         }
                     </button>
                 </div>
@@ -701,27 +678,29 @@ class Catalog {
     const nextBtn = document.querySelector(".pagination__button--next");
 
     if (prevBtn) {
-      prevBtn.addEventListener("click", () => {
+      prevBtn.addEventListener("click", (e) => {
+        e.preventDefault();
         if (this.currentPage > 1) {
           this.currentPage--;
           this.renderProducts();
+          this.updatePagination(); // ВАЖНО: обновляем всю пагинацию
           this.updatePaginationButtons();
-          // Скроллим к заголовку каталога
           this.scrollToCatalogTitle();
         }
       });
     }
 
     if (nextBtn) {
-      nextBtn.addEventListener("click", () => {
+      nextBtn.addEventListener("click", (e) => {
+        e.preventDefault();
         const totalPages = Math.ceil(
           this.filteredProducts.length / this.productsPerPage
         );
         if (this.currentPage < totalPages) {
           this.currentPage++;
           this.renderProducts();
+          this.updatePagination(); // ВАЖНО: обновляем всю пагинацию
           this.updatePaginationButtons();
-          // Скроллим к заголовку каталога
           this.scrollToCatalogTitle();
         }
       });
@@ -731,7 +710,7 @@ class Catalog {
     this.updatePagination();
   }
 
-  // Обновление пагинации
+  // Обновление пагинации - ИСПРАВЛЕННАЯ ВЕРСИЯ
   updatePagination() {
     const totalPages = Math.ceil(
       this.filteredProducts.length / this.productsPerPage
@@ -741,6 +720,14 @@ class Catalog {
     if (!pagesContainer) return;
 
     pagesContainer.innerHTML = "";
+
+    // Если нет товаров или только одна страница - скрываем пагинацию
+    if (totalPages <= 1) {
+      pagesContainer.style.display = "none";
+      return;
+    } else {
+      pagesContainer.style.display = "flex";
+    }
 
     // Показываем максимум 5 страниц
     let startPage = Math.max(1, this.currentPage - 2);
@@ -753,17 +740,28 @@ class Catalog {
     for (let i = startPage; i <= endPage; i++) {
       const pageBtn = document.createElement("button");
       pageBtn.type = "button";
-      pageBtn.className = `pagination__page ${
-        i === this.currentPage ? "pagination__page--active" : ""
-      }`;
+      pageBtn.className = `pagination__page`;
+      
+      // Добавляем активный класс если это текущая страница
+      if (i === this.currentPage) {
+        pageBtn.classList.add("pagination__page--active");
+      }
+      
       pageBtn.textContent = i;
+      pageBtn.dataset.page = i;
 
-      pageBtn.addEventListener("click", () => {
-        this.currentPage = i;
-        this.renderProducts();
-        this.updatePaginationButtons();
-        // Скроллим к заголовку каталога
-        this.scrollToCatalogTitle();
+      // Обработчик клика с правильным обновлением пагинации
+      pageBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const page = parseInt(e.target.dataset.page);
+        
+        if (page && page !== this.currentPage) {
+          this.currentPage = page;
+          this.renderProducts();
+          this.updatePagination(); // ВАЖНО: перерисовываем всю пагинацию
+          this.updatePaginationButtons();
+          this.scrollToCatalogTitle();
+        }
       });
 
       pagesContainer.appendChild(pageBtn);
@@ -782,10 +780,12 @@ class Catalog {
 
     if (prevBtn) {
       prevBtn.disabled = this.currentPage === 1;
+      prevBtn.classList.toggle("pagination__button--disabled", this.currentPage === 1);
     }
 
     if (nextBtn) {
       nextBtn.disabled = this.currentPage === totalPages || totalPages === 0;
+      nextBtn.classList.toggle("pagination__button--disabled", this.currentPage === totalPages || totalPages === 0);
     }
   }
 }
