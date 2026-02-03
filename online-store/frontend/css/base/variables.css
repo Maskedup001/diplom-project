@@ -158,9 +158,9 @@
 }
 
 /* ====== АДАПТИВНЫЕ НАСТРОЙКИ ====== */
+/* Медиа-запросы */
 @media (max-width: 48rem) { /* 768px */
     :root {
-        /* Уменьшаем размеры шрифтов на мобильных */
         --font-size-base: 0.9375rem;   /* 15px */
         --font-size-lg: 1.125rem;      /* 18px */
         --font-size-xl: 1.25rem;       /* 20px */
@@ -176,6 +176,15 @@
         
         /* Уменьшаем высоту хедера */
         --header-height: 3.5rem;       /* 56px */
+    }
+    
+    /* Скрываем текст телефона, оставляем только иконку */
+    .header__phone span {
+        display: none;
+    }
+    
+    .header__phone::after {
+        content: none;
     }
 }
 

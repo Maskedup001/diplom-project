@@ -1,4 +1,5 @@
-/* Блок: header */
+/* ================= HEADER ================= */
+
 .header {
     background-color: var(--color-primary);
     color: var(--color-text-light);
@@ -12,7 +13,7 @@
     flex-wrap: wrap;
 }
 
-/* Элемент: logo внутри header */
+/* Логотип */
 .header__logo {
     display: flex;
     align-items: center;
@@ -27,22 +28,29 @@
     margin-right: var(--spacing-2);
 }
 
+/* Телефон - скрываем на мобильных */
 .header__phone {
     font-weight: var(--font-weight-semibold);
     font-size: var(--font-size-md);
-    color: var(--color-text-light);
+    color: var(--color-white);
     text-decoration: none;
-    transition: color var(--transition-fast);
+    transition: all var(--transition-normal);
     display: flex;
     align-items: center;
-    gap: var(--spacing-1);
+    gap: var(--spacing-2);
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: var(--spacing-2) var(--spacing-4);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .header__phone:hover {
-    color: var(--color-accent);
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    transform: translateY(-2px);
 }
 
-/* Блок: search */
+/* Поиск */
 .search {
     display: flex;
     flex-grow: 1;
@@ -69,78 +77,62 @@
     background-color: var(--color-white);
 }
 
+/* Кнопка поиска */
 .search__button {
     border-radius: 0 var(--radius-md) var(--radius-md) 0;
     padding: var(--spacing-2) var(--spacing-4);
     font-size: var(--font-size-sm);
-    background-color: var(--color-accent);
+    background-color: rgba(255, 255, 255, 0.1);
     color: var(--color-white);
-    border: 2px solid var(--color-accent);
-    border-left: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     cursor: pointer;
     font-weight: var(--font-weight-medium);
     transition: all var(--transition-fast);
     min-width: 80px;
-    /* Чтобы кнопка и инпут были на одном уровне */
     margin: 0;
     line-height: 1.5;
 }
 
 .search__button:hover {
-    background-color: var(--color-accent-dark);
-    border-color: var(--color-accent-dark);
-    /* Убрал transform чтобы не подпрыгивала */
-    /* transform: translateY(-1px); */
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
 }
 
-/* .search__button:active {
-     Тоже убрал 
-     transform: translateY(0); 
-} */
-
-/* Альтернативный ховер-эффект без смещения */
-.search__button:hover {
-    background-color: var(--color-accent-dark);
-    border-color: var(--color-accent-dark);
-    /* Вместо смещения - изменение тени или яркости */
-    filter: brightness(1.1);
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
-}
-
-/* Блок: cart */
+/* Корзина */
 .cart {
     display: flex;
     align-items: center;
     text-decoration: none;
-    color: var(--color-button-text);
-    background-color: var(--color-accent);
+    color: var(--color-white);
+    background-color: rgba(255, 255, 255, 0.1);
     padding: var(--spacing-2) var(--spacing-4);
     border-radius: var(--radius-md);
     position: relative;
     transition: all var(--transition-fast);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-weight: var(--font-weight-medium);
 }
 
 .cart:hover {
-    background-color: var(--color-accent-light);
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    transform: translateY(-2px);
 }
 
 .cart__icon {
-    margin-right: var(--spacing-1);
+    margin-right: var(--spacing-2);
     font-size: var(--font-size-lg);
 }
 
-/* Исправленный .cart__count */
 .cart__count {
     position: absolute;
-    top: -5px;
-    right: -5px;
+    top: -8px;
+    right: -8px;
     background-color: var(--color-white);
     color: var(--color-accent);
     border-radius: 50%;
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -155,104 +147,485 @@
     font-size: var(--font-size-sm);
 }
 
-/* Блок: nav */
+/* ================= NAVIGATION ================= */
+
 .nav {
     background-color: var(--color-primary-dark);
-    margin-top: var(--spacing-2);
+    margin-top: var(--spacing-3);
+    padding: var(--spacing-3) var(--spacing-6);
+    position: relative;
+    border-radius: var(--radius-lg);
 }
 
+/* Основной список меню */
 .nav__list {
     display: flex;
     list-style: none;
+    padding: 0;
+    margin: 0;
+    align-items: center;
+    justify-content: space-between;
 }
 
+/* Основные пункты меню слева */
 .nav__item {
-    padding: var(--spacing-4) var(--spacing-6);
+    padding: 0 var(--spacing-2);
+    margin: 0;
 }
 
+/* Основные ссылки меню (Главная, Каталог, и т.д.) */
 .nav__link {
     color: var(--color-text-light);
     text-decoration: none;
-    transition: color var(--transition-normal);
+    transition: all var(--transition-normal);
     font-size: var(--font-size-sm);
-    padding: var(--spacing-1) var(--spacing-2);
-    border-radius: var(--radius-sm);
+    padding: var(--spacing-2) var(--spacing-4);
+    border-radius: var(--radius-md);
+    display: inline-block;
+    line-height: normal;
+    white-space: nowrap;
+    font-weight: var(--font-weight-medium);
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .nav__link:hover {
-    color: var(--color-accent);
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    transform: translateY(-2px);
 }
 
+/* Активная ссылка */
 .nav__link--active {
-    color: var(--color-accent);
+    color: var(--color-text-light);
     font-weight: var(--font-weight-bold);
-    background-color: rgba(255, 255, 255, 0.15);
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
 }
 
-/* Адаптивность для header */
-@media (max-width: var(--breakpoint-md)) {
+/* ========== КОНТЕЙНЕР АВТОРИЗАЦИИ (ВСЕ 4 КНОПКИ) ========== */
+
+/* Контейнер для всех кнопок авторизации - правый блок */
+.nav-auth-container {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    margin-left: auto;
+}
+
+/* Стиль для всех элементов в контейнере авторизации */
+.nav-auth-container .nav__item {
+    padding: 0;
+    margin: 0;
+}
+
+/* ОБЩИЙ СТИЛЬ ДЛЯ ВСЕХ 4-х КНОПОК АВТОРИЗАЦИИ */
+.nav-auth-container .nav__link,
+#logout-nav-link {
+    color: var(--color-text-light);
+    text-decoration: none;
+    transition: all var(--transition-normal);
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-2) var(--spacing-4);
+    border-radius: var(--radius-md);
+    display: inline-block;
+    line-height: normal;
+    white-space: nowrap;
+    font-weight: var(--font-weight-medium);
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    text-align: center;
+    font-family: inherit;
+}
+
+/* Ховер для всех кнопок */
+.nav-auth-container .nav__link:hover,
+#logout-nav-link:hover {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    transform: translateY(-2px);
+}
+
+/* Кнопка "Личный кабинет" - акцентный цвет */
+#profile-nav-link {
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-white);
+    font-weight: var(--font-weight-semibold);
+}
+
+#profile-nav-link:hover {
+    background-color: var(--color-accent-dark);
+    border-color: var(--color-accent-dark);
+}
+
+/* Кнопка "Выйти" - опасный цвет */
+#logout-nav-link {
+    background-color: var(--color-danger);
+    border-color: var(--color-danger);
+    color: var(--color-white);
+    font-weight: var(--font-weight-semibold);
+}
+
+#logout-nav-link:hover {
+    background-color: var(--color-danger-dark);
+    border-color: var(--color-danger-dark);
+}
+
+/* Скрываем "Личный кабинет" и "Выйти" по умолчанию */
+#profile-nav-link,
+#logout-nav-link {
+    display: none;
+}
+
+/* ================= БУРГЕР-МЕНЮ С ЮНИКОД ================= */
+
+/* Контейнер для бургера - скрыт на десктопе */
+.nav__burger-container {
+    display: none;
+}
+
+/* Кнопка бургера с юникод иконками - скрыта на десктопе */
+.nav__burger {
+    display: none;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    padding: var(--spacing-3) 0;
+    margin: 0;
+    width: 100%;
+    max-width: 400px;
+    height: 48px;
+    position: relative;
+    border-radius: var(--radius-md);
+    transition: all var(--transition-normal);
+    color: var(--color-white);
+    font-size: 24px;
+}
+
+.nav__burger:hover {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.nav__burger.active {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+}
+
+/* Юникод иконки для бургера */
+.burger-icon,
+.close-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: all 0.3s ease;
+    font-size: 24px;
+    line-height: 1;
+}
+
+/* Крестик скрыт по умолчанию */
+.close-icon {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(90deg);
+}
+
+/* Когда меню открыто: скрываем бургер, показываем крестик */
+.nav__burger.active .burger-icon {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-90deg);
+}
+
+.nav__burger.active .close-icon {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(0deg);
+}
+
+/* ================= АДАПТИВНОСТЬ ================= */
+
+/* Планшет */
+@media (max-width: 992px) {
+    .search {
+        max-width: 400px;
+        margin: 0 var(--spacing-4);
+    }
+    
+    .nav {
+        padding: var(--spacing-2) var(--spacing-4);
+    }
+    
+    .nav__item {
+        padding: 0 var(--spacing-1);
+    }
+    
+    .nav__link {
+        padding: var(--spacing-2) var(--spacing-3);
+        font-size: var(--font-size-xs);
+    }
+    
+    /* Кнопки авторизации на планшете */
+    .nav-auth-container .nav__link,
+    #logout-nav-link {
+        padding: var(--spacing-2) var(--spacing-3);
+        font-size: var(--font-size-xs);
+    }
+    
+    .nav-auth-container {
+        gap: var(--spacing-1);
+    }
+}
+
+/* Мобильные (бургер-меню) */
+@media (max-width: 768px) {
     .header__container {
         flex-direction: column;
         gap: var(--spacing-4);
     }
     
+    /* Логотип */
     .header__logo {
         order: 1;
-        margin-bottom: var(--spacing-2);
-    }
-    
-    .header__contacts {
-        order: 2;
-    }
-    
-    .search {
-        margin: var(--spacing-3) 0;
-        max-width: 100%;
-        order: 4;
         width: 100%;
-    }
-    
-    .cart {
-        order: 3;
-    }
-    
-    .nav {
-        order: 5;
-        width: 100%;
-        margin-top: var(--spacing-3);
-    }
-    
-    .nav__list {
-        flex-wrap: wrap;
         justify-content: center;
+        padding: var(--spacing-3) 0;
     }
     
-    .nav__item {
-        padding: var(--spacing-2) var(--spacing-3);
+    /* Телефон - СКРЫВАЕМ на мобильных */
+    .header__contacts {
+        display: none;
+    }
+    
+    /* Поиск */
+    .search {
+        order: 3;
+        margin: var(--spacing-2) auto;
+        max-width: 100%;
+        width: 100%;
+        max-width: 400px;
+    }
+    
+    /* Корзина */
+    .cart {
+        order: 2;
+        width: 100%;
+        max-width: 200px;
+        margin: var(--spacing-2) auto;
+        padding: var(--spacing-3);
+        justify-content: center;
+        font-size: var(--font-size-lg);
+    }
+    
+    .cart__icon {
+        font-size: var(--font-size-xl);
+        margin-right: var(--spacing-3);
+    }
+    
+    .cart__text {
+        font-size: var(--font-size-lg);
+    }
+    
+    .cart__count {
+        width: 26px;
+        height: 26px;
+        font-size: var(--font-size-sm);
+        top: -10px;
+        right: -10px;
     }
     
     .search__input,
     .search__button {
-        padding: var(--spacing-2) var(--spacing-3);
+        padding: var(--spacing-3);
+        font-size: var(--font-size-base);
+    }
+    
+    .search__button {
+        min-width: 100px;
+    }
+    
+    /* Навигация на мобильных */
+    .nav {
+        order: 4;
+        width: 100%;
+        margin: var(--spacing-3) auto 0 auto;
+        padding: 0;
+        border-radius: 0;
+        background: var(--color-primary-dark);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Скрываем основное меню на мобильных */
+    .nav__list {
+        display: none;
+    }
+    
+    /* ПОКАЗЫВАЕМ КОНТЕЙНЕР БУРГЕРА */
+    .nav__burger-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        padding: var(--spacing-3);
+        background: var(--color-primary-dark);
+        min-height: 60px;
+    }
+    
+    /* Кнопка бургера с юникод - ТАКОЙ ЖЕ ДЛИНЫ КАК ПОИСК */
+    .nav__burger {
+        display: block;
+    }
+    
+    /* Мобильное меню - показывается при активном бургере */
+    .nav__list.active {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        background: var(--color-primary-dark);
+        position: absolute;
+        top: 100%;
+        left: 0;
+        z-index: 1000;
+        padding: var(--spacing-3) 0;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        overflow-y: visible; /* БЕЗ внутреннего прокрута */
+        border-radius: 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Элементы меню на мобильных */
+    .nav__list.active .nav__item {
+        width: 90%;
+        text-align: center;
+        padding: 0;
+        margin: var(--spacing-2) auto;
+        border-bottom: none;
+    }
+    
+    /* Ссылки в бургер-меню */
+    .nav__list.active .nav__link {
+        display: block;
+        width: 100%;
+        padding: var(--spacing-3);
+        font-size: var(--font-size-base);
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: var(--radius-md);
+        margin: var(--spacing-1) 0;
+        text-align: center;
+        font-weight: var(--font-weight-medium);
+    }
+    
+    .nav__list.active .nav__link:hover {
+        background: var(--color-accent);
+        border-color: var(--color-accent);
+        transform: translateY(-2px);
+    }
+    
+    .nav__list.active .nav__link--active {
+        background: var(--color-accent);
+        border-color: var(--color-accent);
+    }
+    
+    /* Контейнер авторизации в бургер-меню */
+    .nav__list.active .nav-auth-container {
+        flex-direction: column;
+        width: 90%;
+        margin: var(--spacing-3) auto;
+        padding: var(--spacing-3);
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: var(--radius-md);
+        gap: var(--spacing-2);
+    }
+    
+    .nav__list.active .nav-auth-container .nav__item {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+    
+    /* Все 4 кнопки авторизации в бургер-меню */
+    .nav__list.active .nav-auth-container .nav__link,
+    .nav__list.active #logout-nav-link {
+        display: block;
+        width: 100%;
+        padding: var(--spacing-3);
+        font-size: var(--font-size-base);
+        margin: var(--spacing-1) 0;
+        text-align: center;
+        border-radius: var(--radius-md);
+    }
+    
+    /* На мобильных показываем ВСЕ кнопки авторизации */
+    .nav__list.active #profile-nav-link,
+    .nav__list.active #logout-nav-link {
+        display: block;
     }
 }
 
-@media (max-width: var(--breakpoint-sm)) {
-    .header__phone {
-        font-size: var(--font-size-sm);
+/* Маленькие мобильные */
+@media (max-width: 576px) {
+    .header__logo {
+        font-size: var(--font-size-lg);
     }
     
-    .cart__text {
-        display: none;
+    .logo__image {
+        height: 32px;
     }
     
     .cart {
         padding: var(--spacing-2);
+        max-width: 180px;
     }
     
-    .nav__link {
+    .cart__icon {
+        font-size: var(--font-size-lg);
+        margin-right: var(--spacing-2);
+    }
+    
+    .cart__text {
+        font-size: var(--font-size-md);
+    }
+    
+    .cart__count {
+        width: 22px;
+        height: 22px;
         font-size: var(--font-size-xs);
-        padding: var(--spacing-1);
+        top: -8px;
+        right: -8px;
+    }
+    
+    .search {
+        max-width: 350px;
+    }
+    
+    .search__input {
+        padding: var(--spacing-2);
+        font-size: var(--font-size-sm);
+    }
+    
+    .search__button {
+        padding: var(--spacing-2);
+        font-size: var(--font-size-sm);
+        min-width: 80px;
+    }
+    
+    /* Бургер кнопка на маленьких экранах - ТАКОЙ ЖЕ ДЛИНЫ КАК ПОИСК */
+    .nav__burger {
+        max-width: 350px;
+        height: 44px;
+        padding: var(--spacing-2) 0;
+        font-size: 22px;
+    }
+    
+    .nav__link,
+    .nav-auth-container .nav__link,
+    #logout-nav-link {
+        font-size: var(--font-size-sm);
+        padding: var(--spacing-2);
     }
 }
