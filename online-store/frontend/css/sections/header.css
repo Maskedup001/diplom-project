@@ -209,7 +209,7 @@
 .nav-auth-container {
     display: flex;
     align-items: center;
-    gap: var(--spacing-2);
+    gap: var(--spacing-4);
     margin-left: auto;
 }
 
@@ -628,4 +628,48 @@
         font-size: var(--font-size-sm);
         padding: var(--spacing-2);
     }
+}
+
+
+
+/* ================= ИКОНКА ПРОФИЛЯ ================= */
+
+/* Иконка профиля в кнопке "Личный кабинет" */
+.profile-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 8px;
+    display: inline-block;
+    vertical-align: text-bottom;
+    filter: brightness(0) invert(1) drop-shadow(0 0 0.5px white); /* Добавил тень для жирности */
+    opacity: 0.9;
+    transition: all var(--transition-fast);
+}
+
+/* При наведении на ссылку с иконкой */
+#profile-nav-link:hover .profile-icon {
+    opacity: 1;
+    /* transform: scale(1.1); */
+}
+
+/* На мобильных увеличиваем иконку */
+@media (max-width: 768px) {
+    .profile-icon {
+        width: 18px;
+        height: 18px;
+        margin-right: 10px;
+        vertical-align: middle;
+    }
+}
+
+/* Убедимся что текст ровный */
+#profile-nav-link {
+    line-height: normal;
+    white-space: nowrap;
+}
+
+#profile-nav-link span {
+    display: inline-block;
+    vertical-align: middle;
+    line-height: normal;
 }

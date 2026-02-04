@@ -29,10 +29,35 @@ function updateHeaderAuth() {
         
         // Обновляем текст кнопки "Личный кабинет" с именем пользователя
         if (user.username) {
-            profileLink.textContent = isMobile ? `👤 ${user.username}` : user.username;
+            if (isMobile) {
+                // На мобильных: иконка + имя
+                profileLink.innerHTML = `
+                    <img src="images/components/person-profile.png" alt="Профиль" class="profile-icon">
+                    ${user.username}
+                `;
+            } else {
+                // На десктопе: иконка + имя (укороченное)
+                const shortName = user.username.length > 15 ? 
+                    user.username.substring(0, 12) + '...' : user.username;
+                profileLink.innerHTML = `
+                    <img src="images/components/person-profile.png" alt="Профиль" class="profile-icon">
+                    ${shortName}
+                `;
+            }
             profileLink.title = 'Личный кабинет';
         } else {
-            profileLink.textContent = 'Личный кабинет';
+            // Если нет имени, оставляем стандартный текст
+            if (isMobile) {
+                profileLink.innerHTML = `
+                    <img src="images/components/person-profile.png" alt="Профиль" class="profile-icon">
+                    Личный кабинет
+                `;
+            } else {
+                profileLink.innerHTML = `
+                    <img src="images/components/person-profile.png" alt="Профиль" class="profile-icon">
+                    Личный кабинет
+                `;
+            }
             profileLink.title = 'Личный кабинет';
         }
         
@@ -91,9 +116,12 @@ function logout() {
 // Обновляем при изменении размера окна
 window.addEventListener('resize', updateHeaderAuth);
 
-// Обновляем при любом клике (на случай если меняется авторизация)
-document.addEventListener('click', function() {
-    setTimeout(updateHeaderAuth, 100);
+// Обновляем при клике на бургер-меню (но не на другие элементы)
+document.addEventListener('click', function(e) {
+    // Обновляем только если кликнули на бургер или на ссылку в меню
+    if (e.target.closest('#nav-burger') || e.target.closest('.nav__link')) {
+        setTimeout(updateHeaderAuth, 100);
+    }
 });
 
 // Экспортируем для использования в других файлах
