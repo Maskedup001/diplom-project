@@ -430,6 +430,8 @@ class Catalog {
 
   // Скролл к заголовку каталога (после хедера)
   scrollToCatalogTitle() {
+		// Не скроллим на мобильных устройствах
+		if (window.innerWidth <= 768) return;
     const catalogTitle = document.querySelector('.catalog__title');
     if (catalogTitle) {
       const headerHeight = 80; // Высота хедера

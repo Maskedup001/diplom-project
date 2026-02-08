@@ -611,9 +611,9 @@
 /* Модальное окно для фильтров */
 .modal--filters .modal__content {
     max-width: 500px;
-    width: 90%;
+    width: 100%;
     max-height: 85vh;
-    display: flex;
+    display: flex;																	/*ПОСМОТРЕТЬ ПОТОМ ЭТОТ БЛОК НА ОПТИМИЗАЦИЮ*/
     flex-direction: column;
     padding: var(--spacing-6);
     background: var(--color-bg-card);
@@ -654,11 +654,37 @@
     color: var(--color-white);
 }
 
+/* ПРОКРУТКА ДЛЯ ТЕЛА МОДАЛЬНОГО ОКНА */
 .modal--filters .modal__body {
     flex: 1;
     overflow-y: auto;
     padding-right: var(--spacing-2);
     margin-bottom: var(--spacing-4);
+    max-height: calc(70vh - 120px); /* Ограничиваем высоту для прокрутки */
+    
+    /* Стили скроллбара */
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-primary) var(--color-border-light);
+}
+
+/* Стили для скроллбара в WebKit браузерах */
+.modal--filters .modal__body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal--filters .modal__body::-webkit-scrollbar-track {
+    background: var(--color-border-light);
+    border-radius: 3px;
+    margin: 4px 0;
+}
+
+.modal--filters .modal__body::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: 3px;
+}
+
+.modal--filters .modal__body::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary-dark);
 }
 
 .modal--filters .modal__footer {
@@ -679,14 +705,24 @@
 /* Адаптация фильтров для мобильных */
 .modal--filters .catalog-filters {
     width: 100%;
+    max-width: 100%;
     position: static;
     padding: 0;
+    margin: 0;
     box-shadow: none;
     border: none;
     background: transparent;
 }
 
+/* Контейнер фильтров занимает всю ширину */
+#mobile-filters-container {
+    width: 100%;
+}
+
+/* Каждая группа фильтров на всю ширину */
 .modal--filters .filter-group {
+    width: 100%;
+    max-width: 100%;
     margin-bottom: var(--spacing-8);
     padding-bottom: var(--spacing-8);
     border-bottom: 1px solid var(--color-border);
@@ -703,11 +739,15 @@
     margin-bottom: var(--spacing-4);
     font-weight: var(--font-weight-semibold);
     color: var(--color-text-primary);
+    width: 100%;
 }
 
+/* Чекбоксы на всю ширину */
 .modal--filters .filter-checkbox {
+    display: flex;
+    width: 100%;
     padding: var(--spacing-3);
-    margin: 0 calc(-1 * var(--spacing-3));
+    margin: 0;
     border-radius: var(--radius-md);
     transition: background-color var(--transition-fast);
 }
@@ -719,21 +759,43 @@
 .modal--filters .filter-checkbox__input {
     width: 20px;
     height: 20px;
+    margin-right: var(--spacing-3);
 }
 
 .modal--filters .filter-checkbox__label {
+    flex: 1;
     font-size: var(--font-size-base);
     font-weight: var(--font-weight-medium);
 }
 
+/* Поля цены на всю ширину */
+.modal--filters .price-range {
+    width: 100%;
+}
+
+.modal--filters .price-range__inputs {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-2);
+}
+
 .modal--filters .price-range__input {
-    width: 110px;
+    flex: 1;
+    min-width: 0;
+    width: auto;
     padding: var(--spacing-2) var(--spacing-3);
     font-size: var(--font-size-base);
 }
 
 .modal--filters .price-range__slider {
+    width: 100%;
     margin: var(--spacing-4) 0 var(--spacing-6);
+}
+
+.modal--filters .price-range__slider-input {
+    width: 100%;
 }
 
 .modal--filters .price-range__slider-input::-webkit-slider-thumb {
@@ -801,35 +863,6 @@
         width: 100%;
         padding: var(--spacing-2) var(--spacing-3);
     }
-    
-    /* Улучшаем сетку товаров */
-    .products-grid {
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        gap: var(--spacing-4);
-    }
-    
-    .product-card__image {
-        height: 160px;
-    }
-    
-    .product-card__content {
-        padding: var(--spacing-3);
-    }
-    
-    .product-card__title {
-        font-size: var(--font-size-sm);
-    }
-    
-    .product-card__footer {
-        flex-direction: column;
-        align-items: stretch;
-        gap: var(--spacing-2);
-    }
-    
-    .product-card__button {
-        width: 100%;
-        padding: var(--spacing-2);
-    }
 }
 
 @media (min-width: 769px) {
@@ -853,27 +886,17 @@
     }
 }
 
-/* Темный режим поддержка */
-@media (prefers-color-scheme: dark) {
-    .modal--filters .modal__content {
-        background: var(--color-neutral-800);
-        border: 1px solid var(--color-neutral-700);
-    }
-    
-    .modal--filters .filter-checkbox:hover {
-        background: var(--color-neutral-700);
-    }
-    
-    .modal--filters .modal__header {
-        border-bottom-color: var(--color-neutral-700);
-    }
-    
-    .modal--filters .modal__footer {
-        border-top-color: var(--color-neutral-700);
-    }
-    
-    .modal--filters .filter-group {
-        border-bottom-color: var(--color-neutral-700);
+/* Адаптивность высоты для очень маленьких экранов */
+@media (max-height: 700px) {
+    .modal--filters .modal__body {
+        max-height: calc(60vh - 120px);
     }
 }
+
+@media (max-height: 500px) {
+    .modal--filters .modal__body {
+        max-height: calc(50vh - 120px);
+    }
+}
+
 
