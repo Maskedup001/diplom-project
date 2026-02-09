@@ -1,177 +1,198 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Личный кабинет – ТехноМир</title>
-    <link rel="stylesheet" href="css/styles.css">
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Личный кабинет – ТехноМир</title>
+	<link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body class="page">
-    
-    <!-- Шапка сайта -->
-    <header class="header">
-    <div class="container header__container">
-        <!-- Логотип -->
-        <a href="index.html" class="logo header__logo">
-            <img src="images\favicon\favicon.png" alt="Логотип ТехноМир" class="logo__image">
-            <span class="logo__text">ТехноМир</span>
-        </a>
 
-        <!-- Поиск -->
-        <form class="search header__search" action="catalog.html" method="get">
-            <input type="text" class="search__input" placeholder="Найти товар..." name="find">
-            <button type="submit" class="button search__button">Найти</button>
-        </form>
+	<!-- Шапка сайта -->
+	<header class="header">
+		<div class="container header__container">
+			<!-- Логотип -->
+			<a href="index.html" class="logo header__logo">
+				<img src="images\favicon\favicon.png" alt="Логотип ТехноМир" class="logo__image">
+				<span class="logo__text">ТехноМир</span>
+			</a>
 
-        <!-- Контакты -->
-        <div class="header__contacts">
-            <a href="tel:+74950000000" class="header__phone">
-                <span class="header__phone-icon">📞</span>
-                <span>+7 (495) 000-00-00</span>
-            </a>
-        </div>
+			<!-- Поиск -->
+			<form class="search header__search" action="catalog.html" method="get">
+				<input type="text" class="search__input" placeholder="Найти товар..." name="find">
+				<button type="submit" class="button search__button">Найти</button>
+			</form>
 
-        <!-- Корзина -->
-        <a href="cart.html" class="cart header__cart">
-            <span class="cart__icon">🛒</span>
-            <span class="cart__count">0</span>
-            <span class="cart__text">Корзина</span>
-        </a>
-    </div>
+			<!-- Контакты -->
+			<div class="header__contacts">
+				<a href="tel:+74950000000" class="header__phone">
+					<span class="header__phone-icon">📞</span>
+					<span>+7 (495) 000-00-00</span>
+				</a>
+			</div>
 
-    <!-- Главное меню навигации -->
-    <nav class="nav container">
-        <ul class="nav__list" id="main-nav">
-            <li class="nav__item"><a href="index.html" class="nav__link">Главная</a></li>
-            <li class="nav__item"><a href="catalog.html" class="nav__link">Каталог</a></li>
-            <li class="nav__item"><a href="#actions" class="nav__link">Акции</a></li>
-            <li class="nav__item"><a href="#delivery" class="nav__link">Доставка</a></li>
-            <li class="nav__item"><a href="#about" class="nav__link">О нас</a></li>
-            <li class="nav__item"><a href="#contacts" class="nav__link">Контакты</a></li>
-            
-            <!-- Контейнер для авторизационных ссылок -->
-            <div class="nav-auth-container">
-                <li class="nav__item"><a href="login.html" class="nav__link" id="login-nav-link">Войти</a></li>
-                <li class="nav__item"><a href="register.html" class="nav__link" id="register-nav-link">Регистрация</a></li>
-                <li class="nav__item"><a href="profile.html" class="nav__link nav__link--active" id="profile-nav-link">Личный кабинет</a></li>
-                <li class="nav__item"><button class="nav__link" id="logout-nav-link">Выйти</button></li>
-            </div>
-        </ul>
-        
-        <!-- Бургер-кнопка -->
-        <div class="nav__burger-container">
-            <button class="nav__burger" id="nav-burger" aria-label="Меню">
-                <span class="burger-icon">☰</span>
-                <span class="close-icon">✕</span>
-            </button>
-        </div>
-    </nav>
-</header>
+			<!-- Корзина -->
+			<a href="cart.html" class="cart header__cart">
+				<span class="cart__icon">🛒</span>
+				<span class="cart__count">0</span>
+				<span class="cart__text">Корзина</span>
+			</a>
+		</div>
 
-    <!-- Основное содержимое -->
-    <main class="main">
-        <div class="container container--narrow">
-            <div class="profile-card">
-                <h1 class="profile-card__title">Личный кабинет</h1>
-                
-                <!-- Информация о пользователе -->
-                <div class="profile-card__section">
-                    <h2 class="profile-card__subtitle">Данные профиля</h2>
-                    <div class="profile-card__info">
-                        <div class="profile-card__field">
-                            <span class="profile-card__label">Имя:</span>
-                            <span id="user-name" class="profile-card__value">Загрузка...</span>
-                        </div>
-                        <div class="profile-card__field">
-                            <span class="profile-card__label">Email:</span>
-                            <span id="user-email" class="profile-card__value">Загрузка...</span>
-                        </div>
-                        <div class="profile-card__field">
-                            <span class="profile-card__label">Дата регистрации:</span>
-                            <span id="user-created" class="profile-card__value">Загрузка...</span>
-                        </div>
-                    </div>
-                    <button id="edit-profile-btn" class="button button--primary button--full">Редактировать профиль</button>
-                </div>
+		<!-- Главное меню навигации -->
+		<nav class="nav container">
+			<ul class="nav__list" id="main-nav">
+				<li class="nav__item"><a href="index.html" class="nav__link">Главная</a></li>
+				<li class="nav__item"><a href="catalog.html" class="nav__link">Каталог</a></li>
+				<li class="nav__item"><a href="#actions" class="nav__link">Акции</a></li>
+				<li class="nav__item"><a href="#delivery" class="nav__link">Доставка</a></li>
+				<li class="nav__item"><a href="#about" class="nav__link">О нас</a></li>
+				<li class="nav__item"><a href="#contacts" class="nav__link">Контакты</a></li>
 
-                <!-- История заказов -->
-                <div class="profile-card__section">
-                    <h2 class="profile-card__subtitle">История заказов</h2>
-                    <div class="profile-card__orders" id="orders-list">
-                        <div class="profile-card__empty">
-                            <p>У вас пока нет заказов</p>
-                            <a href="catalog.html" class="button button--secondary">Перейти в каталог</a>
-                        </div>
-                    </div>
-                </div>
+				<!-- Контейнер для авторизационных ссылок -->
+				<div class="nav-auth-container">
+					<li class="nav__item"><a href="login.html" class="nav__link" id="login-nav-link">Войти</a></li>
+					<li class="nav__item"><a href="register.html" class="nav__link" id="register-nav-link">Регистрация</a></li>
+					<li class="nav__item"><a href="profile.html" class="nav__link nav__link--active" id="profile-nav-link">Личный
+							кабинет</a></li>
+					<li class="nav__item"><button class="nav__link" id="logout-nav-link">Выйти</button></li>
+				</div>
+			</ul>
 
-                <!-- Действия -->
-                <div class="profile-card__section">
-                    <h2 class="profile-card__subtitle">Действия</h2>
-                    <div class="profile-card__actions">
-                        <button id="logout-btn" class="button button--danger button--full">Выйти из аккаунта</button>
-                        <button id="delete-account-btn" class="button button--outline button--full">Удалить аккаунт</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
+			<!-- Бургер-кнопка -->
+			<div class="nav__burger-container">
+				<button class="nav__burger" id="nav-burger" aria-label="Меню">
+					<span class="burger-icon">☰</span>
+					<span class="close-icon">✕</span>
+				</button>
+			</div>
+		</nav>
+	</header>
 
-    <!-- Подвал сайта -->
-    <footer class="footer">
-        <div class="container footer__container">
-            <div class="footer__section">
-                <h3 class="footer__title">О магазине</h3>
-                <p class="footer__text">«ТехноМир» — современный интернет-магазин электроники и бытовой техники с 2015 года.</p>
-            </div>
-            <div class="footer__section">
-                <h3 class="footer__title">Контакты</h3>
-                <p class="footer__text">📞 +7 (495) 000-00-00<br>📍 Москва, ул. Техническая, д. 10<br>✉️ info@technomir.ru</p>
-            </div>
-            <div class="footer__section">
-                <h3 class="footer__title">Мы в соцсетях</h3>
-                <div class="social footer__social">
-                    <a href="#" class="social__link">VK</a>
-                    <a href="#" class="social__link">TG</a>
-                    <a href="#" class="social__link">YouTube</a>
-                </div>
-            </div>
-        </div>
-        <div class="footer__copyright">© 2023 ТехноМир. Все права защищены.</div>
-    </footer>
+	<!-- Основное содержимое -->
+	<main class="main">
+		<div class="container container--narrow">
+			<div class="profile-card">
+				<h1 class="profile-card__title">Личный кабинет</h1>
 
-    <!-- Модальное окно редактирования профиля -->
-    <div class="modal modal--profile" id="edit-modal">
-        <div class="modal__content">
-            <button class="modal__close" data-modal-close="edit-modal">×</button>
-            <h2 class="modal__title">Редактировать профиль</h2>
-            <form id="edit-profile-form" class="form">
-                <!-- Только поля из регистрации -->
-                <div class="form__group">
-                    <label for="edit-name" class="form__label">Имя:</label>
-                    <input type="text" id="edit-name" class="form__input" name="name" required>
-                </div>
-                <div class="form__group">
-                    <label for="edit-email" class="form__label">Email:</label>
-                    <input type="email" id="edit-email" class="form__input" name="email" required>
-                </div>
-                <div class="modal__buttons">
-                    <button type="button" class="button button--outline" data-modal-close="edit-modal">Отмена</button>
-                    <button type="submit" class="button button--primary">Сохранить изменения</button>
-                </div>
-            </form>
-        </div>
-    </div>
+				<!-- Информация о пользователе -->
+				<div class="profile-card__section">
+					<h2 class="profile-card__subtitle">Данные профиля</h2>
+					<!-- В основном блоке информации о пользователе -->
+					<div class="profile-card__info">
+						<div class="profile-card__field">
+							<span class="profile-card__label">Имя пользователя:</span>
+							<span id="user-username" class="profile-card__value">Загрузка...</span>
+						</div>
+						<div class="profile-card__field">
+							<span class="profile-card__label">Полное имя:</span>
+							<span id="user-name" class="profile-card__value">Загрузка...</span>
+						</div>
+						<div class="profile-card__field">
+							<span class="profile-card__label">Email:</span>
+							<span id="user-email" class="profile-card__value">Загрузка...</span>
+						</div>
+						<div class="profile-card__field">
+							<span class="profile-card__label">Телефон:</span>
+							<span id="user-phone" class="profile-card__value">Не указан</span> <!-- ДОБАВИЛ ТЕЛЕФОН -->
+						</div>
+						<div class="profile-card__field">
+							<span class="profile-card__label">Дата регистрации:</span>
+							<span id="user-created" class="profile-card__value">Загрузка...</span>
+						</div>
+					</div>
+					<button id="edit-profile-btn" class="button button--primary button--full">Редактировать профиль</button>
+				</div>
 
-    <!-- Затемнение фона -->
-    <div class="overlay" id="overlay"></div>
+				<!-- История заказов -->
+				<div class="profile-card__section">
+					<h2 class="profile-card__subtitle">История заказов</h2>
+					<div class="profile-card__orders" id="orders-list">
+						<div class="profile-card__empty">
+							<p>У вас пока нет заказов</p>
+							<a href="catalog.html" class="button button--secondary">Перейти в каталог</a>
+						</div>
+					</div>
+				</div>
 
-    <!-- Подключение JavaScript -->
-    <script src="js/script.js"></script>
-		<script src="js/search.js"></script>
-		<script src="js/mobile-menu.js"></script>
-		<script src="js/header-auth.js"></script>
-		<script src="js/auth.js"></script>
-		<script src="js/profile.js"></script>
+				<!-- Действия -->
+				<div class="profile-card__section">
+					<h2 class="profile-card__subtitle">Действия</h2>
+					<div class="profile-card__actions">
+						<button id="logout-btn" class="button button--danger button--full">Выйти из аккаунта</button>
+						<button id="delete-account-btn" class="button button--outline button--full">Удалить аккаунт</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+
+	<!-- Подвал сайта -->
+	<footer class="footer">
+		<div class="container footer__container">
+			<div class="footer__section">
+				<h3 class="footer__title">О магазине</h3>
+				<p class="footer__text">«ТехноМир» — современный интернет-магазин электроники и бытовой техники с 2015 года.</p>
+			</div>
+			<div class="footer__section">
+				<h3 class="footer__title">Контакты</h3>
+				<p class="footer__text">📞 +7 (495) 000-00-00<br>📍 Москва, ул. Техническая, д. 10<br>✉️ info@technomir.ru</p>
+			</div>
+			<div class="footer__section">
+				<h3 class="footer__title">Мы в соцсетях</h3>
+				<div class="social footer__social">
+					<a href="#" class="social__link">VK</a>
+					<a href="#" class="social__link">TG</a>
+					<a href="#" class="social__link">YouTube</a>
+				</div>
+			</div>
+		</div>
+		<div class="footer__copyright">© 2023 ТехноМир. Все права защищены.</div>
+	</footer>
+
+	<!-- Модальное окно редактирования профиля -->
+	<div class="modal modal--profile" id="edit-modal">
+		<div class="modal__content">
+			<button class="modal__close" data-modal-close="edit-modal">×</button>
+			<h2 class="modal__title">Редактировать профиль</h2>
+			<!-- В модальном окне редактирования -->
+			<form id="edit-profile-form" class="form">
+				<div class="form__group">
+					<label for="edit-username" class="form__label">Имя пользователя (логин):</label>
+					<input type="text" id="edit-username" class="form__input" name="username" required>
+				</div>
+
+				<div class="form__group">
+					<label for="edit-name" class="form__label">Полное имя:</label>
+					<input type="text" id="edit-name" class="form__input" name="full_name" required>
+				</div>
+
+				<div class="form__group">
+					<label for="edit-email" class="form__label">Email:</label>
+					<input type="email" id="edit-email" class="form__input" name="email" required>
+				</div>
+
+				<div class="form__group">
+					<label for="edit-phone" class="form__label">Телефон:</label>
+					<input type="tel" id="edit-phone" class="form__input" name="phone">
+				</div>
+
+				<button type="submit" class="button button--primary form__submit">Сохранить изменения</button>
+			</form>
+		</div>
+	</div>
+
+	<!-- Затемнение фона -->
+	<div class="overlay" id="overlay"></div>
+
+	<!-- Подключение JavaScript -->
+	<script src="js/script.js"></script>
+	<script src="js/search.js"></script>
+	<script src="js/mobile-menu.js"></script>
+	<script src="js/header-auth.js"></script>
+	<script src="js/auth.js"></script>
+	<script src="js/profile.js"></script>
 </body>
 </html>

@@ -1,316 +1,333 @@
-// profile.js - личный кабинет
+// profile.js - РАБОЧИЙ КОД С CSS КЛАССАМИ
+const API_URL = 'http://localhost:3000/api';
 
-class ProfileModal {
-    constructor() {
-        this.modal = document.getElementById('edit-modal');
-        this.overlay = document.getElementById('overlay');
-        this.form = document.getElementById('edit-profile-form');
-        this.init();
-    }
+// ========== ГЛАВНАЯ ФУНКЦИЯ ==========
+document.addEventListener('DOMContentLoaded', async function() {
+    console.log('=== ЗАГРУЗКА profile.js ===');
     
-    init() {
-        console.log('ProfileModal: Инициализация');
-        this.setupEventListeners();
-    }
+    // 1. Проверяем авторизацию
+    const user = await checkAuth();
+    if (!user) return;
     
-    setupEventListeners() {
-        // Открытие модального окна
-        const editBtn = document.getElementById('edit-profile-btn');
-        if (editBtn) {
-            editBtn.addEventListener('click', () => this.open());
-        }
-        
-        // Закрытие по кнопке ×
-        const closeBtn = document.querySelector('[data-modal-close="edit-modal"]');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => this.close());
-        }
-        
-        // Закрытие по кнопке Отмена
-        const cancelBtn = document.querySelector('.modal__buttons .button--outline');
-        if (cancelBtn && cancelBtn.textContent.includes('Отмена')) {
-            cancelBtn.addEventListener('click', () => this.close());
-        }
-        
-        // Закрытие по клику на overlay
-        if (this.overlay) {
-            this.overlay.addEventListener('click', (e) => {
-                if (e.target === this.overlay) this.close();
-            });
-        }
-        
-        // Закрытие по Escape
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') this.close();
-        });
-        
-        // Отправка формы
-        if (this.form) {
-            this.form.addEventListener('submit', (e) => this.save(e));
-        }
-    }
+    // 2. Загружаем данные пользователя
+    await loadUserData();
     
-    open() {
-        console.log('ProfileModal: Открытие');
-        
-        if (!this.modal || !this.overlay) {
-            console.error('ProfileModal: Модальное окно или overlay не найдены');
-            return;
-        }
-        
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (!user) {
-            console.error('ProfileModal: Пользователь не найден');
-            return;
-        }
-        
-        // Заполняем форму
-        document.getElementById('edit-name').value = user.name || '';
-        document.getElementById('edit-email').value = user.email || '';
-        
-        // Показываем модальное окно
-        this.modal.classList.add('modal--active');
-        this.overlay.classList.add('overlay--active');
-        
-        // Блокируем скролл
-        document.body.style.overflow = 'hidden';
-        
-        console.log('ProfileModal: Окно открыто');
-    }
+    // 3. Настраиваем все обработчики
+    setupAllEventListeners();
     
-    close() {
-        console.log('ProfileModal: Закрытие');
-        
-        if (this.modal) this.modal.classList.remove('modal--active');
-        if (this.overlay) this.overlay.classList.remove('overlay--active');
-        
-        // Разблокируем скролл
-        document.body.style.overflow = '';
-    }
-    
-    save(event) {
-        event.preventDefault();
-        console.log('ProfileModal: Сохранение');
-        
-        const name = document.getElementById('edit-name').value.trim();
-        const email = document.getElementById('edit-email').value.trim();
-        
-        // Валидация
-        if (!name) {
-            alert('Введите имя');
-            return;
-        }
-        
-        if (!email) {
-            alert('Введите email');
-            return;
-        }
-        
-        if (!this.isValidEmail(email)) {
-            alert('Введите корректный email');
-            return;
-        }
-        
-        // Сохраняем данные
-        const user = JSON.parse(localStorage.getItem('user')) || {};
-        const users = JSON.parse(localStorage.getItem('users')) || [];
-        
-        const oldEmail = user.email;
-        
-        // Обновляем пользователя
-        user.name = name;
-        user.email = email;
-        localStorage.setItem('user', JSON.stringify(user));
-        
-        // Обновляем в массиве users
-        if (oldEmail) {
-            const userIndex = users.findIndex(u => u.email === oldEmail);
-            if (userIndex !== -1) {
-                users[userIndex].name = name;
-                users[userIndex].email = email;
-                localStorage.setItem('users', JSON.stringify(users));
-            }
-        }
-        
-        // Обновляем отображение
-        loadUserData();
-        
-        // Закрываем модальное окно
-        this.close();
-        
-        // Обновляем header
-        if (window.updateHeaderAuth) {
-            window.updateHeaderAuth();
-        }
-        
-        alert('Данные профиля обновлены');
-    }
-    
-    isValidEmail(email) {
-        return email.includes('@') && email.includes('.') && email.length > 5;
-    }
-}
-
-// Основной код профиля
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('profile.js: Загрузка');
-    
-    // Проверяем авторизацию
-    if (!checkAuth()) return;
-    
-    // Инициализируем модальное окно профиля
-    window.profileModal = new ProfileModal();
-    
-    // Загружаем данные пользователя
-    loadUserData();
-    
-    // Настраиваем другие обработчики
-    setupOtherEventListeners();
-    
-    // Обновляем header
-    updateProfilePageHeader();
+    console.log('✅ profile.js инициализирован');
 });
 
-function checkAuth() {
+// ========== АВТОРИЗАЦИЯ ==========
+async function checkAuth() {
+    const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user'));
     
-    if (!user) {
+    if (!token || !user) {
         alert('Для доступа к личному кабинету необходимо авторизоваться');
         window.location.href = 'login.html';
-        return false;
+        return null;
     }
     
-    console.log('Пользователь авторизован:', user);
-    return true;
+    return user;
 }
 
-function loadUserData() {
+// ========== ЗАГРУЗКА ДАННЫХ ==========
+async function loadUserData() {
+    const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user'));
     
-    if (user) {
-        document.getElementById('user-name').textContent = user.name || 'Не указано';
-        document.getElementById('user-email').textContent = user.email || 'Не указано';
+    try {
+        const response = await fetch(`${API_URL}/profile`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
         
-        if (user.createdAt) {
-            const date = new Date(user.createdAt);
-            document.getElementById('user-created').textContent = 
-                date.toLocaleDateString('ru-RU', {
-                    day: 'numeric',
-                    month: 'long',
-                    year: 'numeric'
-                });
+        if (response.ok) {
+            const result = await response.json();
+            
+            if (result.success && result.user) {
+                localStorage.setItem('user', JSON.stringify(result.user));
+                updateUserDisplay(result.user);
+                return;
+            }
+        }
+        
+        updateUserDisplay(user);
+        
+    } catch (error) {
+        console.error('Ошибка загрузки данных:', error);
+        updateUserDisplay(user);
+    }
+}
+
+// Обновление отображения пользователя
+function updateUserDisplay(user) {
+    const fields = [
+        { id: 'user-username', value: user.username || 'Не указано' },
+        { id: 'user-name', value: user.full_name || user.username || 'Не указано' },
+        { id: 'user-email', value: user.email || 'Не указано' },
+        { id: 'user-phone', value: user.phone || 'Не указано' }
+    ];
+    
+    fields.forEach(field => {
+        const element = document.getElementById(field.id);
+        if (element) element.textContent = field.value;
+    });
+    
+    const createdElement = document.getElementById('user-created');
+    if (createdElement) {
+        if (user.created_at) {
+            const date = new Date(user.created_at);
+            createdElement.textContent = date.toLocaleDateString('ru-RU');
         } else {
-            document.getElementById('user-created').textContent = 'Сегодня';
+            createdElement.textContent = 'Сегодня';
         }
     }
 }
 
-function setupOtherEventListeners() {
-    // Кнопка выхода в профиле
+// ========== ОБРАБОТЧИКИ СОБЫТИЙ ==========
+function setupAllEventListeners() {
+    // 1. Кнопка редактирования профиля
+    const editBtn = document.getElementById('edit-profile-btn');
+    if (editBtn) {
+        editBtn.addEventListener('click', openEditModal);
+    }
+    
+    // 2. Кнопка выхода
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', function() {
-            if (confirm('Вы уверены, что хотите выйти из аккаунта?')) {
-                logout();
-            }
-        });
-    }
-    
-    // Кнопка удаления аккаунта
-    const deleteBtn = document.getElementById('delete-account-btn');
-    if (deleteBtn) {
-        deleteBtn.addEventListener('click', function() {
-            if (confirm('ВНИМАНИЕ! Вы уверены, что хотите удалить аккаунт?\nЭто действие нельзя отменить.')) {
-                deleteAccount();
-            }
-        });
-    }
-    
-    // Кнопка "Выйти" в header
-    const logoutHeaderBtn = document.getElementById('logout-nav-link');
-    if (logoutHeaderBtn) {
-        logoutHeaderBtn.addEventListener('click', function(e) {
-            e.preventDefault();
+        logoutBtn.addEventListener('click', () => {
             if (confirm('Вы уверены, что хотите выйти?')) {
                 logout();
             }
         });
     }
-}
-
-function updateProfilePageHeader() {
-    const loginItem = document.getElementById('login-nav-item');
-    const registerItem = document.getElementById('register-nav-item');
-    const profileItem = document.getElementById('profile-nav-item');
-    const logoutItem = document.getElementById('logout-nav-item');
     
-    if (loginItem) loginItem.classList.add('nav__item--hidden');
-    if (registerItem) registerItem.classList.add('nav__item--hidden');
-    if (profileItem) profileItem.classList.remove('nav__item--hidden');
-    if (logoutItem) logoutItem.classList.remove('nav__item--hidden');
-    
-    const profileLink = document.getElementById('profile-nav-link');
-    if (profileLink) profileLink.classList.add('nav__link--active');
-}
-
-function logout() {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    
-    if (window.updateHeaderAuth) {
-        window.updateHeaderAuth();
+    // 3. Кнопка удаления аккаунта
+    const deleteBtn = document.getElementById('delete-account-btn');
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => {
+            if (confirm('Удалить аккаунт? Это действие нельзя отменить.')) {
+                deleteAccount();
+            }
+        });
     }
     
-    window.location.href = 'index.html';
+    // 4. Модальное окно редактирования
+    setupEditModalListeners();
 }
 
-function deleteAccount() {
-    const users = JSON.parse(localStorage.getItem('users')) || [];
+// ========== МОДАЛЬНОЕ ОКНО ==========
+function setupEditModalListeners() {
+    const modal = document.getElementById('edit-modal');
+    const overlay = document.getElementById('overlay');
+    const closeBtn = modal?.querySelector('.modal__close');
+    const cancelBtn = modal?.querySelector('.button--outline');
+    const form = document.getElementById('edit-profile-form');
+    
+    if (!modal || !overlay || !form) {
+        console.error('❌ Не найдены элементы модального окна');
+        return;
+    }
+    
+    // Закрытие по крестику
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeEditModal);
+    }
+    
+    // Закрытие по кнопке Отмена
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeEditModal);
+    }
+    
+    // Закрытие по overlay
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeEditModal();
+    });
+    
+    // Закрытие по ESC
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('modal--active')) {
+            closeEditModal();
+        }
+    });
+    
+    // Отправка формы
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await saveProfile();
+    });
+}
+
+// Открытие модального окна - ИСПРАВЛЕННЫЙ ВАРИАНТ
+function openEditModal() {
+    console.log('🟢 ОТКРЫВАЮ МОДАЛЬНОЕ ОКНО ЧЕРЕЗ CSS КЛАССЫ');
+    
+    const modal = document.getElementById('edit-modal');
+    const overlay = document.getElementById('overlay');
     const user = JSON.parse(localStorage.getItem('user'));
     
-    if (user && user.email) {
-        const updatedUsers = users.filter(u => u.email !== user.email);
-        localStorage.setItem('users', JSON.stringify(updatedUsers));
+    if (!modal || !overlay || !user) {
+        console.error('❌ Не найдены элементы для открытия модального окна');
+        return;
     }
     
+    // Заполняем форму
+    document.getElementById('edit-username').value = user.username || '';
+    document.getElementById('edit-name').value = user.full_name || user.username || '';
+    document.getElementById('edit-email').value = user.email || '';
+    document.getElementById('edit-phone').value = user.phone || '';
+    
+    // ПОКАЗЫВАЕМ ЧЕРЕЗ CSS КЛАССЫ (как в примере)
+    modal.classList.add('modal--active');
+    overlay.classList.add('overlay--active');
+    
+    // Блокируем скролл
+    document.body.style.overflow = 'hidden';
+    
+    console.log('✅ Модальное окно открыто через классы');
+}
+
+// Закрытие модального окна - ИСПРАВЛЕННЫЙ ВАРИАНТ
+function closeEditModal() {
+    console.log('🔴 ЗАКРЫВАЮ МОДАЛЬНОЕ ОКНО ЧЕРЕЗ CSS КЛАССЫ');
+    
+    const modal = document.getElementById('edit-modal');
+    const overlay = document.getElementById('overlay');
+    
+    if (modal) modal.classList.remove('modal--active');
+    if (overlay) overlay.classList.remove('overlay--active');
+    
+    // Разблокируем скролл
+    document.body.style.overflow = '';
+}
+
+// Сохранение профиля
+async function saveProfile() {
+    console.log('💾 Сохраняю профиль...');
+    
+    const username = document.getElementById('edit-username').value.trim();
+    const full_name = document.getElementById('edit-name').value.trim();
+    const email = document.getElementById('edit-email').value.trim();
+    const phone = document.getElementById('edit-phone').value.trim();
+    
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user'));
+    
+    // Валидация
+    if (!username || !email || !full_name) {
+        alert('Заполните все обязательные поля');
+        return;
+    }
+    
+    if (!isValidEmail(email)) {
+        alert('Введите корректный email');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_URL}/profile`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                username: username,
+                email: email,
+                full_name: full_name,
+                phone: phone
+            })
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Ошибка обновления профиля');
+        }
+        
+        const result = await response.json();
+        
+        // Обновляем localStorage
+        const updatedUser = {
+            ...user,
+            username: username,
+            email: email,
+            full_name: full_name,
+            phone: phone
+        };
+        
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        // Обновляем отображение
+        updateUserDisplay(updatedUser);
+        
+        // Закрываем модальное окно
+        closeEditModal();
+        
+        alert('✅ Профиль успешно обновлен!');
+        
+    } catch (error) {
+        console.error('Ошибка сохранения:', error);
+        alert(`❌ Ошибка: ${error.message}`);
+    }
+}
+
+// Проверка email
+function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+// ========== ВЫХОД И УДАЛЕНИЕ ==========
+function logout() {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     localStorage.removeItem('cart');
     
-    if (window.updateHeaderAuth) {
-        window.updateHeaderAuth();
+    if (typeof updateHeaderAuth === 'function') {
+        updateHeaderAuth();
     }
     
-    alert('Аккаунт успешно удален');
     window.location.href = 'index.html';
 }
 
-// Для тестирования
-window.mockLoginForTest = function() {
-    const testUser = {
-        id: 1,
-        name: 'Тестовый Пользователь',
-        email: 'test@example.com',
-        createdAt: new Date().toISOString()
-    };
+async function deleteAccount() {
+    const token = localStorage.getItem('token');
     
-    localStorage.setItem('user', JSON.stringify(testUser));
-    
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    if (!users.some(u => u.email === testUser.email)) {
-        users.push({
-            ...testUser,
-            password: 'test123'
+    try {
+        const response = await fetch(`${API_URL}/profile`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
         });
-        localStorage.setItem('users', JSON.stringify(users));
+        
+        if (!response.ok) {
+            throw new Error('Ошибка удаления аккаунта');
+        }
+        
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        localStorage.removeItem('cart');
+        
+        if (typeof updateHeaderAuth === 'function') {
+            updateHeaderAuth();
+        }
+        
+        alert('✅ Аккаунт успешно удален');
+        window.location.href = 'index.html';
+        
+    } catch (error) {
+        console.error('Ошибка удаления:', error);
+        alert('❌ Ошибка удаления аккаунта');
     }
-    
-    if (window.updateHeaderAuth) {
-        window.updateHeaderAuth();
-    }
-    
-    alert('Тестовый вход выполнен!');
-    window.location.reload();
+}
+
+// ========== ФУНКЦИИ ДЛЯ ОТЛАДКИ ==========
+window.debugProfile = {
+    openModal: openEditModal,
+    closeModal: closeEditModal,
+    saveProfile: saveProfile,
+    logout: logout,
+    deleteAccount: deleteAccount,
+    reloadData: loadUserData
 };
 
-console.log('profile.js: Инициализация завершена');
+console.log('✅ profile.js полностью загружен');

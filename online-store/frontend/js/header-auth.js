@@ -82,35 +82,37 @@ function updateHeaderAuth() {
 }
 
 function setupLogoutHandler() {
-    // Обработчик для кнопки "Выйти"
+    // Обработчик для кнопки "Выйти" С ПОДТВЕРЖДЕНИЕМ
     document.addEventListener('click', function(event) {
         if (event.target.id === 'logout-nav-link' || 
             event.target.closest('#logout-nav-link')) {
-            logout();
+            
+            // Показываем диалог подтверждения
+            if (confirm('Вы уверены, что хотите выйти из аккаунта?')) {
+                logout();
+            }
         }
     });
 }
 
 function logout() {
-    if (confirm('Вы уверены, что хотите выйти?')) {
-        // Очищаем данные пользователя
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-        localStorage.removeItem('cart');
-        
-        // Обновляем header
-        updateHeaderAuth();
-        
-        // Если мы на странице профиля - перенаправляем на главную
-        if (window.location.pathname.includes('profile.html')) {
-            window.location.href = 'index.html';
-        } else {
-            // На других страницах просто обновляем
-            location.reload();
-        }
-        
-        console.log('Выход выполнен');
+    // Очищаем данные пользователя
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('cart');
+    
+    // Обновляем header
+    updateHeaderAuth();
+    
+    // Если мы на странице профиля - перенаправляем на главную
+    if (window.location.pathname.includes('profile.html')) {
+        window.location.href = 'index.html';
+    } else {
+        // На других страницах просто обновляем
+        location.reload();
     }
+    
+    console.log('Выход выполнен');
 }
 
 // Обновляем при изменении размера окна

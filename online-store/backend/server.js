@@ -42,17 +42,30 @@ async function connectDB() {
         console.log('🔗 Подключаюсь к SQL Server...');
         pool = await sql.connect(dbConfig);
         console.log('✅ БД подключена успешно!');
-        
-        // Тестовый запрос
-        const result = await pool.request().query('SELECT 1 as test');
-        console.log('✅ Тестовый запрос выполнен');
-        
         return pool;
     } catch (err) {
-        console.error('❌ ОШИБКА ПОДКЛЮЧЕНИЯ К БД:', err.message);
-        console.error('Детали ошибки:', err);
+        console.error('❌ Ошибка подключения к БД:', err.message);
         return null;
     }
+}
+
+// Middleware для проверки JWT
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ error: 'Требуется авторизация' });
+    }
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) {
+            console.error('❌ Ошибка проверки токена:', err.message);
+            return res.status(403).json({ error: 'Неверный токен' });
+        }
+        req.user = user;
+        next();
+    });
 }
 
 // ========== API МАРШРУТЫ ==========
@@ -60,140 +73,67 @@ async function connectDB() {
 // Тест подключения к БД
 app.get('/api/db-test', async (req, res) => {
     try {
-        if (!pool) {
-            await connectDB();
-        }
+        if (!pool) await connectDB();
         
         if (pool) {
             const result = await pool.request().query('SELECT @@VERSION as version');
             res.json({
                 success: true,
                 message: '✅ БД подключена',
-                server: dbConfig.server,
-                database: dbConfig.database,
-                user: dbConfig.user,
                 version: result.recordset[0].version.substring(0, 100)
             });
         } else {
-            res.json({
-                success: false,
-                message: '❌ Не удалось подключиться к БД'
-            });
+            res.json({ success: false, message: '❌ Не удалось подключиться к БД' });
         }
     } catch (err) {
-        console.error('Ошибка в db-test:', err);
-        res.json({ 
-            success: false, 
-            error: err.message,
-            details: err.toString()
-        });
+        res.status(500).json({ error: err.message });
     }
 });
 
 // ========== АВТОРИЗАЦИЯ ==========
 
-// Регистрация - УПРОЩЕННЫЙ ВАРИАНТ
+// Регистрация
 app.post('/api/auth/register', async (req, res) => {
-    console.log('📝 Получен запрос на регистрацию');
-    console.log('Данные:', req.body);
-    
     try {
         const { username, email, password, full_name, phone } = req.body;
 
-        // Валидация
         if (!username || !email || !password) {
-            console.log('❌ Не все поля заполнены');
-            return res.status(400).json({ 
-                error: 'Заполните все обязательные поля',
-                received: req.body 
-            });
+            return res.status(400).json({ error: 'Заполните все обязательные поля' });
         }
 
-        // Подключаемся к БД если нет соединения
+        if (!pool) await connectDB();
         if (!pool) {
-            console.log('🔄 Подключаемся к БД...');
-            await connectDB();
-            if (!pool) {
-                console.log('❌ Нет подключения к БД');
-                return res.status(500).json({ error: 'Нет подключения к базе данных' });
-            }
+            return res.status(500).json({ error: 'Нет подключения к БД' });
         }
 
-        console.log('🔍 Проверяем существующего пользователя...');
-        
         // Проверяем есть ли такой пользователь
-        let userCheck;
-        try {
-            userCheck = await pool.request()
-                .input('email', sql.NVarChar, email)
-                .input('username', sql.NVarChar, username)
-                .query('SELECT id FROM Users WHERE email = @email OR username = @username');
-            
-            console.log('Результат проверки:', userCheck.recordset);
-        } catch (sqlErr) {
-            console.error('❌ ОШИБКА SQL при проверке пользователя:', sqlErr.message);
-            console.error('SQL детали:', sqlErr);
-            return res.status(500).json({ 
-                error: 'Ошибка проверки пользователя',
-                sqlError: sqlErr.message 
-            });
-        }
+        const userCheck = await pool.request()
+            .input('email', sql.NVarChar, email)
+            .input('username', sql.NVarChar, username)
+            .query('SELECT id FROM Users WHERE email = @email OR username = @username');
 
         if (userCheck.recordset.length > 0) {
-            console.log('❌ Пользователь уже существует');
-            return res.status(400).json({ 
-                error: 'Пользователь с таким email или именем уже существует',
-                existingUsers: userCheck.recordset 
-            });
+            return res.status(400).json({ error: 'Пользователь с таким email или именем уже существует' });
         }
 
-        console.log('🔐 Хешируем пароль...');
         // Хешируем пароль
-        let hashedPassword;
-        try {
-            hashedPassword = await bcrypt.hash(password, 10);
-            console.log('✅ Пароль захэширован');
-        } catch (hashErr) {
-            console.error('❌ Ошибка хеширования пароля:', hashErr);
-            return res.status(500).json({ error: 'Ошибка обработки пароля' });
-        }
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        console.log('👤 Создаем пользователя...');
         // Создаем пользователя
-        let result;
-        try {
-            result = await pool.request()
-                .input('username', sql.NVarChar, username)
-                .input('email', sql.NVarChar, email)
-                .input('password_hash', sql.NVarChar, hashedPassword)
-                .input('full_name', sql.NVarChar, full_name || null)
-                .input('phone', sql.NVarChar, phone || null)
-                .query(`
-                    INSERT INTO Users (username, email, password_hash, full_name, phone)
-                    OUTPUT INSERTED.id, INSERTED.username, INSERTED.email, INSERTED.full_name, INSERTED.created_at
-                    VALUES (@username, @email, @password_hash, @full_name, @phone)
-                `);
-            
-            console.log('✅ Пользователь создан:', result.recordset[0]);
-        } catch (insertErr) {
-            console.error('❌ ОШИБКА SQL при создании пользователя:', insertErr.message);
-            console.error('SQL код ошибки:', insertErr.code);
-            console.error('SQL номер ошибки:', insertErr.number);
-            console.error('SQL состояние:', insertErr.state);
-            console.error('SQL процедура:', insertErr.procName);
-            console.error('SQL текст:', insertErr.originalError?.info?.message);
-            
-            return res.status(500).json({ 
-                error: 'Ошибка создания пользователя в БД',
-                sqlError: insertErr.message,
-                sqlCode: insertErr.code,
-                sqlNumber: insertErr.number
-            });
-        }
+        const result = await pool.request()
+            .input('username', sql.NVarChar, username)
+            .input('email', sql.NVarChar, email)
+            .input('password_hash', sql.NVarChar, hashedPassword)
+            .input('full_name', sql.NVarChar, full_name || null)
+            .input('phone', sql.NVarChar, phone || null)
+            .query(`
+                INSERT INTO Users (username, email, password_hash, full_name, phone)
+                OUTPUT INSERTED.id, INSERTED.username, INSERTED.email, INSERTED.full_name, INSERTED.created_at
+                VALUES (@username, @email, @password_hash, @full_name, @phone)
+            `);
 
         const user = result.recordset[0];
 
-        console.log('🔑 Создаем JWT токен...');
         // Создаем JWT токен
         const token = jwt.sign(
             { 
@@ -204,10 +144,6 @@ app.post('/api/auth/register', async (req, res) => {
             JWT_SECRET, 
             { expiresIn: '7d' }
         );
-
-        console.log('✅ Регистрация успешна!');
-        console.log('Пользователь:', user);
-        console.log('Токен создан (длина:', token.length, 'символов)');
 
         res.json({
             success: true,
@@ -220,25 +156,17 @@ app.post('/api/auth/register', async (req, res) => {
                 phone: user.phone,
                 created_at: user.created_at
             },
-            token: token
+            token
         });
 
     } catch (err) {
-        console.error('❌ ОБЩАЯ ОШИБКА РЕГИСТРАЦИИ:', err);
-        console.error('Стек ошибки:', err.stack);
-        res.status(500).json({ 
-            error: 'Внутренняя ошибка сервера при регистрации',
-            details: err.message,
-            stack: err.stack
-        });
+        console.error('Ошибка регистрации:', err);
+        res.status(500).json({ error: 'Ошибка сервера при регистрации' });
     }
 });
 
-// Вход - УПРОЩЕННЫЙ
+// Вход
 app.post('/api/auth/login', async (req, res) => {
-    console.log('🔑 Получен запрос на вход');
-    console.log('Данные:', req.body);
-    
     try {
         const { email, password } = req.body;
 
@@ -247,6 +175,9 @@ app.post('/api/auth/login', async (req, res) => {
         }
 
         if (!pool) await connectDB();
+        if (!pool) {
+            return res.status(500).json({ error: 'Нет подключения к БД' });
+        }
 
         // Ищем пользователя
         const result = await pool.request()
@@ -296,6 +227,155 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+// ========== ПРОФИЛЬ ==========
+
+// Получить профиль
+app.get('/api/profile', authenticateToken, async (req, res) => {
+    try {
+        if (!pool) await connectDB();
+        if (!pool) {
+            return res.status(500).json({ error: 'Нет подключения к БД' });
+        }
+
+        const result = await pool.request()
+            .input('id', sql.Int, req.user.id)
+            .query(`
+                SELECT id, username, email, full_name, phone, created_at
+                FROM Users WHERE id = @id
+            `);
+
+        if (result.recordset.length === 0) {
+            return res.status(404).json({ error: 'Пользователь не найден' });
+        }
+
+        res.json({
+            success: true,
+            user: result.recordset[0]
+        });
+
+    } catch (err) {
+        console.error('Ошибка получения профиля:', err);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+// Обновить профиль
+app.put('/api/profile', authenticateToken, async (req, res) => {
+    try {
+        const { username, email, full_name, phone } = req.body;
+
+        if (!pool) await connectDB();
+        if (!pool) {
+            return res.status(500).json({ error: 'Нет подключения к БД' });
+        }
+
+        // Проверяем уникальность email и username
+        const checkResult = await pool.request()
+            .input('id', sql.Int, req.user.id)
+            .input('email', sql.NVarChar, email)
+            .input('username', sql.NVarChar, username)
+            .query(`
+                SELECT id FROM Users 
+                WHERE (email = @email OR username = @username) AND id != @id
+            `);
+
+        if (checkResult.recordset.length > 0) {
+            return res.status(400).json({ error: 'Email или имя пользователя уже заняты' });
+        }
+
+        // Обновляем данные
+        await pool.request()
+            .input('id', sql.Int, req.user.id)
+            .input('username', sql.NVarChar, username)
+            .input('email', sql.NVarChar, email)
+            .input('full_name', sql.NVarChar, full_name || null)
+            .input('phone', sql.NVarChar, phone || null)
+            .query(`
+                UPDATE Users 
+                SET username = @username, 
+                    email = @email, 
+                    full_name = @full_name, 
+                    phone = @phone,
+                    updated_at = GETDATE()
+                WHERE id = @id
+            `);
+
+        res.json({
+            success: true,
+            message: 'Профиль обновлен'
+        });
+
+    } catch (err) {
+        console.error('Ошибка обновления профиля:', err);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+// УДАЛЕНИЕ АККАУНТА
+app.delete('/api/profile', authenticateToken, async (req, res) => {
+    try {
+        if (!pool) await connectDB();
+        if (!pool) {
+            return res.status(500).json({ error: 'Нет подключения к БД' });
+        }
+
+        const userId = req.user.id;
+
+        // Начинаем транзакцию
+        const transaction = new sql.Transaction(pool);
+        await transaction.begin();
+
+        try {
+            // 1. Удаляем заказы пользователя (сначала OrderItems, потом Orders)
+            await transaction.request()
+                .input('user_id', sql.Int, userId)
+                .query(`
+                    DELETE oi FROM OrderItems oi
+                    INNER JOIN Orders o ON oi.order_id = o.id
+                    WHERE o.user_id = @user_id
+                `);
+
+            await transaction.request()
+                .input('user_id', sql.Int, userId)
+                .query('DELETE FROM Orders WHERE user_id = @user_id');
+
+            // 2. Удаляем корзину пользователя (если есть таблица CartItems)
+            try {
+                await transaction.request()
+                    .input('user_id', sql.Int, userId)
+                    .query('DELETE FROM CartItems WHERE user_id = @user_id');
+            } catch (cartErr) {
+                // Игнорируем если таблицы нет
+                console.log('Таблица CartItems не найдена, пропускаем');
+            }
+
+            // 3. Удаляем самого пользователя
+            await transaction.request()
+                .input('id', sql.Int, userId)
+                .query('DELETE FROM Users WHERE id = @id');
+
+            // Коммитим транзакцию
+            await transaction.commit();
+
+            res.json({
+                success: true,
+                message: 'Аккаунт успешно удален'
+            });
+
+        } catch (err) {
+            await transaction.rollback();
+            throw err;
+        }
+
+    } catch (err) {
+        console.error('Ошибка удаления аккаунта:', err);
+        res.status(500).json({ 
+            error: 'Ошибка удаления аккаунта',
+            details: err.message 
+        });
+    }
+});
+
 // ========== ТОВАРЫ ==========
 
 // Получить все товары
@@ -322,8 +402,6 @@ app.get('/api/products', async (req, res) => {
             FROM Products
             ORDER BY ProductID
         `);
-        
-        console.log(`📦 Загружено из БД: ${result.recordset.length} товаров`);
         
         const products = result.recordset.map(item => ({
             id: item.id,
@@ -390,10 +468,10 @@ app.listen(PORT, async () => {
     console.log('📋 Доступные API:');
     console.log(`🔐 Регистрация: POST http://localhost:${PORT}/api/auth/register`);
     console.log(`🔑 Вход: POST http://localhost:${PORT}/api/auth/login`);
+    console.log(`👤 Профиль: GET http://localhost:${PORT}/api/profile`);
+    console.log(`🗑️ Удалить аккаунт: DELETE http://localhost:${PORT}/api/profile`);
     console.log(`📦 Товары: GET http://localhost:${PORT}/api/products`);
-    console.log(`📊 Тест БД: GET http://localhost:${PORT}/api/db-test`);
     console.log('='.repeat(50));
     
-    // Подключаемся к БД
     await connectDB();
 });
