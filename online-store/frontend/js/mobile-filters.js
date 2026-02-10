@@ -1,4 +1,4 @@
-// mobile-filters.js - с обработчиками событий на фильтрах
+// mobile-filters.js - управление мобильными фильтрами
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Mobile filters: загружаю...');
     initMobileFilters();
@@ -11,7 +11,7 @@ function initMobileFilters() {
     const desktopFilters = document.querySelector('.catalog-filters');
     const overlay = document.getElementById('overlay');
     
-    console.log('Найдены элементы:', {
+    console.log('Элементы найдены:', {
         filtersToggle: !!filtersToggle,
         filtersModal: !!filtersModal,
         mobileFiltersContainer: !!mobileFiltersContainer,
@@ -24,285 +24,326 @@ function initMobileFilters() {
         return;
     }
     
-    // Переменная для хранения ссылки на мобильные фильтры
-    let mobileFiltersElement = null;
+    // ========== ОСНОВНЫЕ ФУНКЦИИ ==========
     
     // 1. ОТКРЫТИЕ МОДАЛЬНОГО ОКНА
     function openFiltersModal() {
-        console.log('Открываю модальное окно фильтров');
+        console.log('📱 Открываю модальное окно фильтров');
         
-        // Копируем фильтры из десктопной версии
-        copyFiltersToModal();
-        
-        // Добавляем обработчики на элементы фильтров
-        addEventListenersToMobileFilters();
-        
-        // Показываем модальное окно
-        filtersModal.style.display = 'block';
-        overlay.style.display = 'block';
-        document.body.style.overflow = 'hidden';
-        
+        // Ждем немного чтобы DOM обновился
         setTimeout(() => {
+            // Копируем фильтры из десктопной версии
+            copyFiltersToModal();
+            
+            // Показываем модальное окно
             filtersModal.classList.add('modal--active');
             overlay.classList.add('overlay--active');
-        }, 10);
+            document.body.style.overflow = 'hidden';
+            
+            console.log('✅ Модальное окно открыто');
+        }, 50);
     }
     
-    // 2. КОПИРОВАНИЕ ФИЛЬТРОВ В МОДАЛЬНОЕ ОКНО
-    function copyFiltersToModal() {
-        console.log('Копирую фильтры в модальное окно...');
-        
-        mobileFiltersContainer.innerHTML = '';
-        
-        // Создаем контейнер для фильтров
-        mobileFiltersElement = document.createElement('div');
-        mobileFiltersElement.className = 'catalog-filters mobile-version';
-        mobileFiltersElement.style.cssText = 'display: block !important; opacity: 1 !important; width: 100% !important;';
-        
-        // Копируем ТОЛЬКО группы фильтров
-        const filterGroups = desktopFilters.querySelectorAll('.filter-group');
-        
-        if (filterGroups.length === 0) {
-            console.error('Не найдены группы фильтров!');
-            mobileFiltersContainer.innerHTML = '<p>Фильтры не найдены</p>';
-            return;
-        }
-        
-        console.log(`Найдено ${filterGroups.length} групп фильтров`);
-        
-        // Копируем каждую группу
-        filterGroups.forEach((group, index) => {
-            const groupClone = group.cloneNode(true);
-            
-            // Синхронизируем значения
-            syncGroupFromDesktop(groupClone, group);
-            
-            mobileFiltersElement.appendChild(groupClone);
-        });
-        
-        // Добавляем в контейнер
-        mobileFiltersContainer.appendChild(mobileFiltersElement);
-        
-        console.log('Фильтры скопированы в модальное окно');
-    }
-    
-    // 3. ДОБАВЛЕНИЕ ОБРАБОТЧИКОВ СОБЫТИЙ НА МОБИЛЬНЫЕ ФИЛЬТРЫ
-    function addEventListenersToMobileFilters() {
-        if (!mobileFiltersElement) return;
-        
-        console.log('Добавляю обработчики на мобильные фильтры...');
-        
-        // 1. Обработчики на чекбоксы категорий и брендов
-        const checkboxes = mobileFiltersElement.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(checkbox => {
-            // Удаляем старые обработчики (если есть)
-            checkbox.replaceWith(checkbox.cloneNode(true));
-            
-            // Находим новый чекбокс
-            const newCheckbox = mobileFiltersElement.querySelector(
-                `input[name="${checkbox.name}"][value="${checkbox.value}"]`
-            );
-            
-            if (newCheckbox) {
-                newCheckbox.addEventListener('change', function() {
-                    console.log('Чекбокс изменен:', this.name, this.value, this.checked);
-                    
-                    // Сразу синхронизируем с десктопом
-                    const desktopCheckbox = desktopFilters.querySelector(
-                        `input[name="${this.name}"][value="${this.value}"]`
-                    );
-                    if (desktopCheckbox) {
-                        desktopCheckbox.checked = this.checked;
-                        
-                        // ТРИГГЕРИМ СОБЫТИЕ на десктопном чекбоксе
-                        desktopCheckbox.dispatchEvent(new Event('change', { bubbles: true }));
-                    }
-                });
-            }
-        });
-        
-        // 2. Обработчики на поля цены
-        const priceInputs = ['price-min', 'price-max'];
-        priceInputs.forEach(id => {
-            const mobileInput = mobileFiltersElement.querySelector(`#${id}`);
-            const desktopInput = desktopFilters.querySelector(`#${id}`);
-            
-            if (mobileInput && desktopInput) {
-                // Удаляем старый обработчик
-                mobileInput.replaceWith(mobileInput.cloneNode(true));
-                const newMobileInput = mobileFiltersElement.querySelector(`#${id}`);
-                
-                newMobileInput.addEventListener('input', function() {
-                    console.log('Цена изменена:', id, this.value);
-                    
-                    // Синхронизируем с десктопом
-                    desktopInput.value = this.value;
-                    
-                    // ТРИГГЕРИМ СОБЫТИЕ на десктопном инпуте
-                    desktopInput.dispatchEvent(new Event('input', { bubbles: true }));
-                });
-            }
-        });
-        
-        // 3. Обработчики на слайдеры цены
-        const priceSliders = ['price-slider-min', 'price-slider-max'];
-        priceSliders.forEach(id => {
-            const mobileSlider = mobileFiltersElement.querySelector(`#${id}`);
-            const desktopSlider = desktopFilters.querySelector(`#${id}`);
-            
-            if (mobileSlider && desktopSlider) {
-                // Удаляем старый обработчик
-                mobileSlider.replaceWith(mobileSlider.cloneNode(true));
-                const newMobileSlider = mobileFiltersElement.querySelector(`#${id}`);
-                
-                newMobileSlider.addEventListener('input', function() {
-                    console.log('Слайдер изменен:', id, this.value);
-                    
-                    // Синхронизируем с десктопом
-                    desktopSlider.value = this.value;
-                    
-                    // ТРИГГЕРИМ СОБЫТИЕ на десктопном слайдере
-                    desktopSlider.dispatchEvent(new Event('input', { bubbles: true }));
-                    
-                    // Также обновляем соответствующее поле ввода
-                    if (id === 'price-slider-min') {
-                        const priceMin = mobileFiltersElement.querySelector('#price-min');
-                        const desktopMin = desktopFilters.querySelector('#price-min');
-                        if (priceMin && desktopMin) {
-                            priceMin.value = this.value;
-                            desktopMin.value = this.value;
-                            desktopMin.dispatchEvent(new Event('input', { bubbles: true }));
-                        }
-                    } else if (id === 'price-slider-max') {
-                        const priceMax = mobileFiltersElement.querySelector('#price-max');
-                        const desktopMax = desktopFilters.querySelector('#price-max');
-                        if (priceMax && desktopMax) {
-                            priceMax.value = this.value;
-                            desktopMax.value = this.value;
-                            desktopMax.dispatchEvent(new Event('input', { bubbles: true }));
-                        }
-                    }
-                });
-            }
-        });
-        
-        console.log('Обработчики событий добавлены на мобильные фильтры');
-    }
-    
-    // 4. СИНХРОНИЗАЦИЯ ОДНОЙ ГРУППЫ ФИЛЬТРОВ
-    function syncGroupFromDesktop(mobileGroup, desktopGroup) {
-        // Синхронизируем чекбоксы
-        const mobileCheckboxes = mobileGroup.querySelectorAll('input[type="checkbox"]');
-        const desktopCheckboxes = desktopGroup.querySelectorAll('input[type="checkbox"]');
-        
-        mobileCheckboxes.forEach((mobileCheckbox, index) => {
-            if (desktopCheckboxes[index]) {
-                mobileCheckbox.checked = desktopCheckboxes[index].checked;
-            }
-        });
-        
-        // Синхронизируем поля цены (только для первой группы)
-        if (mobileGroup.querySelector('#price-min')) {
-            const priceIds = ['price-min', 'price-max', 'price-slider-min', 'price-slider-max'];
-            priceIds.forEach(id => {
-                const mobileInput = mobileGroup.querySelector(`#${id}`);
-                const desktopInput = desktopGroup.querySelector(`#${id}`);
-                if (mobileInput && desktopInput) {
-                    mobileInput.value = desktopInput.value;
-                }
-            });
-        }
-    }
-    
-    // 5. ЗАКРЫТИЕ МОДАЛЬНОГО ОКНА
+    // 2. ЗАКРЫТИЕ МОДАЛЬНОГО ОКНА
     function closeFiltersModal() {
-        console.log('Закрываю модальное окно');
-        
-        filtersModal.style.display = 'none';
-        overlay.style.display = 'none';
-        document.body.style.overflow = '';
+        console.log('📱 Закрываю модальное окно фильтров');
         
         filtersModal.classList.remove('modal--active');
         overlay.classList.remove('overlay--active');
+        document.body.style.overflow = '';
+        
+        // Очищаем контейнер при закрытии
+        setTimeout(() => {
+            mobileFiltersContainer.innerHTML = '';
+        }, 300);
+        
+        console.log('✅ Модальное окно закрыто');
     }
     
-    // 6. ПРИМЕНЕНИЕ ФИЛЬТРОВ (просто закрывает окно, фильтры уже применяются в реальном времени)
-    function applyFilters() {
-        console.log('Применяю фильтры и закрываю окно...');
+    // 3. КОПИРОВАНИЕ ФИЛЬТРОВ В МОДАЛЬНОЕ ОКНО
+    function copyFiltersToModal() {
+        console.log('📱 Копирую фильтры...');
         
-        // Фильтры уже применены через обработчики событий выше
-        // Просто закрываем окно
-        closeFiltersModal();
-    }
-    
-    // 7. СБРОС ФИЛЬТРОВ
-    function resetAllFilters() {
-        console.log('Сбрасываю все фильтры');
+        // Очищаем контейнер
+        mobileFiltersContainer.innerHTML = '';
         
-        // Сбрасываем в основном каталоге
-        if (window.catalog && typeof window.catalog.resetFilters === 'function') {
-            window.catalog.resetFilters();
+        // Проверяем что есть что копировать
+        if (!desktopFilters || desktopFilters.children.length === 0) {
+            console.error('❌ desktopFilters пустой или не найден');
+            mobileFiltersContainer.innerHTML = '<div class="no-filters">Фильтры не найдены</div>';
+            return;
         }
         
-        // Обновляем модальное окно
-        setTimeout(copyFiltersToModal, 100);
+        // СОЗДАЕМ ПРОСТУЮ КОПИЮ БЕЗ ИЗМЕНЕНИЯ ID
+        const filtersHTML = desktopFilters.innerHTML;
+        
+        // Удаляем кнопку сброса если она есть
+        const cleanedHTML = filtersHTML.replace(
+            /<button[^>]*class="[^"]*\bcatalog-filters__reset\b[^"]*"[^>]*>.*?<\/button>/gi,
+            ''
+        );
+        
+        // Вставляем фильтры
+        mobileFiltersContainer.innerHTML = cleanedHTML;
+        
+        // Синхронизируем значения с десктопными фильтрами
+        syncFiltersFromDesktop();
+        
+        // Добавляем обработчики
+        addEventListenersToMobileFilters();
+        
+        console.log('✅ Фильтры скопированы');
     }
     
-    // НАЗНАЧАЕМ ОБРАБОТЧИКИ СОБЫТИЙ
+    // 4. СИНХРОНИЗАЦИЯ ЗНАЧЕНИЙ ИЗ ДЕСКТОПНЫХ ФИЛЬТРОВ
+    function syncFiltersFromDesktop() {
+        const mobileContainer = document.getElementById('mobile-filters-container');
+        if (!mobileContainer) return;
+        
+        console.log('📱 Синхронизирую значения...');
+        
+        // А. Синхронизируем чекбоксы
+        const mobileCheckboxes = mobileContainer.querySelectorAll('input[type="checkbox"]');
+        mobileCheckboxes.forEach(mobileCheckbox => {
+            const name = mobileCheckbox.getAttribute('name');
+            const value = mobileCheckbox.value;
+            
+            const desktopCheckbox = document.querySelector(
+                `.catalog-filters input[name="${name}"][value="${value}"]`
+            );
+            
+            if (desktopCheckbox) {
+                mobileCheckbox.checked = desktopCheckbox.checked;
+            }
+        });
+        
+        // Б. Синхронизируем поля цены
+        const priceElements = [
+            { mobileSelector: '#price-min', desktopSelector: '#price-min' },
+            { mobileSelector: '#price-max', desktopSelector: '#price-max' },
+            { mobileSelector: '#price-slider-min', desktopSelector: '#price-slider-min' },
+            { mobileSelector: '#price-slider-max', desktopSelector: '#price-slider-max' }
+        ];
+        
+        priceElements.forEach(({ mobileSelector, desktopSelector }) => {
+            const mobileEl = mobileContainer.querySelector(mobileSelector);
+            const desktopEl = document.querySelector(desktopSelector);
+            
+            if (mobileEl && desktopEl) {
+                mobileEl.value = desktopEl.value;
+            }
+        });
+        
+        console.log('✅ Значения синхронизированы');
+    }
+    
+    // 5. ДОБАВЛЕНИЕ ОБРАБОТЧИКОВ НА МОБИЛЬНЫЕ ФИЛЬТРЫ
+    function addEventListenersToMobileFilters() {
+        const mobileContainer = document.getElementById('mobile-filters-container');
+        if (!mobileContainer) return;
+        
+        console.log('📱 Добавляю обработчики...');
+        
+        // А. Обработчики на чекбоксах (категории и бренды)
+        const mobileCheckboxes = mobileContainer.querySelectorAll('input[type="checkbox"]');
+        mobileCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const name = this.getAttribute('name');
+                const value = this.value;
+                const isChecked = this.checked;
+                
+                console.log(`Чекбокс изменен: ${name}=${value} ${isChecked}`);
+                
+                // Ищем соответствующий десктопный чекбокс
+                const desktopCheckbox = document.querySelector(
+                    `.catalog-filters input[name="${name}"][value="${value}"]`
+                );
+                
+                if (desktopCheckbox) {
+                    // Синхронизируем состояние
+                    desktopCheckbox.checked = isChecked;
+                    
+                    // Триггерим событие на десктопном чекбоксе
+                    const changeEvent = new Event('change', { bubbles: true });
+                    desktopCheckbox.dispatchEvent(changeEvent);
+                }
+            });
+        });
+        
+        // Б. Обработчики на полях цены (ручной ввод)
+        const priceMin = mobileContainer.querySelector('#price-min');
+        const priceMax = mobileContainer.querySelector('#price-max');
+        const desktopMin = document.querySelector('#price-min');
+        const desktopMax = document.querySelector('#price-max');
+        
+        if (priceMin && desktopMin) {
+            priceMin.addEventListener('input', function() {
+                const value = this.value;
+                desktopMin.value = value;
+                
+                // Триггерим событие
+                const inputEvent = new Event('input', { bubbles: true });
+                desktopMin.dispatchEvent(inputEvent);
+            });
+        }
+        
+        if (priceMax && desktopMax) {
+            priceMax.addEventListener('input', function() {
+                const value = this.value;
+                desktopMax.value = value;
+                
+                // Триггерим событие
+                const inputEvent = new Event('input', { bubbles: true });
+                desktopMax.dispatchEvent(inputEvent);
+            });
+        }
+        
+        // В. Обработчики на слайдерах цены
+        const priceSliderMin = mobileContainer.querySelector('#price-slider-min');
+        const priceSliderMax = mobileContainer.querySelector('#price-slider-max');
+        const desktopSliderMin = document.querySelector('#price-slider-min');
+        const desktopSliderMax = document.querySelector('#price-slider-max');
+        
+        if (priceSliderMin && desktopSliderMin) {
+            priceSliderMin.addEventListener('input', function() {
+                const value = this.value;
+                desktopSliderMin.value = value;
+                
+                // Также обновляем поле ввода
+                if (priceMin && desktopMin) {
+                    priceMin.value = value;
+                    desktopMin.value = value;
+                }
+                
+                // Триггерим событие
+                const inputEvent = new Event('input', { bubbles: true });
+                desktopSliderMin.dispatchEvent(inputEvent);
+            });
+        }
+        
+        if (priceSliderMax && desktopSliderMax) {
+            priceSliderMax.addEventListener('input', function() {
+                const value = this.value;
+                desktopSliderMax.value = value;
+                
+                // Также обновляем поле ввода
+                if (priceMax && desktopMax) {
+                    priceMax.value = value;
+                    desktopMax.value = value;
+                }
+                
+                // Триггерим событие
+                const inputEvent = new Event('input', { bubbles: true });
+                desktopSliderMax.dispatchEvent(inputEvent);
+            });
+        }
+        
+        console.log('✅ Обработчики добавлены');
+    }
+    
+    // 6. ПРИМЕНЕНИЕ ФИЛЬТРОВ
+    function applyFilters() {
+        console.log('📱 Применяю фильтры...');
+        
+        // Закрываем модальное окно
+        closeFiltersModal();
+        
+        // Вызываем метод из основного каталога
+        if (window.catalog && typeof window.catalog.applyFilters === 'function') {
+            window.catalog.applyFilters();
+        } else {
+            console.warn('catalog.applyFilters не найден');
+        }
+    }
+    
+    // 7. СБРОС ВСЕХ ФИЛЬТРОВ
+    function resetAllFilters() {
+        console.log('📱 Сбрасываю все фильтры');
+        
+        // Вызываем метод из основного каталога
+        if (window.catalog && typeof window.catalog.resetFilters === 'function') {
+            window.catalog.resetFilters();
+        } else {
+            console.warn('catalog.resetFilters не найден');
+        }
+        
+        // Обновляем мобильные фильтры через 100мс
+        setTimeout(() => {
+            if (filtersModal.classList.contains('modal--active')) {
+                copyFiltersToModal();
+            }
+        }, 100);
+    }
+    
+    // ========== НАЗНАЧАЕМ ОБРАБОТЧИКИ СОБЫТИЙ ==========
+    
+    // Открытие модального окна
     filtersToggle.addEventListener('click', openFiltersModal);
-    console.log('Обработчик для кнопки фильтров добавлен');
+    console.log('✅ Обработчик для кнопки фильтров добавлен');
     
     // Закрытие по крестику
     const closeBtn = filtersModal.querySelector('.modal__close');
     if (closeBtn) {
         closeBtn.addEventListener('click', closeFiltersModal);
-        console.log('Обработчик для крестика добавлен');
+        console.log('✅ Обработчик для крестика добавлен');
     }
     
     // Закрытие по кнопке "Отмена"
     const cancelBtn = filtersModal.querySelector('.button--outline');
     if (cancelBtn) {
         cancelBtn.addEventListener('click', closeFiltersModal);
-        console.log('Обработчик для "Отмена" добавлен');
+        console.log('✅ Обработчик для "Отмена" добавлен');
     }
     
     // Применение фильтров
     const applyBtn = document.getElementById('apply-filters');
     if (applyBtn) {
         applyBtn.addEventListener('click', applyFilters);
-        console.log('Обработчик для "Применить" добавлен');
+        console.log('✅ Обработчик для "Применить" добавлен');
     }
     
-    // Сброс в модальном окне
+    // Сброс фильтров (в модальном окне)
     const mobileResetBtn = document.getElementById('mobile-reset-filters');
     if (mobileResetBtn) {
         mobileResetBtn.addEventListener('click', resetAllFilters);
-        console.log('Обработчик для сброса в модальном окне добавлен');
+        console.log('✅ Обработчик для сброса в модальном окне добавлен');
     }
     
-    // Сброс в десктопной версии
+    // Сброс фильтров (в десктопной версии)
     const desktopResetBtn = document.getElementById('reset-filters');
     if (desktopResetBtn) {
         desktopResetBtn.addEventListener('click', resetAllFilters);
-        console.log('Обработчик для сброса в десктопе добавлен');
+        console.log('✅ Обработчик для сброса в десктопе добавлен');
     }
     
     // Закрытие по клику на оверлей
     overlay.addEventListener('click', closeFiltersModal);
+    console.log('✅ Обработчик для overlay добавлен');
     
     // Закрытие по ESC
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && filtersModal.style.display === 'block') {
+        if (e.key === 'Escape' && filtersModal.classList.contains('modal--active')) {
             closeFiltersModal();
         }
     });
+    console.log('✅ Обработчик для ESC добавлен');
     
     // Закрытие при переходе на десктоп
     window.addEventListener('resize', function() {
-        if (window.innerWidth > 768 && filtersModal.style.display === 'block') {
+        if (window.innerWidth > 768 && filtersModal.classList.contains('modal--active')) {
             closeFiltersModal();
         }
     });
+    console.log('✅ Обработчик для resize добавлен');
     
-    console.log('Mobile filters успешно инициализированы!');
+    console.log('🚀 Mobile filters успешно инициализированы!');
+    
+    // Дебаг функции для консоли
+    window.debugMobileFilters = {
+        open: openFiltersModal,
+        close: closeFiltersModal,
+        copy: copyFiltersToModal,
+        sync: syncFiltersFromDesktop
+    };
+    console.log('🔧 Для отладки в консоли используй: debugMobileFilters.open()');
 }
