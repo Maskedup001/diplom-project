@@ -7,6 +7,17 @@ class Cart {
 
     // Добавить товар в корзину
     addItem(product) {
+        // ========== ДОБАВЛЕННАЯ ПРОВЕРКА АВТОРИЗАЦИИ ==========
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            const result = confirm('Для добавления товаров в корзину необходимо авторизоваться. Перейти на страницу входа?');
+            if (result) {
+                window.location.href = 'login.html';
+            }
+            return false; // Возвращаем false если нажали "Отмена"
+        }
+        // ========== КОНЕЦ ПРОВЕРКИ ==========
+        
         // Преобразуем ID в строку для надежности
         const productId = String(product.id);
         
@@ -25,17 +36,49 @@ class Cart {
         this.saveCart();
         this.updateCartDisplay();
         this.showNotification(`"${product.title}" добавлен в корзину!`);
+        return true;
+    }
+
+    // Очистить корзину (при выходе из аккаунта)
+    clearCart() {
+        this.items = [];
+        this.saveCart();
+        this.updateCartDisplay();
+        console.log('Корзина очищена');
     }
 
     // Удалить товар из корзины
     removeItem(productId) {
+        // ========== ДОБАВЛЕННАЯ ПРОВЕРКА АВТОРИЗАЦИИ ==========
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            const result = confirm('Для изменения корзины необходимо авторизоваться. Перейти на страницу входа?');
+            if (result) {
+                window.location.href = 'login.html';
+            }
+            return false; // Возвращаем false если нажали "Отмена"
+        }
+        // ========== КОНЕЦ ПРОВЕРКИ ==========
+        
         this.items = this.items.filter(item => String(item.id) !== String(productId));
         this.saveCart();
         this.updateCartDisplay();
+        return true;
     }
 
     // Изменить количество
     updateQuantity(productId, change) {
+        // ========== ДОБАВЛЕННАЯ ПРОВЕРКА АВТОРИЗАЦИИ ==========
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            const result = confirm('Для изменения корзины необходимо авторизоваться. Перейти на страницу входа?');
+            if (result) {
+                window.location.href = 'login.html';
+            }
+            return false; // Возвращаем false если нажали "Отмена"
+        }
+        // ========== КОНЕЦ ПРОВЕРКИ ==========
+        
         const item = this.items.find(item => String(item.id) === String(productId));
         
         if (item) {
@@ -48,6 +91,7 @@ class Cart {
                 this.updateCartDisplay();
             }
         }
+        return true;
     }
 
     // Общая стоимость
@@ -68,7 +112,6 @@ class Cart {
         
         if (cartCount) {
             cartCount.textContent = totalItems;
-            // cartCount.style.display = totalItems > 0 ? 'flex' : 'none';               ###### БЫЛ БАГ С ОТОБРАЖЕНИЕМ ТОВАРОВ ###### 
         }
 
         // Обновить модальное окно корзины (если оно открыто)
@@ -284,10 +327,10 @@ function handleAddToCartClick(e) {
             };
             
             console.log('Добавляем товар в корзину:', product);
-            window.cart.addItem(product);
+            const added = window.cart.addItem(product); // Получаем результат
             
-            // Открываем модальное окно корзины, если оно есть
-            if (window.modals && document.getElementById('cart-modal')) {
+            // Открываем модальное окно корзины, если оно есть И товар был успешно добавлен
+            if (added && window.modals && document.getElementById('cart-modal')) {
                 window.modals.openModal('cart-modal');
             }
             
@@ -318,6 +361,17 @@ document.addEventListener('DOMContentLoaded', () => {
         cartButton.addEventListener('click', (e) => {
             e.preventDefault();
             
+            // ========== ДОБАВЛЕННАЯ ПРОВЕРКА ПРИ ОТКРЫТИИ КОРЗИНЫ ==========
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user) {
+                const result = confirm('Для просмотра корзины необходимо авторизоваться. Перейти на страницу входа?');
+                if (result) {
+                    window.location.href = 'login.html';
+                }
+                return; // Выходим если нажали "Отмена"
+            }
+            // ========== КОНЕЦ ПРОВЕРКИ ==========
+            
             // Если есть корзина - обновляем и открываем
             if (window.cart) {
                 window.cart.renderCartModal();
@@ -345,6 +399,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const isOnCartPage = window.location.pathname.includes('cart.html');
         
         if (action && id && window.cart && isInCartModal && !isOnCartPage) {
+            // ========== ДОБАВЛЕННАЯ ПРОВЕРКА ПРИ ИЗМЕНЕНИИ КОРЗИНЫ ==========
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user) {
+                const result = confirm('Для изменения корзины необходимо авторизоваться. Перейти на страницу входа?');
+                if (result) {
+                    window.location.href = 'login.html';
+                }
+                return; // Выходим если нажали "Отмена"
+            }
+            // ========== КОНЕЦ ПРОВЕРКИ ==========
+            
             switch(action) {
                 case 'increase':
                     window.cart.updateQuantity(id, 1);

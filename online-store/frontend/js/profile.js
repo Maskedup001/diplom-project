@@ -1,4 +1,4 @@
-// profile.js - РАБОЧИЙ КОД С CSS КЛАССАМИ
+// profile.js - использует общий logoutUser()
 const API_URL = 'http://localhost:3000/api';
 
 // ========== ГЛАВНАЯ ФУНКЦИЯ ==========
@@ -93,12 +93,19 @@ function setupAllEventListeners() {
         editBtn.addEventListener('click', openEditModal);
     }
     
-    // 2. Кнопка выхода
+    // 2. Кнопка выхода - ИСПОЛЬЗУЕМ logoutUser()
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            if (confirm('Вы уверены, что хотите выйти?')) {
-                logout();
+        logoutBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Используем общую функцию выхода
+            if (typeof logoutUser === 'function') {
+                logoutUser();
+            } else {
+                // Если общей функции нет, используем локальную
+                logoutBackup();
             }
         });
     }
@@ -115,6 +122,20 @@ function setupAllEventListeners() {
     
     // 4. Модальное окно редактирования
     setupEditModalListeners();
+}
+
+// Локальный backup если общая функция не загрузилась
+function logoutBackup() {
+    // Тут можно оставить confirm или убрать (он уже в logoutUser)
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('cart');
+    
+    if (typeof updateHeaderAuth === 'function') {
+        updateHeaderAuth();
+    }
+    
+    window.location.href = 'index.html';
 }
 
 // ========== МОДАЛЬНОЕ ОКНО ==========
@@ -159,7 +180,7 @@ function setupEditModalListeners() {
     });
 }
 
-// Открытие модального окна - ИСПРАВЛЕННЫЙ ВАРИАНТ
+// Открытие модального окна
 function openEditModal() {
     console.log('🟢 ОТКРЫВАЮ МОДАЛЬНОЕ ОКНО ЧЕРЕЗ CSS КЛАССЫ');
     
@@ -178,7 +199,7 @@ function openEditModal() {
     document.getElementById('edit-email').value = user.email || '';
     document.getElementById('edit-phone').value = user.phone || '';
     
-    // ПОКАЗЫВАЕМ ЧЕРЕЗ CSS КЛАССЫ (как в примере)
+    // Показываем через CSS классы
     modal.classList.add('modal--active');
     overlay.classList.add('overlay--active');
     
@@ -188,7 +209,7 @@ function openEditModal() {
     console.log('✅ Модальное окно открыто через классы');
 }
 
-// Закрытие модального окна - ИСПРАВЛЕННЫЙ ВАРИАНТ
+// Закрытие модального окна
 function closeEditModal() {
     console.log('🔴 ЗАКРЫВАЮ МОДАЛЬНОЕ ОКНО ЧЕРЕЗ CSS КЛАССЫ');
     
@@ -277,19 +298,7 @@ function isValidEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-// ========== ВЫХОД И УДАЛЕНИЕ ==========
-function logout() {
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    localStorage.removeItem('cart');
-    
-    if (typeof updateHeaderAuth === 'function') {
-        updateHeaderAuth();
-    }
-    
-    window.location.href = 'index.html';
-}
-
+// Удаление аккаунта
 async function deleteAccount() {
     const token = localStorage.getItem('token');
     
@@ -325,7 +334,6 @@ window.debugProfile = {
     openModal: openEditModal,
     closeModal: closeEditModal,
     saveProfile: saveProfile,
-    logout: logout,
     deleteAccount: deleteAccount,
     reloadData: loadUserData
 };

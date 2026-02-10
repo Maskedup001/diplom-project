@@ -227,6 +227,23 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+// Выход (ДОБАВЬ ЭТОТ КОД СЮДА)
+app.post('/api/auth/logout', authenticateToken, async (req, res) => {
+    try {
+        // Просто возвращаем успех, JWT токен на клиенте сам удаляется
+        // Можно добавить логику инвалидации токена если нужно
+        console.log(`👋 Пользователь ${req.user.id} вышел из системы`);
+        
+        res.json({
+            success: true,
+            message: 'Выход выполнен'
+        });
+    } catch (err) {
+        console.error('Ошибка выхода:', err);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
 // ========== ПРОФИЛЬ ==========
 
 // Получить профиль
@@ -468,7 +485,9 @@ app.listen(PORT, async () => {
     console.log('📋 Доступные API:');
     console.log(`🔐 Регистрация: POST http://localhost:${PORT}/api/auth/register`);
     console.log(`🔑 Вход: POST http://localhost:${PORT}/api/auth/login`);
+    console.log(`🚪 Выход: POST http://localhost:${PORT}/api/auth/logout`);
     console.log(`👤 Профиль: GET http://localhost:${PORT}/api/profile`);
+    console.log(`✏️ Обновить профиль: PUT http://localhost:${PORT}/api/profile`);
     console.log(`🗑️ Удалить аккаунт: DELETE http://localhost:${PORT}/api/profile`);
     console.log(`📦 Товары: GET http://localhost:${PORT}/api/products`);
     console.log('='.repeat(50));
