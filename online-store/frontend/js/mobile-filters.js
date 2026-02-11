@@ -35,6 +35,9 @@ function initMobileFilters() {
             // Копируем фильтры из десктопной версии
             copyFiltersToModal();
             
+            // Инициализируем слайдер цен для мобильной версии
+            initPriceRangeSlider();
+            
             // Показываем модальное окно
             filtersModal.classList.add('modal--active');
             overlay.classList.add('overlay--active');
@@ -74,7 +77,7 @@ function initMobileFilters() {
             return;
         }
         
-        // СОЗДАЕМ ПРОСТУЮ КОПИЮ БЕЗ ИЗМЕНЕНИЯ ID
+        // Копируем HTML фильтров
         const filtersHTML = desktopFilters.innerHTML;
         
         // Удаляем кнопку сброса если она есть
@@ -118,26 +121,197 @@ function initMobileFilters() {
         });
         
         // Б. Синхронизируем поля цены
-        const priceElements = [
-            { mobileSelector: '#price-min', desktopSelector: '#price-min' },
-            { mobileSelector: '#price-max', desktopSelector: '#price-max' },
-            { mobileSelector: '#price-slider-min', desktopSelector: '#price-slider-min' },
-            { mobileSelector: '#price-slider-max', desktopSelector: '#price-slider-max' }
-        ];
+        const priceMin = mobileContainer.querySelector('#price-min');
+        const priceMax = mobileContainer.querySelector('#price-max');
+        const priceSliderMin = mobileContainer.querySelector('#price-slider-min');
+        const priceSliderMax = mobileContainer.querySelector('#price-slider-max');
         
-        priceElements.forEach(({ mobileSelector, desktopSelector }) => {
-            const mobileEl = mobileContainer.querySelector(mobileSelector);
-            const desktopEl = document.querySelector(desktopSelector);
-            
-            if (mobileEl && desktopEl) {
-                mobileEl.value = desktopEl.value;
-            }
-        });
+        const desktopMin = document.querySelector('#price-min');
+        const desktopMax = document.querySelector('#price-max');
+        const desktopSliderMin = document.querySelector('#price-slider-min');
+        const desktopSliderMax = document.querySelector('#price-slider-max');
+        
+        if (priceMin && desktopMin) priceMin.value = desktopMin.value;
+        if (priceMax && desktopMax) priceMax.value = desktopMax.value;
+        if (priceSliderMin && desktopSliderMin) priceSliderMin.value = desktopSliderMin.value;
+        if (priceSliderMax && desktopSliderMax) priceSliderMax.value = desktopSliderMax.value;
         
         console.log('✅ Значения синхронизированы');
     }
     
-    // 5. ДОБАВЛЕНИЕ ОБРАБОТЧИКОВ НА МОБИЛЬНЫЕ ФИЛЬТРЫ
+    // 5. ИНИЦИАЛИЗАЦИЯ СЛАЙДЕРА ЦЕН (КАК В CATALOG.JS)
+    function initPriceRangeSlider() {
+        const mobileContainer = document.getElementById('mobile-filters-container');
+        if (!mobileContainer) return;
+        
+        const priceMinInput = mobileContainer.querySelector('#price-min');
+        const priceMaxInput = mobileContainer.querySelector('#price-max');
+        const priceSliderMin = mobileContainer.querySelector('#price-slider-min');
+        const priceSliderMax = mobileContainer.querySelector('#price-slider-max');
+        const track = mobileContainer.querySelector('.price-range__track');
+        
+        const desktopMin = document.querySelector('#price-min');
+        const desktopMax = document.querySelector('#price-max');
+        const desktopSliderMin = document.querySelector('#price-slider-min');
+        const desktopSliderMax = document.querySelector('#price-slider-max');
+        
+        if (!priceMinInput || !priceMaxInput || !priceSliderMin || !priceSliderMax) {
+            console.warn('❌ Элементы слайдера не найдены в мобильной версии');
+            return;
+        }
+        
+        console.log('📱 Инициализирую слайдер цен...');
+        
+        // Функция обновления трека
+        function updatePriceRangeTrack() {
+            if (!track) return;
+            
+            const min = parseInt(priceSliderMin.value) || 0;
+            const max = parseInt(priceSliderMax.value) || 500000;
+            const maxPrice = 500000;
+            
+            const minPercent = (min / maxPrice) * 100;
+            const maxPercent = (max / maxPrice) * 100;
+            
+            track.style.left = `${minPercent}%`;
+            track.style.right = `${100 - maxPercent}%`;
+        }
+        
+        // Обновление полей при вводе в инпуты
+        priceMinInput.addEventListener('input', function(e) {
+            let value = parseInt(e.target.value) || 0;
+            
+            // Ограничиваем минимальное значение
+            value = Math.max(value, 0);
+            
+            // Проверяем чтобы не было больше max
+            const maxValue = parseInt(priceMaxInput.value);
+            if (value >= maxValue) {
+                value = maxValue - 1000;
+                e.target.value = value;
+            }
+            
+            // Обновляем слайдер
+            priceSliderMin.value = value;
+            
+            // Обновляем десктопные значения
+            if (desktopMin) desktopMin.value = value;
+            if (desktopSliderMin) desktopSliderMin.value = value;
+            
+            // Триггерим событие на десктопе
+            if (desktopMin) desktopMin.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            // Обновляем трек
+            updatePriceRangeTrack();
+            
+            // Применяем фильтры
+            if (window.catalog && typeof window.catalog.applyFilters === 'function') {
+                window.catalog.applyFilters();
+            }
+        });
+        
+        priceMaxInput.addEventListener('input', function(e) {
+            let value = parseInt(e.target.value) || 500000;
+            
+            // Ограничиваем максимальное значение
+            value = Math.min(value, 500000);
+            
+            // Проверяем чтобы не было меньше min
+            const minValue = parseInt(priceMinInput.value);
+            if (value <= minValue) {
+                value = minValue + 1000;
+                e.target.value = value;
+            }
+            
+            // Обновляем слайдер
+            priceSliderMax.value = value;
+            
+            // Обновляем десктопные значения
+            if (desktopMax) desktopMax.value = value;
+            if (desktopSliderMax) desktopSliderMax.value = value;
+            
+            // Триггерим событие на десктопе
+            if (desktopMax) desktopMax.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            // Обновляем трек
+            updatePriceRangeTrack();
+            
+            // Применяем фильтры
+            if (window.catalog && typeof window.catalog.applyFilters === 'function') {
+                window.catalog.applyFilters();
+            }
+        });
+        
+        // Обновление при движении слайдеров
+        priceSliderMin.addEventListener('input', function(e) {
+            let value = parseInt(e.target.value);
+            const maxValue = parseInt(priceSliderMax.value);
+            
+            // Если пытаемся пройти через max ползунок
+            if (value >= maxValue) {
+                value = maxValue - 1;
+                priceSliderMin.value = value;
+            }
+            
+            // Обновляем поле ввода
+            priceMinInput.value = value;
+            
+            // Обновляем десктопные значения
+            if (desktopMin) desktopMin.value = value;
+            if (desktopSliderMin) desktopSliderMin.value = value;
+            
+            // Триггерим событие на десктопе
+            if (desktopSliderMin) {
+                desktopSliderMin.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            
+            // Обновляем трек
+            updatePriceRangeTrack();
+            
+            // Применяем фильтры
+            if (window.catalog && typeof window.catalog.applyFilters === 'function') {
+                window.catalog.applyFilters();
+            }
+        });
+        
+        priceSliderMax.addEventListener('input', function(e) {
+            let value = parseInt(e.target.value);
+            const minValue = parseInt(priceSliderMin.value);
+            
+            // Если пытаемся пройти через min ползунок
+            if (value <= minValue) {
+                value = minValue + 1;
+                priceSliderMax.value = value;
+            }
+            
+            // Обновляем поле ввода
+            priceMaxInput.value = value;
+            
+            // Обновляем десктопные значения
+            if (desktopMax) desktopMax.value = value;
+            if (desktopSliderMax) desktopSliderMax.value = value;
+            
+            // Триггерим событие на десктопе
+            if (desktopSliderMax) {
+                desktopSliderMax.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            
+            // Обновляем трек
+            updatePriceRangeTrack();
+            
+            // Применяем фильтры
+            if (window.catalog && typeof window.catalog.applyFilters === 'function') {
+                window.catalog.applyFilters();
+            }
+        });
+        
+        // Инициализация трека при загрузке
+        setTimeout(updatePriceRangeTrack, 100);
+        
+        console.log('✅ Слайдер цен инициализирован');
+    }
+    
+    // 6. ДОБАВЛЕНИЕ ОБРАБОТЧИКОВ НА МОБИЛЬНЫЕ ФИЛЬТРЫ
     function addEventListenersToMobileFilters() {
         const mobileContainer = document.getElementById('mobile-filters-container');
         if (!mobileContainer) return;
@@ -170,78 +344,10 @@ function initMobileFilters() {
             });
         });
         
-        // Б. Обработчики на полях цены (ручной ввод)
-        const priceMin = mobileContainer.querySelector('#price-min');
-        const priceMax = mobileContainer.querySelector('#price-max');
-        const desktopMin = document.querySelector('#price-min');
-        const desktopMax = document.querySelector('#price-max');
-        
-        if (priceMin && desktopMin) {
-            priceMin.addEventListener('input', function() {
-                const value = this.value;
-                desktopMin.value = value;
-                
-                // Триггерим событие
-                const inputEvent = new Event('input', { bubbles: true });
-                desktopMin.dispatchEvent(inputEvent);
-            });
-        }
-        
-        if (priceMax && desktopMax) {
-            priceMax.addEventListener('input', function() {
-                const value = this.value;
-                desktopMax.value = value;
-                
-                // Триггерим событие
-                const inputEvent = new Event('input', { bubbles: true });
-                desktopMax.dispatchEvent(inputEvent);
-            });
-        }
-        
-        // В. Обработчики на слайдерах цены
-        const priceSliderMin = mobileContainer.querySelector('#price-slider-min');
-        const priceSliderMax = mobileContainer.querySelector('#price-slider-max');
-        const desktopSliderMin = document.querySelector('#price-slider-min');
-        const desktopSliderMax = document.querySelector('#price-slider-max');
-        
-        if (priceSliderMin && desktopSliderMin) {
-            priceSliderMin.addEventListener('input', function() {
-                const value = this.value;
-                desktopSliderMin.value = value;
-                
-                // Также обновляем поле ввода
-                if (priceMin && desktopMin) {
-                    priceMin.value = value;
-                    desktopMin.value = value;
-                }
-                
-                // Триггерим событие
-                const inputEvent = new Event('input', { bubbles: true });
-                desktopSliderMin.dispatchEvent(inputEvent);
-            });
-        }
-        
-        if (priceSliderMax && desktopSliderMax) {
-            priceSliderMax.addEventListener('input', function() {
-                const value = this.value;
-                desktopSliderMax.value = value;
-                
-                // Также обновляем поле ввода
-                if (priceMax && desktopMax) {
-                    priceMax.value = value;
-                    desktopMax.value = value;
-                }
-                
-                // Триггерим событие
-                const inputEvent = new Event('input', { bubbles: true });
-                desktopSliderMax.dispatchEvent(inputEvent);
-            });
-        }
-        
         console.log('✅ Обработчики добавлены');
     }
     
-    // 6. ПРИМЕНЕНИЕ ФИЛЬТРОВ
+    // 7. ПРИМЕНЕНИЕ ФИЛЬТРОВ
     function applyFilters() {
         console.log('📱 Применяю фильтры...');
         
@@ -256,7 +362,7 @@ function initMobileFilters() {
         }
     }
     
-    // 7. СБРОС ВСЕХ ФИЛЬТРОВ
+    // 8. СБРОС ВСЕХ ФИЛЬТРОВ
     function resetAllFilters() {
         console.log('📱 Сбрасываю все фильтры');
         
@@ -271,6 +377,7 @@ function initMobileFilters() {
         setTimeout(() => {
             if (filtersModal.classList.contains('modal--active')) {
                 copyFiltersToModal();
+                initPriceRangeSlider();
             }
         }, 100);
     }
@@ -343,7 +450,8 @@ function initMobileFilters() {
         open: openFiltersModal,
         close: closeFiltersModal,
         copy: copyFiltersToModal,
-        sync: syncFiltersFromDesktop
+        sync: syncFiltersFromDesktop,
+        initSlider: initPriceRangeSlider
     };
     console.log('🔧 Для отладки в консоли используй: debugMobileFilters.open()');
 }
