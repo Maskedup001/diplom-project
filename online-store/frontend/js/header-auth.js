@@ -60,7 +60,9 @@ function setupLogoutHandler() {
             event.target.closest('#logout-nav-link')) {
             
             // Используем общую функцию выхода
-            if (typeof logoutUser === 'function') {
+            if (typeof window.logoutUser === 'function') {
+                window.logoutUser();
+            } else if (typeof logoutUser === 'function') {
                 logoutUser();
             } else {
                 // Если общей функции нет
@@ -70,19 +72,32 @@ function setupLogoutHandler() {
     });
 }
 
-// Локальный backup если общая функция не загрузилась
+// ========== ИСПРАВЛЕННЫЙ logoutBackup() - УДАЛЯЕТ КОРЗИНУ! ==========
 function logoutBackup() {
     if (confirm('Вы уверены, что хотите выйти?')) {
+        console.log('🔄 Резервный выход из аккаунта');
+        
+        // ✅ УДАЛЯЕМ ВСЁ!
         localStorage.removeItem('user');
         localStorage.removeItem('token');
+        localStorage.removeItem('user_orders');
+        localStorage.removeItem('searchQuery');
         localStorage.removeItem('cart');
+        localStorage.removeItem('local_cart');
+        localStorage.removeItem('remember_me');
+        
+        console.log('✅ Все данные очищены, корзина удалена');
+        
         updateHeaderAuth();
         window.location.href = 'index.html';
     }
 }
 
-// Делаем функцию глобальной
+// Делаем функции глобальными
 window.updateHeaderAuth = updateHeaderAuth;
+window.logoutBackup = logoutBackup;
 
 // Обновляем при изменении размера окна
 window.addEventListener('resize', updateHeaderAuth);
+
+console.log('✅ header-auth.js загружен (ПРИ ВЫХОДЕ КОРЗИНА УДАЛЯЕТСЯ!)');

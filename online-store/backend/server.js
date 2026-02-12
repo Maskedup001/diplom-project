@@ -42,10 +42,43 @@ async function connectDB() {
         console.log('🔗 Подключаюсь к SQL Server...');
         pool = await sql.connect(dbConfig);
         console.log('✅ БД подключена успешно!');
+        
+        // Проверяем и создаем таблицу корзины если её нет
+        await createCartTable();
+        
         return pool;
     } catch (err) {
         console.error('❌ Ошибка подключения к БД:', err.message);
         return null;
+    }
+}
+
+// Создание таблицы корзины
+async function createCartTable() {
+    try {
+        await pool.request().query(`
+            IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='Cart' AND xtype='U')
+            CREATE TABLE Cart (
+                id INT IDENTITY(1,1) PRIMARY KEY,
+                user_id INT NOT NULL,
+                product_id INT NOT NULL,
+                quantity INT NOT NULL DEFAULT 1,
+                created_at DATETIME DEFAULT GETDATE(),
+                updated_at DATETIME DEFAULT GETDATE(),
+                FOREIGN KEY (user_id) REFERENCES Users(id),
+                FOREIGN KEY (product_id) REFERENCES Products(ProductID)
+            )
+        `);
+        console.log('✅ Таблица Cart создана/проверена');
+
+        // Создаем индекс для быстрого поиска
+        await pool.request().query(`
+            IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Cart_user_id')
+            CREATE INDEX IX_Cart_user_id ON Cart(user_id)
+        `);
+        console.log('✅ Индекс для Cart создан/проверен');
+    } catch (err) {
+        console.log('ℹ️ Таблица Cart уже существует или ошибка:', err.message);
     }
 }
 
@@ -64,6 +97,26 @@ function authenticateToken(req, res, next) {
             return res.status(403).json({ error: 'Неверный токен' });
         }
         req.user = user;
+        next();
+    });
+}
+
+// Middleware для опциональной авторизации
+function optionalAuth(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+        req.user = null;
+        return next();
+    }
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) {
+            req.user = null;
+        } else {
+            req.user = user;
+        }
         next();
     });
 }
@@ -106,7 +159,6 @@ app.post('/api/auth/register', async (req, res) => {
             return res.status(500).json({ error: 'Нет подключения к БД' });
         }
 
-        // Проверяем есть ли такой пользователь
         const userCheck = await pool.request()
             .input('email', sql.NVarChar, email)
             .input('username', sql.NVarChar, username)
@@ -116,10 +168,8 @@ app.post('/api/auth/register', async (req, res) => {
             return res.status(400).json({ error: 'Пользователь с таким email или именем уже существует' });
         }
 
-        // Хешируем пароль
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Создаем пользователя
         const result = await pool.request()
             .input('username', sql.NVarChar, username)
             .input('email', sql.NVarChar, email)
@@ -134,7 +184,6 @@ app.post('/api/auth/register', async (req, res) => {
 
         const user = result.recordset[0];
 
-        // Создаем JWT токен
         const token = jwt.sign(
             { 
                 id: user.id, 
@@ -179,7 +228,6 @@ app.post('/api/auth/login', async (req, res) => {
             return res.status(500).json({ error: 'Нет подключения к БД' });
         }
 
-        // Ищем пользователя
         const result = await pool.request()
             .input('email', sql.NVarChar, email)
             .query('SELECT * FROM Users WHERE email = @email');
@@ -190,13 +238,11 @@ app.post('/api/auth/login', async (req, res) => {
 
         const user = result.recordset[0];
 
-        // Проверяем пароль
         const validPassword = await bcrypt.compare(password, user.password_hash);
         if (!validPassword) {
             return res.status(401).json({ error: 'Неверный email или пароль' });
         }
 
-        // Создаем JWT токен
         const token = jwt.sign(
             { 
                 id: user.id, 
@@ -227,13 +273,10 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
-// Выход (ДОБАВЬ ЭТОТ КОД СЮДА)
+// Выход
 app.post('/api/auth/logout', authenticateToken, async (req, res) => {
     try {
-        // Просто возвращаем успех, JWT токен на клиенте сам удаляется
-        // Можно добавить логику инвалидации токена если нужно
         console.log(`👋 Пользователь ${req.user.id} вышел из системы`);
-        
         res.json({
             success: true,
             message: 'Выход выполнен'
@@ -286,7 +329,6 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
             return res.status(500).json({ error: 'Нет подключения к БД' });
         }
 
-        // Проверяем уникальность email и username
         const checkResult = await pool.request()
             .input('id', sql.Int, req.user.id)
             .input('email', sql.NVarChar, email)
@@ -300,7 +342,6 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
             return res.status(400).json({ error: 'Email или имя пользователя уже заняты' });
         }
 
-        // Обновляем данные
         await pool.request()
             .input('id', sql.Int, req.user.id)
             .input('username', sql.NVarChar, username)
@@ -328,7 +369,7 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
     }
 });
 
-// УДАЛЕНИЕ АККАУНТА
+// ========== УДАЛЕНИЕ АККАУНТА (С ПОЛНОЙ ОЧИСТКОЙ КОРЗИНЫ) ==========
 app.delete('/api/profile', authenticateToken, async (req, res) => {
     try {
         if (!pool) await connectDB();
@@ -343,7 +384,14 @@ app.delete('/api/profile', authenticateToken, async (req, res) => {
         await transaction.begin();
 
         try {
-            // 1. Удаляем заказы пользователя (сначала OrderItems, потом Orders)
+            // ✅ 1. Удаляем корзину пользователя (В БД)
+            await transaction.request()
+                .input('user_id', sql.Int, userId)
+                .query('DELETE FROM Cart WHERE user_id = @user_id');
+            
+            console.log(`🗑️ Корзина пользователя ${userId} удалена из БД`);
+
+            // 2. Удаляем заказы пользователя
             await transaction.request()
                 .input('user_id', sql.Int, userId)
                 .query(`
@@ -356,16 +404,6 @@ app.delete('/api/profile', authenticateToken, async (req, res) => {
                 .input('user_id', sql.Int, userId)
                 .query('DELETE FROM Orders WHERE user_id = @user_id');
 
-            // 2. Удаляем корзину пользователя (если есть таблица CartItems)
-            try {
-                await transaction.request()
-                    .input('user_id', sql.Int, userId)
-                    .query('DELETE FROM CartItems WHERE user_id = @user_id');
-            } catch (cartErr) {
-                // Игнорируем если таблицы нет
-                console.log('Таблица CartItems не найдена, пропускаем');
-            }
-
             // 3. Удаляем самого пользователя
             await transaction.request()
                 .input('id', sql.Int, userId)
@@ -373,6 +411,8 @@ app.delete('/api/profile', authenticateToken, async (req, res) => {
 
             // Коммитим транзакцию
             await transaction.commit();
+
+            console.log(`🗑️ Пользователь ${userId} удалил аккаунт (корзина полностью удалена)`);
 
             res.json({
                 success: true,
@@ -442,7 +482,264 @@ app.get('/api/products', async (req, res) => {
     }
 });
 
-// Вспомогательные функции
+// Получить товар по ID
+app.get('/api/products/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        if (!pool) await connectDB();
+        if (!pool) {
+            return res.status(500).json({ error: 'База данных недоступна' });
+        }
+
+        const result = await pool.request()
+            .input('id', sql.Int, id)
+            .query(`
+                SELECT 
+                    ProductID as id,
+                    ProductName as title,
+                    Price as price,
+                    CategoryID as categoryId,
+                    Brand as brand,
+                    Description as description,
+                    StockQuantity as stock,
+                    Rating as rating,
+                    Reviews as reviews,
+                    ImageURL as image
+                FROM Products
+                WHERE ProductID = @id
+            `);
+
+        if (result.recordset.length === 0) {
+            return res.status(404).json({ error: 'Товар не найден' });
+        }
+
+        const item = result.recordset[0];
+        const product = {
+            id: item.id,
+            title: item.title || 'Товар',
+            price: item.price || 0,
+            category: getCategoryName(item.categoryId),
+            brand: item.brand || 'unknown',
+            description: item.description || 'Описание товара',
+            stock: item.stock || 0,
+            rating: item.rating || 4.0,
+            reviews: item.reviews || 0,
+            availability: (item.stock || 0) > 0 ? 'in-stock' : 'out-of-stock',
+            image: item.image || getDefaultImage(item.categoryId)
+        };
+
+        res.json(product);
+
+    } catch (err) {
+        console.error('Ошибка при получении товара:', err.message);
+        res.status(500).json({ error: 'Ошибка получения товара' });
+    }
+});
+
+// ========== КОРЗИНА (СЕРВЕРНАЯ) ==========
+
+// ПОЛУЧИТЬ корзину пользователя
+app.get('/api/cart', authenticateToken, async (req, res) => {
+    try {
+        if (!pool) await connectDB();
+        if (!pool) {
+            return res.status(500).json({ error: 'База данных недоступна' });
+        }
+
+        const result = await pool.request()
+            .input('user_id', sql.Int, req.user.id)
+            .query(`
+                SELECT 
+                    c.id as cart_id,
+                    c.quantity,
+                    p.ProductID as id,
+                    p.ProductName as title,
+                    p.Price as price,
+                    p.ImageURL as image,
+                    p.Brand as brand,
+                    p.StockQuantity as stock
+                FROM Cart c
+                JOIN Products p ON c.product_id = p.ProductID
+                WHERE c.user_id = @user_id
+                ORDER BY c.created_at DESC
+            `);
+
+        res.json(result.recordset);
+    } catch (err) {
+        console.error('Ошибка получения корзины:', err);
+        res.status(500).json({ error: 'Ошибка получения корзины' });
+    }
+});
+
+// ДОБАВИТЬ товар в корзину
+app.post('/api/cart', authenticateToken, async (req, res) => {
+    try {
+        const { productId, quantity = 1 } = req.body;
+
+        if (!productId) {
+            return res.status(400).json({ error: 'Не указан товар' });
+        }
+
+        if (!pool) await connectDB();
+        if (!pool) {
+            return res.status(500).json({ error: 'База данных недоступна' });
+        }
+
+        const existing = await pool.request()
+            .input('user_id', sql.Int, req.user.id)
+            .input('product_id', sql.Int, productId)
+            .query(`
+                SELECT id, quantity FROM Cart 
+                WHERE user_id = @user_id AND product_id = @product_id
+            `);
+
+        if (existing.recordset.length > 0) {
+            const cartItem = existing.recordset[0];
+            const newQuantity = cartItem.quantity + quantity;
+
+            await pool.request()
+                .input('id', sql.Int, cartItem.id)
+                .input('quantity', sql.Int, newQuantity)
+                .input('updated_at', sql.DateTime, new Date())
+                .query(`
+                    UPDATE Cart 
+                    SET quantity = @quantity, updated_at = @updated_at
+                    WHERE id = @id
+                `);
+        } else {
+            await pool.request()
+                .input('user_id', sql.Int, req.user.id)
+                .input('product_id', sql.Int, productId)
+                .input('quantity', sql.Int, quantity)
+                .input('created_at', sql.DateTime, new Date())
+                .input('updated_at', sql.DateTime, new Date())
+                .query(`
+                    INSERT INTO Cart (user_id, product_id, quantity, created_at, updated_at)
+                    VALUES (@user_id, @product_id, @quantity, @created_at, @updated_at)
+                `);
+        }
+
+        const updatedCart = await pool.request()
+            .input('user_id', sql.Int, req.user.id)
+            .query(`
+                SELECT 
+                    c.id as cart_id,
+                    c.quantity,
+                    p.ProductID as id,
+                    p.ProductName as title,
+                    p.Price as price,
+                    p.ImageURL as image,
+                    p.Brand as brand
+                FROM Cart c
+                JOIN Products p ON c.product_id = p.ProductID
+                WHERE c.user_id = @user_id
+            `);
+
+        res.json({
+            success: true,
+            message: 'Товар добавлен в корзину',
+            cart: updatedCart.recordset
+        });
+
+    } catch (err) {
+        console.error('Ошибка добавления в корзину:', err);
+        res.status(500).json({ error: 'Ошибка добавления в корзину' });
+    }
+});
+
+// ОБНОВИТЬ количество товара в корзине
+app.put('/api/cart/:cartId', authenticateToken, async (req, res) => {
+    try {
+        const { cartId } = req.params;
+        const { quantity } = req.body;
+
+        if (!quantity || quantity < 1) {
+            return res.status(400).json({ error: 'Некорректное количество' });
+        }
+
+        if (!pool) await connectDB();
+        if (!pool) {
+            return res.status(500).json({ error: 'База данных недоступна' });
+        }
+
+        const checkResult = await pool.request()
+            .input('id', sql.Int, cartId)
+            .input('user_id', sql.Int, req.user.id)
+            .query('SELECT id FROM Cart WHERE id = @id AND user_id = @user_id');
+
+        if (checkResult.recordset.length === 0) {
+            return res.status(404).json({ error: 'Товар не найден в корзине' });
+        }
+
+        await pool.request()
+            .input('id', sql.Int, cartId)
+            .input('quantity', sql.Int, quantity)
+            .input('updated_at', sql.DateTime, new Date())
+            .query('UPDATE Cart SET quantity = @quantity, updated_at = @updated_at WHERE id = @id');
+
+        res.json({ 
+            success: true, 
+            message: 'Количество обновлено' 
+        });
+
+    } catch (err) {
+        console.error('Ошибка обновления корзины:', err);
+        res.status(500).json({ error: 'Ошибка обновления корзины' });
+    }
+});
+
+// УДАЛИТЬ товар из корзины
+app.delete('/api/cart/:cartId', authenticateToken, async (req, res) => {
+    try {
+        const { cartId } = req.params;
+
+        if (!pool) await connectDB();
+        if (!pool) {
+            return res.status(500).json({ error: 'База данных недоступна' });
+        }
+
+        await pool.request()
+            .input('id', sql.Int, cartId)
+            .input('user_id', sql.Int, req.user.id)
+            .query('DELETE FROM Cart WHERE id = @id AND user_id = @user_id');
+
+        res.json({ 
+            success: true, 
+            message: 'Товар удален из корзины' 
+        });
+
+    } catch (err) {
+        console.error('Ошибка удаления из корзины:', err);
+        res.status(500).json({ error: 'Ошибка удаления из корзины' });
+    }
+});
+
+// ОЧИСТИТЬ корзину пользователя
+app.delete('/api/cart', authenticateToken, async (req, res) => {
+    try {
+        if (!pool) await connectDB();
+        if (!pool) {
+            return res.status(500).json({ error: 'База данных недоступна' });
+        }
+
+        await pool.request()
+            .input('user_id', sql.Int, req.user.id)
+            .query('DELETE FROM Cart WHERE user_id = @user_id');
+
+        res.json({ 
+            success: true, 
+            message: 'Корзина очищена' 
+        });
+
+    } catch (err) {
+        console.error('Ошибка очистки корзины:', err);
+        res.status(500).json({ error: 'Ошибка очистки корзины' });
+    }
+});
+
+// ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+
 function getCategoryName(categoryId) {
     const categories = {
         1: 'smartphone',
@@ -490,7 +787,20 @@ app.listen(PORT, async () => {
     console.log(`✏️ Обновить профиль: PUT http://localhost:${PORT}/api/profile`);
     console.log(`🗑️ Удалить аккаунт: DELETE http://localhost:${PORT}/api/profile`);
     console.log(`📦 Товары: GET http://localhost:${PORT}/api/products`);
+    console.log(`🛒 Получить корзину: GET http://localhost:${PORT}/api/cart`);
+    console.log(`➕ Добавить в корзину: POST http://localhost:${PORT}/api/cart`);
+    console.log(`✏️ Обновить количество: PUT http://localhost:${PORT}/api/cart/:cartId`);
+    console.log(`❌ Удалить из корзины: DELETE http://localhost:${PORT}/api/cart/:cartId`);
+    console.log(`🧹 Очистить корзину: DELETE http://localhost:${PORT}/api/cart`);
     console.log('='.repeat(50));
     
     await connectDB();
+});
+
+process.on('SIGINT', async () => {
+    if (pool) {
+        await pool.close();
+        console.log('🔌 Подключение к БД закрыто');
+    }
+    process.exit(0);
 });

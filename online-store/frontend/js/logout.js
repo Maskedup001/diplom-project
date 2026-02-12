@@ -6,35 +6,50 @@ function logoutUser() {
     
     console.log('🔄 Выход из аккаунта...');
     
-    // 1. Получаем токен ДО удаления
     const token = localStorage.getItem('token');
     
-    // 2. Отправляем запрос на сервер если есть токен
     if (token) {
         fetch('http://localhost:3000/api/auth/logout', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
-        }).catch(err => {
-            console.log('Сервер недоступен');
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log('✅ Запрос на выход отправлен');
+            }
+        })
+        .catch(err => {
+            console.log('⚠️ Сервер недоступен, выход выполнен локально');
         });
     }
     
-    // 3. Очищаем все данные
+    // ✅ ПРИ ВЫХОДЕ - УДАЛЯЕМ ВСЁ!
     localStorage.removeItem('user');
     localStorage.removeItem('token');
-    localStorage.removeItem('cart');
     localStorage.removeItem('user_orders');
     localStorage.removeItem('searchQuery');
+    localStorage.removeItem('cart');
+    localStorage.removeItem('local_cart');
+    localStorage.removeItem('remember_me');
     
-    // 4. Обновляем header
-    if (typeof updateHeaderAuth === 'function') {
+    console.log('✅ Все данные очищены, корзина удалена');
+    
+    if (typeof window.updateHeaderAuth === 'function') {
+        window.updateHeaderAuth();
+    } else if (typeof updateHeaderAuth === 'function') {
         updateHeaderAuth();
     }
     
-    // 5. ВСЕГДА перенаправляем на главную
     window.location.href = 'index.html';
 }
 
 window.logoutUser = logoutUser;
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { logoutUser };
+}
+
+console.log('✅ logout.js загружен (ПРИ ВЫХОДЕ КОРЗИНА УДАЛЯЕТСЯ!)');

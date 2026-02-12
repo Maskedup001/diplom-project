@@ -26,11 +26,11 @@
 
             <!-- Контакты -->
             <div class="header__contacts">
-    <a href="tel:+74950000000" class="header__phone">
-        <span class="header__phone-icon">📞</span>
-        <span>+7 (495) 000-00-00</span>
-    </a>
-</div>
+                <a href="tel:+74950000000" class="header__phone">
+                    <span class="header__phone-icon">📞</span>
+                    <span>+7 (495) 000-00-00</span>
+                </a>
+            </div>
 
             <!-- Корзина -->
             <a href="cart.html" class="cart header__cart">
@@ -60,266 +60,171 @@
             </ul>
             
             <!-- Бургер-кнопка -->
-<div class="nav__burger-container">
-    <button class="nav__burger" id="nav-burger" aria-label="Меню">
-        <span class="burger-icon">☰</span>
-        <span class="close-icon">✕</span>
-    </button>
-</div>
+            <div class="nav__burger-container">
+                <button class="nav__burger" id="nav-burger" aria-label="Меню">
+                    <span class="burger-icon">☰</span>
+                    <span class="close-icon">✕</span>
+                </button>
+            </div>
         </nav>
     </header>
 
-	<!-- ОСНОВНОЕ СОДЕРЖИМОЕ (Блок main) -->
-	<main class="main">
-		<div class="container">
-			<h1 class="main__title">Добро пожаловать в интернет-магазин электроники «ТехноМир»</h1>
+    <!-- ОСНОВНОЕ СОДЕРЖИМОЕ -->
+    <main class="main">
+        <div class="container">
+            <h1 class="main__title">Добро пожаловать в интернет-магазин электроники «ТехноМир»</h1>
 
-			<!-- Секция: Категории товаров (Блок categories) -->
-			<section class="categories">
-				<h2 class="categories__title section-title">Популярные категории</h2>
-				<div class="categories__grid">
-					<a href="catalog.html?category=smartphone" class="category-card">
-						<div class="category-card__image-container">
-							<img src="images/index-category/phone_photo.png" alt="Смартфоны" class="category-card__image">
-						</div>
-						<h3 class="category-card__title">Смартфоны</h3>
-					</a>
-					<a href="catalog.html?category=laptop" class="category-card">
-						<div class="category-card__image-container">
-							<img src="images/index-category/laptops_photo.png" alt="Ноутбуки" class="category-card__image">
-						</div>
-						<h3 class="category-card__title">Ноутбуки</h3>
-					</a>
-					<a href="catalog.html?category=tv" class="category-card">
-						<div class="category-card__image-container">
-							<img src="images/index-category/television_photo.png" alt="Телевизоры" class="category-card__image">
-						</div>
-						<h3 class="category-card__title">Телевизоры</h3>
-					</a>
-					<a href="catalog.html?category=appliances" class="category-card">
-						<div class="category-card__image-container">
-							<img src="images/index-category/appliances_photo.png" alt="Бытовая техника" class="category-card__image">
-						</div>
-						<h3 class="category-card__title">Бытовая техника</h3>
-					</a>
-				</div>
-			</section>
+            <!-- Секция: Категории товаров -->
+            <section class="categories">
+                <h2 class="categories__title section-title">Популярные категории</h2>
+                <div class="categories__grid">
+                    <a href="catalog.html?category=smartphone" class="category-card">
+                        <div class="category-card__image-container">
+                            <img src="images/index-category/phone_photo.png" alt="Смартфоны" class="category-card__image">
+                        </div>
+                        <h3 class="category-card__title">Смартфоны</h3>
+                    </a>
+                    <a href="catalog.html?category=laptop" class="category-card">
+                        <div class="category-card__image-container">
+                            <img src="images/index-category/laptops_photo.png" alt="Ноутбуки" class="category-card__image">
+                        </div>
+                        <h3 class="category-card__title">Ноутбуки</h3>
+                    </a>
+                    <a href="catalog.html?category=tv" class="category-card">
+                        <div class="category-card__image-container">
+                            <img src="images/index-category/television_photo.png" alt="Телевизоры" class="category-card__image">
+                        </div>
+                        <h3 class="category-card__title">Телевизоры</h3>
+                    </a>
+                    <a href="catalog.html?category=appliances" class="category-card">
+                        <div class="category-card__image-container">
+                            <img src="images/index-category/appliances_photo.png" alt="Бытовая техника" class="category-card__image">
+                        </div>
+                        <h3 class="category-card__title">Бытовая техника</h3>
+                    </a>
+                </div>
+            </section>
 
-			<!-- Секция: Хиты продаж -->
-			<section class="products">
-				<h2 class="products__title section-title">Хиты продаж</h2>
-				<div class="products__grid">
-					<!-- 1 -->
-					<div class="product-card" data-id="1" data-title="iPhone 15 Pro" data-price="99990"
-						data-image="images/iphone.jpg">
-						<img src="images/iphone.jpg" alt="iPhone 15 Pro" class="product-card__image">
-						<h3 class="product-card__title">iPhone 15 Pro</h3>
-						<p class="product-card__description">Новый флагман Apple с процессором A17 Pro</p>
-						<div class="product-card__footer">
-							<span class="product-card__price">99 990 ₽</span>
-							<button class="button add-to-cart">В корзину</button>
-						</div>
-					</div>
-					<!-- 2 -->
-					<div class="product-card" data-id="2" data-title="MacBook Air M2" data-price="129990"
-						data-image="images/macbook.jpg">
-						<img src="images/macbook.jpg" alt="MacBook Air M2" class="product-card__image">
-						<h3 class="product-card__title">MacBook Air M2</h3>
-						<p class="product-card__description">Ультратонкий ноутбук с чипом Apple M2</p>
-						<div class="product-card__footer">
-							<span class="product-card__price">129 990 ₽</span>
-							<button class="button add-to-cart">В корзину</button>
-						</div>
-					</div>
-					<!-- 3 -->
-					<div class="product-card" data-id="3" data-title="Samsung Galaxy S23 Ultra" data-price="89990"
-						data-image="images/samsung.jpg">
-						<img src="images/samsung.jpg" alt="Samsung Galaxy S23 Ultra" class="product-card__image">
-						<h3 class="product-card__title">Samsung Galaxy S23 Ultra</h3>
-						<p class="product-card__description">Смартфон с лучшей камерой на рынке</p>
-						<div class="product-card__footer">
-							<span class="product-card__price">89 990 ₽</span>
-							<button class="button add-to-cart">В корзину</button>
-						</div>
-					</div>
-					<!-- 4 -->
-					<div class="product-card" data-id="7" data-title="AirPods Pro 2" data-price="24990"
-						data-image="images/airpods.jpg">
-						<img src="images/airpods.jpg" alt="AirPods Pro 2" class="product-card__image">
-						<h3 class="product-card__title">AirPods Pro 2</h3>
-						<p class="product-card__description">Наушники с активным шумоподавлением</p>
-						<div class="product-card__footer">
-							<span class="product-card__price">24 990 ₽</span>
-							<button class="button add-to-cart">В корзину</button>
-						</div>
-					</div>
-					<!-- 5 -->
-					<div class="product-card" data-id="8" data-title="PlayStation 5" data-price="59990"
-						data-image="images/ps5.jpg">
-						<img src="images/ps5.jpg" alt="PlayStation 5" class="product-card__image">
-						<h3 class="product-card__title">PlayStation 5</h3>
-						<p class="product-card__description">Игровая консоль нового поколения</p>
-						<div class="product-card__footer">
-							<span class="product-card__price">59 990 ₽</span>
-							<button class="button add-to-cart">В корзину</button>
-						</div>
-					</div>
-					<!-- 6 -->
-					<div class="product-card" data-id="5" data-title="Sony Bravia XR-55A80L" data-price="159990"
-						data-image="images/sony-tv.jpg">
-						<img src="images/sony-tv.jpg" alt="Sony Bravia XR-55A80L" class="product-card__image">
-						<h3 class="product-card__title">Sony Bravia XR-55A80L</h3>
-						<p class="product-card__description">OLED телевизор 55" с процессором Cognitive Processor XR</p>
-						<div class="product-card__footer">
-							<span class="product-card__price">159 990 ₽</span>
-							<button class="button add-to-cart">В корзину</button>
-						</div>
-					</div>
-				</div>
-			</section>
+            <!-- Секция: Хиты продаж (загружаются из БД) -->
+            <section class="products">
+                <h2 class="products__title section-title">Хиты продаж</h2>
+                <div class="products__grid">
+                    <!-- Товары загрузятся динамически через index.js -->
+                </div>
+            </section>
 
-			<!-- Секция: Акции -->
-<section class="promo">
-    <h2 class="promo__title section-title">Специальные предложения</h2>
-    <div class="promo__grid">
-        <div class="promo-card promo-card--main">
-            <div class="promo-card__content">
-                <h3 class="promo-card__title">Распродажа техники</h3>
-                <p class="promo-card__text">Скидки до 30% на прошлогодние модели</p>
-                <a href="catalog.html?promo=sale" class="button promo-card__button">Смотреть</a>
+            <!-- Секция: Акции -->
+            <section class="promo">
+                <h2 class="promo__title section-title">Специальные предложения</h2>
+                <div class="promo__grid">
+                    <div class="promo-card promo-card--main">
+                        <div class="promo-card__content">
+                            <h3 class="promo-card__title">Распродажа техники</h3>
+                            <p class="promo-card__text">Скидки до 30% на прошлогодние модели</p>
+                            <a href="catalog.html?promo=sale" class="button promo-card__button">Смотреть</a>
+                        </div>
+                    </div>
+                    <div class="promo-card promo-card--secondary">
+                        <div class="promo-card__content">
+                            <h3 class="promo-card__title">Рассрочка 0%</h3>
+                            <p class="promo-card__text">Покупайте технику без переплат</p>
+                            <a href="#credit" class="button promo-card__button">Подробнее</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Секция: Новинки (загружаются из БД) -->
+            <section class="products">
+                <h2 class="products__title section-title">Новинки</h2>
+                <div class="products__grid">
+                    <!-- Товары загрузятся динамически через index.js -->
+                </div>
+            </section>
+
+            <!-- Секция: Преимущества -->
+            <section class="features">
+                <h2 class="features__title section-title">Почему выбирают нас?</h2>
+                <div class="features__list">
+                    <div class="feature">
+                        <div class="feature__icon">🚚</div>
+                        <h3 class="feature__title">Быстрая доставка</h3>
+                        <p class="feature__text">По Москве — за 2 часа, по России — от 1 дня.</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature__icon">🛡️</div>
+                        <h3 class="feature__title">Официальная гарантия</h3>
+                        <p class="feature__text">На все товары от 1 до 3 лет от производителя.</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature__icon">💳</div>
+                        <h3 class="feature__title">Любые способы оплаты</h3>
+                        <p class="feature__text">Картой, наличными, переводом или в кредит.</p>
+                    </div>
+                    <div class="feature">
+                        <div class="feature__icon">📞</div>
+                        <h3 class="feature__title">Поддержка 24/7</h3>
+                        <p class="feature__text">Консультанты всегда на связи для помощи.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- ПОДВАЛ САЙТА -->
+    <footer class="footer">
+        <div class="container footer__container">
+            <div class="footer__section">
+                <h3 class="footer__title">О магазине</h3>
+                <p class="footer__text">«ТехноМир» — современный интернет-магазин электроники и бытовой техники с 2015 года.</p>
+            </div>
+            <div class="footer__section">
+                <h3 class="footer__title">Контакты</h3>
+                <p class="footer__text">📞 +7 (495) 000-00-00<br>📍 Москва, ул. Техническая, д. 10<br>✉️ info@technomir.ru</p>
+            </div>
+            <div class="footer__section">
+                <h3 class="footer__title">Мы в соцсетях</h3>
+                <div class="social footer__social">
+                    <a href="#" class="social__link">VK</a>
+                    <a href="#" class="social__link">TG</a>
+                    <a href="#" class="social__link">YouTube</a>
+                </div>
             </div>
         </div>
-        <div class="promo-card promo-card--secondary">
-            <div class="promo-card__content">
-                <h3 class="promo-card__title">Рассрочка 0%</h3>
-                <p class="promo-card__text">Покупайте технику без переплат</p>
-                <a href="#credit" class="button promo-card__button">Подробнее</a> <!-- Убрал button--outline -->
+        <div class="footer__copyright">© 2023 ТехноМир. Все права защищены.</div>
+    </footer>
+
+    <!-- Модальное окно корзины -->
+    <div class="modal modal--cart" id="cart-modal">
+        <div class="modal__content">
+            <button class="modal__close" data-modal-close="cart-modal">×</button>
+            <h2 class="modal__title">Ваша корзина</h2>
+            <div class="cart-items" id="cart-items">
+                <!-- Товары будут добавляться сюда через JS -->
+                <div class="cart-empty" id="cart-empty">
+                    Корзина пуста
+                </div>
+            </div>
+            <div class="cart-total" id="cart-total">
+                Итого: <span class="cart-total__price">0</span> ₽
+            </div>
+            <div class="modal__buttons">
+                <button class="button button--outline" data-modal-close="cart-modal">Продолжить покупки</button>
+                <a href="cart.html" class="button">Оформить заказ</a>
             </div>
         </div>
     </div>
-</section>
 
-			<!-- Секция: Новинки -->
-			<section class="products">
-				<h2 class="products__title section-title">Новинки</h2>
-				<div class="products__grid">
-					<div class="product-card" data-id="11" data-title="Samsung Galaxy Watch 6" data-price="29990"
-						data-image="images/watch.jpg">
-						<img src="images/watch.jpg" alt="Samsung Galaxy Watch 6" class="product-card__image">
-						<h3 class="product-card__title">Samsung Galaxy Watch 6</h3>
-						<p class="product-card__description">Смарт-часы с функцией отслеживания здоровья</p>
-						<div class="product-card__footer">
-							<span class="product-card__price">29 990 ₽</span>
-							<button class="button add-to-cart">В корзину</button>
-						</div>
-					</div>
-					<div class="product-card" data-id="12" data-title="iPad Air 5" data-price="59990"
-						data-image="images/ipad.jpg">
-						<img src="images/ipad.jpg" alt="iPad Air 5" class="product-card__image">
-						<h3 class="product-card__title">iPad Air 5</h3>
-						<p class="product-card__description">Планшет с чипом M1 и дисплеем Liquid Retina</p>
-						<div class="product-card__footer">
-							<span class="product-card__price">59 990 ₽</span>
-							<button class="button add-to-cart">В корзину</button>
-						</div>
-					</div>
-					<div class="product-card" data-id="13" data-title="Nintendo Switch OLED" data-price="32990"
-						data-image="images/switch.jpg">
-						<img src="images/switch.jpg" alt="Nintendo Switch OLED" class="product-card__image">
-						<h3 class="product-card__title">Nintendo Switch OLED</h3>
-						<p class="product-card__description">Гибридная игровая консоль с OLED-экраном</p>
-						<div class="product-card__footer">
-							<span class="product-card__price">32 990 ₽</span>
-							<button class="button add-to-cart">В корзину</button>
-						</div>
-					</div>
-				</div>
-			</section>
+    <!-- Затемнение фона для модальных окон -->
+    <div class="overlay" id="overlay"></div>
 
-			<!-- Секция: Преимущества (Блок features) -->
-			<section class="features">
-				<h2 class="features__title section-title">Почему выбирают нас?</h2>
-				<div class="features__list">
-					<div class="feature">
-						<div class="feature__icon">🚚</div>
-						<h3 class="feature__title">Быстрая доставка</h3>
-						<p class="feature__text">По Москве — за 2 часа, по России — от 1 дня.</p>
-					</div>
-					<div class="feature">
-						<div class="feature__icon">🛡️</div>
-						<h3 class="feature__title">Официальная гарантия</h3>
-						<p class="feature__text">На все товары от 1 до 3 лет от производителя.</p>
-					</div>
-					<div class="feature">
-						<div class="feature__icon">💳</div>
-						<h3 class="feature__title">Любые способы оплаты</h3>
-						<p class="feature__text">Картой, наличными, переводом или в кредит.</p>
-					</div>
-					<div class="feature">
-						<div class="feature__icon">📞</div>
-						<h3 class="feature__title">Поддержка 24/7</h3>
-						<p class="feature__text">Консультанты всегда на связи для помощи.</p>
-					</div>
-				</div>
-			</section>
-		</div>
-	</main>
-
-	<!-- ПОДВАЛ САЙТА (Блок footer) -->
-	<footer class="footer">
-		<div class="container footer__container">
-			<div class="footer__section">
-				<h3 class="footer__title">О магазине</h3>
-				<p class="footer__text">«ТехноМир» — современный интернет-магазин электроники и бытовой техники с 2015 года.</p>
-			</div>
-			<div class="footer__section">
-				<h3 class="footer__title">Контакты</h3>
-				<p class="footer__text">📞 +7 (495) 000-00-00<br>📍 Москва, ул. Техническая, д. 10<br>✉️ info@technomir.ru</p>
-			</div>
-			<div class="footer__section">
-				<h3 class="footer__title">Мы в соцсетях</h3>
-				<div class="social footer__social">
-					<a href="#" class="social__link">VK</a>
-					<a href="#" class="social__link">TG</a>
-					<a href="#" class="social__link">YouTube</a>
-				</div>
-			</div>
-		</div>
-		<div class="footer__copyright">© 2023 ТехноМир. Все права защищены.</div>
-	</footer>
-
-	<!-- Модальное окно корзины (Блок modal) -->
-	<div class="modal modal--cart" id="cart-modal">
-		<div class="modal__content">
-			<button class="modal__close" data-modal-close="cart-modal">×</button>
-			<h2 class="modal__title">Ваша корзина</h2>
-			<div class="cart-items" id="cart-items">
-				<!-- Товары будут добавляться сюда через JS -->
-				<div class="cart-empty" id="cart-empty">
-					Корзина пуста
-				</div>
-			</div>
-			<div class="cart-total" id="cart-total">
-				Итого: <span class="cart-total__price">0</span> ₽
-			</div>
-			<div class="modal__buttons">
-				<button class="button button--outline" data-modal-close="cart-modal">Продолжить покупки</button>
-				<a href="cart.html" class="button">Оформить заказ</a>
-			</div>
-		</div>
-	</div>
-
-	<!-- Затемнение фона для модальных окон -->
-	<div class="overlay" id="overlay"></div>
-
-	<!-- Подключение JavaScript -->
-	 <script src="js/logout.js"></script>
-	<script src="js/script.js"></script>
-	<script src="js/search.js"></script>
-	<script src="js/mobile-menu.js"></script>
-	<script src="js/header-auth.js"></script>
-	
-	
+    <!-- Подключение JavaScript -->
+    <script src="js/logout.js"></script>
+    <script src="js/script.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/mobile-menu.js"></script>
+    <script src="js/header-auth.js"></script>
+    <script src="js/index.js"></script>
+    
 </body>
-
 </html>

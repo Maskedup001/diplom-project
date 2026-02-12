@@ -5,13 +5,11 @@ let loginForm, registerForm;
 
 // Инициализация
 document.addEventListener('DOMContentLoaded', () => {
-    // Форма входа
     loginForm = document.getElementById('loginForm');
     if (loginForm) {
         initLoginForm();
     }
     
-    // Форма регистрации
     registerForm = document.getElementById('registerForm');
     if (registerForm) {
         initRegisterForm();
@@ -25,29 +23,24 @@ function initLoginForm() {
     const passwordInput = document.getElementById('login-password');
     const rememberCheckbox = document.getElementById('remember-me');
     
-    // Добавляем глазок для пароля
     addPasswordToggle(passwordInput);
     
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // Валидация
         if (!validateLoginForm()) {
             return;
         }
         
-        // Данные формы
         const formData = {
             email: emailInput.value.trim(),
             password: passwordInput.value,
             remember: rememberCheckbox.checked
         };
         
-        // Показываем загрузку
         showLoading(form, true);
         
         try {
-            // Отправляем запрос на сервер
             const response = await fetch('/api/auth/login', {
                 method: 'POST',
                 headers: {
@@ -62,10 +55,8 @@ function initLoginForm() {
             const result = await response.json();
             
             if (response.ok) {
-                // Успешный вход
                 showMessage(form, 'success', 'Вход выполнен успешно!');
                 
-                // Сохраняем токен
                 if (result.token) {
                     localStorage.setItem('token', result.token);
                     localStorage.setItem('user', JSON.stringify(result.user));
@@ -73,15 +64,22 @@ function initLoginForm() {
                     if (formData.remember) {
                         localStorage.setItem('remember_me', 'true');
                     }
+                    
+                    const localCart = JSON.parse(localStorage.getItem('local_cart')) || [];
+                    if (localCart.length > 0) {
+                        await syncCartAfterLogin(result.token);
+                    } else {
+                        if (window.cart && typeof window.cart.loadCartFromServer === 'function') {
+                            await window.cart.loadCartFromServer();
+                        }
+                    }
                 }
                 
-                // Редирект через 1.5 секунды
                 setTimeout(() => {
                     window.location.href = 'index.html';
                 }, 1500);
                 
             } else {
-                // Ошибка от сервера
                 showMessage(form, 'error', result.error || 'Ошибка входа');
                 showLoading(form, false);
             }
@@ -93,7 +91,6 @@ function initLoginForm() {
         }
     });
     
-    // Валидация в реальном времени
     emailInput.addEventListener('blur', () => validateEmail(emailInput));
     passwordInput.addEventListener('blur', () => validatePassword(passwordInput));
 }
@@ -105,17 +102,14 @@ function initRegisterForm() {
     const confirmInput = document.getElementById('register-confirm');
     const phoneInput = document.getElementById('register-phone');
     
-    // Добавляем глазки для паролей
     addPasswordToggle(passwordInput);
     addPasswordToggle(confirmInput);
     
-    // ФОРМАТИРОВАНИЕ ТЕЛЕФОНА - ИСПРАВЛЕННЫЙ ВАРИАНТ
     if (phoneInput) {
         phoneInput.addEventListener('input', (e) => {
             formatPhoneNumber(e.target);
         });
         
-        // Разрешаем ввод любых символов
         phoneInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && e.target.value.trim()) {
                 e.preventDefault();
@@ -123,7 +117,6 @@ function initRegisterForm() {
         });
     }
     
-    // Реальная проверка пароля
     if (passwordInput) {
         passwordInput.addEventListener('input', validatePasswordStrength);
         confirmInput.addEventListener('input', validatePasswordMatch);
@@ -132,32 +125,27 @@ function initRegisterForm() {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // Валидация
         if (!validateRegisterForm()) {
             return;
         }
         
-        // Собираем данные
         const name = document.getElementById('register-name').value.trim();
         const surname = document.getElementById('register-surname').value.trim();
         const email = document.getElementById('register-email').value.trim();
         const phone = phoneInput ? phoneInput.value.trim() : '';
         const password = document.getElementById('register-password').value;
         
-        // Показываем загрузку
         showLoading(form, true);
         
         try {
-            // Подготавливаем данные для нашего backend
             const backendData = {
-                username: email.split('@')[0], // Берем часть email как username
+                username: email.split('@')[0],
                 email: email,
                 password: password,
                 full_name: `${name} ${surname}`.trim(),
                 phone: phone || ''
             };
             
-            // Отправляем запрос на сервер
             const response = await fetch('/api/auth/register', {
                 method: 'POST',
                 headers: {
@@ -169,22 +157,28 @@ function initRegisterForm() {
             const result = await response.json();
             
             if (response.ok) {
-                // Успешная регистрация
                 showMessage(form, 'success', 'Регистрация успешна!');
                 
-                // Сохраняем токен
                 if (result.token) {
                     localStorage.setItem('token', result.token);
                     localStorage.setItem('user', JSON.stringify(result.user));
+                    
+                    // НОВЫЙ ПОЛЬЗОВАТЕЛЬ - КОРЗИНА ПУСТАЯ!
+                    localStorage.removeItem('local_cart');
+                    localStorage.removeItem('cart');
+                    
+                    if (window.cart && typeof window.cart.loadCartFromServer === 'function') {
+                        await window.cart.loadCartFromServer();
+                    }
+                    
+                    console.log('✅ Новый пользователь зарегистрирован, корзина пуста');
                 }
                 
-                // Автоматический вход или редирект
                 setTimeout(() => {
                     window.location.href = 'profile.html';
                 }, 1500);
                 
             } else {
-                // Ошибка от сервера
                 showMessage(form, 'error', result.error || 'Ошибка регистрации');
                 showLoading(form, false);
             }
@@ -196,7 +190,6 @@ function initRegisterForm() {
         }
     });
     
-    // Валидация в реальном времени
     const inputs = form.querySelectorAll('.form__input');
     inputs.forEach(input => {
         input.addEventListener('blur', () => {
@@ -207,32 +200,73 @@ function initRegisterForm() {
     });
 }
 
+// ========== СИНХРОНИЗАЦИЯ КОРЗИНЫ ПОСЛЕ ВХОДА ==========
+async function syncCartAfterLogin(token) {
+    try {
+        console.log('🔄 Синхронизация корзины после входа...');
+        
+        const localCart = JSON.parse(localStorage.getItem('local_cart')) || [];
+        
+        if (localCart.length === 0) {
+            console.log('📭 Локальная корзина пуста');
+            
+            if (window.cart && typeof window.cart.loadCartFromServer === 'function') {
+                await window.cart.loadCartFromServer();
+            }
+            return;
+        }
+        
+        console.log(`📦 Переносим ${localCart.length} товаров из локальной корзины на сервер...`);
+        
+        for (const item of localCart) {
+            try {
+                await fetch('/api/cart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        productId: item.id,
+                        quantity: item.quantity || 1
+                    })
+                });
+                console.log(`✅ Товар ${item.title || item.id} перенесен на сервер`);
+            } catch (error) {
+                console.error(`❌ Ошибка переноса товара ${item.id}:`, error);
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 50));
+        }
+        
+        // НЕ УДАЛЯЕМ local_cart - он останется в localStorage
+        
+        if (window.cart && typeof window.cart.loadCartFromServer === 'function') {
+            await window.cart.loadCartFromServer();
+        }
+        
+    } catch (error) {
+        console.error('❌ Ошибка синхронизации корзины:', error);
+    }
+}
+
 // ========== ДОБАВЛЕНИЕ ГЛАЗКА ДЛЯ ПАРОЛЯ ==========
 function addPasswordToggle(passwordInput) {
     if (!passwordInput || passwordInput.type !== 'password') return;
+    if (passwordInput.closest('.password-field')) return;
     
-    // Проверяем, не добавлен ли уже глазок
-    if (passwordInput.closest('.password-field')) {
-        return;
-    }
-    
-    // Создаем контейнер для поля
     const fieldContainer = document.createElement('div');
     fieldContainer.className = 'password-field';
     
-    // Получаем родительский контейнер
     const formGroup = passwordInput.closest('.form__group');
     if (!formGroup) return;
     
-    // Оборачиваем input в контейнер
     const parent = passwordInput.parentNode;
     parent.insertBefore(fieldContainer, passwordInput);
     fieldContainer.appendChild(passwordInput);
     
-    // Добавляем отступ для глазка
     passwordInput.style.paddingRight = '45px';
     
-    // Создаем кнопку глазка
     const toggleButton = document.createElement('button');
     toggleButton.type = 'button';
     toggleButton.className = 'password-toggle';
@@ -244,10 +278,8 @@ function addPasswordToggle(passwordInput) {
         </svg>
     `;
     
-    // Добавляем кнопку в контейнер
     fieldContainer.appendChild(toggleButton);
     
-    // Обработчик переключения видимости
     toggleButton.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -255,7 +287,6 @@ function addPasswordToggle(passwordInput) {
         const isPassword = passwordInput.type === 'password';
         passwordInput.type = isPassword ? 'text' : 'password';
         
-        // Меняем иконку
         toggleButton.innerHTML = isPassword ? `
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>
@@ -273,7 +304,6 @@ function formatPhoneNumber(input) {
     let value = input.value.replace(/\D/g, '');
     
     if (value.length > 0) {
-        // Формат: +7 (XXX) XXX-XX-XX
         let formatted = '+7 ';
         
         if (value.length > 1) {
@@ -303,13 +333,8 @@ function validateLoginForm() {
     const emailInput = document.getElementById('login-email');
     const passwordInput = document.getElementById('login-password');
     
-    if (!validateEmail(emailInput)) {
-        isValid = false;
-    }
-    
-    if (!validatePassword(passwordInput)) {
-        isValid = false;
-    }
+    if (!validateEmail(emailInput)) isValid = false;
+    if (!validatePassword(passwordInput)) isValid = false;
     
     return isValid;
 }
@@ -490,16 +515,64 @@ function showLoading(form, show) {
     }
 }
 
-function logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('remember_me');
-    window.location.href = 'index.html';
+// ========== ИСПРАВЛЕННЫЙ ВЫХОД ИЗ СИСТЕМЫ (КОРЗИНА УДАЛЯЕТСЯ!) ==========
+async function logout() {
+    try {
+        const token = localStorage.getItem('token');
+        if (token) {
+            await fetch('/api/auth/logout', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            }).catch(err => console.log('⚠️ Сервер недоступен при выходе'));
+        }
+    } catch (error) {
+        console.error('Ошибка при выходе:', error);
+    } finally {
+        // ✅ УДАЛЯЕМ ВСЁ!
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('remember_me');
+        localStorage.removeItem('cart');
+        localStorage.removeItem('local_cart');
+        localStorage.removeItem('user_orders');
+        localStorage.removeItem('searchQuery');
+        
+        console.log('👋 Пользователь вышел из системы (корзина удалена)');
+        
+        if (window.cart && typeof window.cart.loadCartFromServer === 'function') {
+            window.cart.items = [];
+            window.cart.updateCartDisplay();
+        }
+        
+        window.location.href = 'index.html';
+    }
 }
 
-// Экспорт для использования в других файлах
+// ========== ПРОВЕРКА АВТОРИЗАЦИИ ==========
+function checkAuth() {
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    
+    if (!token || !user) {
+        return null;
+    }
+    
+    try {
+        return JSON.parse(user);
+    } catch (error) {
+        return null;
+    }
+}
+
+// ========== ЭКСПОРТ ==========
 window.authModule = {
     validateEmail,
     validatePassword,
-    logout
+    logout,
+    checkAuth,
+    syncCartAfterLogin
 };
+
+console.log('✅ auth.js загружен (ПРИ ВЫХОДЕ КОРЗИНА УДАЛЯЕТСЯ!)');

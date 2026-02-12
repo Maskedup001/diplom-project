@@ -100,11 +100,11 @@ function setupAllEventListeners() {
             e.preventDefault();
             e.stopPropagation();
             
-            // Используем общую функцию выхода
-            if (typeof logoutUser === 'function') {
+            if (typeof window.logoutUser === 'function') {
+                window.logoutUser();
+            } else if (typeof logoutUser === 'function') {
                 logoutUser();
             } else {
-                // Если общей функции нет, используем локальную
                 logoutBackup();
             }
         });
@@ -124,18 +124,28 @@ function setupAllEventListeners() {
     setupEditModalListeners();
 }
 
-// Локальный backup если общая функция не загрузилась
+// ========== ИСПРАВЛЕННЫЙ logoutBackup() - ВЫХОД (КОРЗИНА УДАЛЯЕТСЯ!) ==========
 function logoutBackup() {
-    // Тут можно оставить confirm или убрать (он уже в logoutUser)
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    localStorage.removeItem('cart');
-    
-    if (typeof updateHeaderAuth === 'function') {
-        updateHeaderAuth();
+    if (confirm('Вы уверены, что хотите выйти?')) {
+        console.log('🔄 Резервный выход из аккаунта (корзина удаляется)');
+        
+        // ✅ УДАЛЯЕМ ВСЁ!
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user_orders');
+        localStorage.removeItem('searchQuery');
+        localStorage.removeItem('cart');
+        localStorage.removeItem('local_cart');
+        localStorage.removeItem('remember_me');
+        
+        console.log('✅ Все данные очищены, корзина удалена');
+        
+        if (typeof updateHeaderAuth === 'function') {
+            updateHeaderAuth();
+        }
+        
+        window.location.href = 'index.html';
     }
-    
-    window.location.href = 'index.html';
 }
 
 // ========== МОДАЛЬНОЕ ОКНО ==========
@@ -151,29 +161,24 @@ function setupEditModalListeners() {
         return;
     }
     
-    // Закрытие по крестику
     if (closeBtn) {
         closeBtn.addEventListener('click', closeEditModal);
     }
     
-    // Закрытие по кнопке Отмена
     if (cancelBtn) {
         cancelBtn.addEventListener('click', closeEditModal);
     }
     
-    // Закрытие по overlay
     overlay.addEventListener('click', (e) => {
         if (e.target === overlay) closeEditModal();
     });
     
-    // Закрытие по ESC
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && modal.classList.contains('modal--active')) {
             closeEditModal();
         }
     });
     
-    // Отправка формы
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         await saveProfile();
@@ -182,7 +187,7 @@ function setupEditModalListeners() {
 
 // Открытие модального окна
 function openEditModal() {
-    console.log('🟢 ОТКРЫВАЮ МОДАЛЬНОЕ ОКНО ЧЕРЕЗ CSS КЛАССЫ');
+    console.log('🟢 ОТКРЫВАЮ МОДАЛЬНОЕ ОКНО');
     
     const modal = document.getElementById('edit-modal');
     const overlay = document.getElementById('overlay');
@@ -193,33 +198,27 @@ function openEditModal() {
         return;
     }
     
-    // Заполняем форму
     document.getElementById('edit-username').value = user.username || '';
     document.getElementById('edit-name').value = user.full_name || user.username || '';
     document.getElementById('edit-email').value = user.email || '';
     document.getElementById('edit-phone').value = user.phone || '';
     
-    // Показываем через CSS классы
     modal.classList.add('modal--active');
     overlay.classList.add('overlay--active');
-    
-    // Блокируем скролл
     document.body.style.overflow = 'hidden';
     
-    console.log('✅ Модальное окно открыто через классы');
+    console.log('✅ Модальное окно открыто');
 }
 
 // Закрытие модального окна
 function closeEditModal() {
-    console.log('🔴 ЗАКРЫВАЮ МОДАЛЬНОЕ ОКНО ЧЕРЕЗ CSS КЛАССЫ');
+    console.log('🔴 ЗАКРЫВАЮ МОДАЛЬНОЕ ОКНО');
     
     const modal = document.getElementById('edit-modal');
     const overlay = document.getElementById('overlay');
     
     if (modal) modal.classList.remove('modal--active');
     if (overlay) overlay.classList.remove('overlay--active');
-    
-    // Разблокируем скролл
     document.body.style.overflow = '';
 }
 
@@ -235,7 +234,6 @@ async function saveProfile() {
     const token = localStorage.getItem('token');
     const user = JSON.parse(localStorage.getItem('user'));
     
-    // Валидация
     if (!username || !email || !full_name) {
         alert('Заполните все обязательные поля');
         return;
@@ -268,7 +266,6 @@ async function saveProfile() {
         
         const result = await response.json();
         
-        // Обновляем localStorage
         const updatedUser = {
             ...user,
             username: username,
@@ -278,11 +275,7 @@ async function saveProfile() {
         };
         
         localStorage.setItem('user', JSON.stringify(updatedUser));
-        
-        // Обновляем отображение
         updateUserDisplay(updatedUser);
-        
-        // Закрываем модальное окно
         closeEditModal();
         
         alert('✅ Профиль успешно обновлен!');
@@ -298,11 +291,17 @@ function isValidEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-// Удаление аккаунта
+// ========== ИСПРАВЛЕННОЕ УДАЛЕНИЕ АККАУНТА (КОРЗИНА УДАЛЯЕТСЯ!) ==========
 async function deleteAccount() {
+    if (!confirm('Вы уверены, что хотите удалить аккаунт? Это действие нельзя отменить.')) {
+        return;
+    }
+    
     const token = localStorage.getItem('token');
     
     try {
+        console.log('🗑️ Удаление аккаунта...');
+        
         const response = await fetch(`${API_URL}/profile`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
@@ -312,9 +311,16 @@ async function deleteAccount() {
             throw new Error('Ошибка удаления аккаунта');
         }
         
+        // ✅ УДАЛЯЕМ ВСЁ!
         localStorage.removeItem('user');
         localStorage.removeItem('token');
+        localStorage.removeItem('user_orders');
+        localStorage.removeItem('searchQuery');
         localStorage.removeItem('cart');
+        localStorage.removeItem('local_cart');
+        localStorage.removeItem('remember_me');
+        
+        console.log('✅ Аккаунт удален, все данные очищены');
         
         if (typeof updateHeaderAuth === 'function') {
             updateHeaderAuth();
@@ -324,7 +330,7 @@ async function deleteAccount() {
         window.location.href = 'index.html';
         
     } catch (error) {
-        console.error('Ошибка удаления:', error);
+        console.error('❌ Ошибка удаления:', error);
         alert('❌ Ошибка удаления аккаунта');
     }
 }

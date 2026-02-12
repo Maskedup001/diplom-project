@@ -151,40 +151,33 @@ class Catalog {
     this.resetFilters();
   }
 
-  // Загрузка товаров (в реальном проекте - с сервера)
+  // Загрузка товаров
   async loadProducts() {
     console.log('🔄 Загружаю товары из API...');
     
     try {
-      // Загружаем товары из нашего Node.js API
       const response = await fetch('/api/products');
       
       if (!response.ok) {
         throw new Error(`Ошибка API: ${response.status}`);
       }
       
-      // Получаем товары ИСКЛЮЧИТЕЛЬНО из базы данных
       this.products = await response.json();
       
       console.log(`✅ Загружено ${this.products.length} товаров из базы данных`);
       
-      // Сначала копируем все товары
       this.filteredProducts = [...this.products];
       
-      // Если есть поисковый запрос, применяем его
       if (this.searchQuery) {
         this.filterBySearch(this.searchQuery);
       }
       
     } catch (error) {
       console.error('❌ КРИТИЧЕСКАЯ ОШИБКА: Не удалось загрузить товары:', error.message);
-      console.error('База данных недоступна! Товары не будут отображаться.');
       
-      // Оставляем массивы пустыми - товары будут загружены только из БД
       this.products = [];
       this.filteredProducts = [];
       
-      // Показываем сообщение об ошибке
       const grid = document.getElementById("products-grid");
       if (grid) {
         grid.innerHTML = `
@@ -207,49 +200,21 @@ class Catalog {
 
   // Инициализация фильтров
   initFilters() {
-    // Фильтр по цене
     const priceMinInput = document.getElementById("price-min");
     const priceMaxInput = document.getElementById("price-max");
     const priceSliderMin = document.getElementById("price-slider-min");
     const priceSliderMax = document.getElementById("price-slider-max");
 
-    // Устанавливаем начальные значения цены
     if (priceMinInput && priceMaxInput && priceSliderMin && priceSliderMax) {
       priceMinInput.value = this.filters.minPrice;
       priceMaxInput.value = this.filters.maxPrice;
       priceSliderMin.value = this.filters.minPrice;
       priceSliderMax.value = this.filters.maxPrice;
 
-      // Функция для предотвращения пересечения ползунков
-      const preventOverlap = () => {
-        const minVal = parseInt(priceSliderMin.value);
-        const maxVal = parseInt(priceSliderMax.value);
-        
-        // Если min ползунок пытается пройти через max
-        if (minVal >= maxVal) {
-          const newMinVal = maxVal - 1000;
-          priceSliderMin.value = newMinVal;
-          priceMinInput.value = newMinVal;
-          this.filters.minPrice = newMinVal;
-        }
-        
-        // Если max ползунок пытается пройти через min
-        if (maxVal <= minVal) {
-          const newMaxVal = minVal + 1000;
-          priceSliderMax.value = newMaxVal;
-          priceMaxInput.value = newMaxVal;
-          this.filters.maxPrice = newMaxVal;
-        }
-      };
-
-      // Обновление ползунков при вводе в инпуты
       priceMinInput.addEventListener("input", (e) => {
         let value = parseInt(e.target.value) || 0;
-        
-        // Ограничиваем минимальное значение
         value = Math.max(value, 0);
         
-        // Проверяем чтобы не было больше max
         const maxValue = parseInt(priceMaxInput.value);
         if (value >= maxValue) {
           value = maxValue - 1000;
@@ -264,11 +229,8 @@ class Catalog {
 
       priceMaxInput.addEventListener("input", (e) => {
         let value = parseInt(e.target.value) || 500000;
-        
-        // Ограничиваем максимальное значение
         value = Math.min(value, 500000);
         
-        // Проверяем чтобы не было меньше min
         const minValue = parseInt(priceMinInput.value);
         if (value <= minValue) {
           value = minValue + 1000;
@@ -281,12 +243,10 @@ class Catalog {
         this.applyFilters();
       });
 
-      // Обновление инпутов при движении ползунков с проверкой пересечения
       priceSliderMin.addEventListener("input", (e) => {
         let value = parseInt(e.target.value);
         const maxValue = parseInt(priceSliderMax.value);
         
-        // Если пытаемся пройти через max ползунок
         if (value >= maxValue) {
           value = maxValue - 1;
           priceSliderMin.value = value;
@@ -302,7 +262,6 @@ class Catalog {
         let value = parseInt(e.target.value);
         const minValue = parseInt(priceSliderMin.value);
         
-        // Если пытаемся пройти через min ползунок
         if (value <= minValue) {
           value = minValue + 1;
           priceSliderMax.value = value;
@@ -314,13 +273,10 @@ class Catalog {
         this.applyFilters();
       });
 
-      // Обновляем трек при инициализации
       this.updatePriceRangeTrack();
     }
 
-    // КАТЕГОРИИ - ВСЕ ЧЕКБОКСЫ ВЫКЛЮЧЕНЫ
     document.querySelectorAll('input[name="category"]').forEach((checkbox) => {
-      // Устанавливаем состояние чекбокса - ВСЕ false
       checkbox.checked = false;
       
       checkbox.addEventListener("change", () => {
@@ -332,9 +288,7 @@ class Catalog {
       });
     });
 
-    // БРЕНДЫ - ВСЕ ЧЕКБОКСЫ ВЫКЛЮЧЕНЫ
     document.querySelectorAll('input[name="brand"]').forEach((checkbox) => {
-      // Устанавливаем состояние чекбокса - ВСЕ false
       checkbox.checked = false;
       
       checkbox.addEventListener("change", () => {
@@ -346,7 +300,6 @@ class Catalog {
       });
     });
 
-    // Кнопка сброса
     const resetBtn = document.getElementById("reset-filters");
     if (resetBtn) {
       resetBtn.addEventListener("click", () => {
@@ -355,12 +308,11 @@ class Catalog {
     }
   }
 
-  // Обновление трека ползунка цены
   updatePriceRangeTrack() {
     const min = this.filters.minPrice;
     const max = this.filters.maxPrice;
     const track = document.querySelector(".price-range__track");
-    const maxPrice = 500000; // Максимальная цена в диапазоне
+    const maxPrice = 500000;
 
     if (track) {
       const minPercent = (min / maxPrice) * 100;
@@ -370,9 +322,7 @@ class Catalog {
     }
   }
 
-  // Применение фильтров (обновленная версия с учетом поиска)
   applyFilters() {
-    // Сначала фильтруем по поисковому запросу (если есть)
     let filtered = [...this.products];
     
     if (this.searchQuery) {
@@ -384,9 +334,7 @@ class Catalog {
       });
     }
     
-    // Затем применяем остальные фильтры
     this.filteredProducts = filtered.filter((product) => {
-      // Фильтр по цене
       if (
         product.price < this.filters.minPrice ||
         product.price > this.filters.maxPrice
@@ -394,7 +342,6 @@ class Catalog {
         return false;
       }
 
-      // Фильтр по категориям
       if (
         this.filters.categories.length > 0 &&
         !this.filters.categories.includes(product.category)
@@ -402,7 +349,6 @@ class Catalog {
         return false;
       }
 
-      // Фильтр по брендам
       if (
         this.filters.brands.length > 0 &&
         !this.filters.brands.includes(product.brand)
@@ -413,28 +359,19 @@ class Catalog {
       return true;
     });
 
-    // Сбрасываем на первую страницу при фильтрации
     this.currentPage = 1;
-
-    // Применяем сортировку
     this.applySorting();
-
-    // Обновляем отображение
     this.updateProductsCount();
     this.renderProducts();
     this.updatePagination();
-    
-    // Скроллим к заголовку каталога (после хедера)
     this.scrollToCatalogTitle();
   }
 
-  // Скролл к заголовку каталога (после хедера)
   scrollToCatalogTitle() {
-		// Не скроллим на мобильных устройствах
-		if (window.innerWidth <= 768) return;
+    if (window.innerWidth <= 768) return;
     const catalogTitle = document.querySelector('.catalog__title');
     if (catalogTitle) {
-      const headerHeight = 80; // Высота хедера
+      const headerHeight = 80;
       const titlePosition = catalogTitle.getBoundingClientRect().top + window.pageYOffset - headerHeight;
       
       window.scrollTo({
@@ -442,7 +379,6 @@ class Catalog {
         behavior: 'smooth'
       });
     } else {
-      // Если заголовок не найден, скроллим просто немного ниже хедера
       window.scrollTo({
         top: 100,
         behavior: 'smooth'
@@ -450,17 +386,14 @@ class Catalog {
     }
   }
 
-  // Сброс фильтров
   resetFilters() {
-    // Сбрасываем значения на ПУСТЫЕ массивы
     this.filters = {
       minPrice: 0,
       maxPrice: 500000,
-      categories: [], // ← ВАЖНО: пустой массив!
+      categories: [],
       brands: [],
     };
 
-    // Сбрасываем UI
     const priceMinInput = document.getElementById("price-min");
     const priceMaxInput = document.getElementById("price-max");
     const priceSliderMin = document.getElementById("price-slider-min");
@@ -473,35 +406,28 @@ class Catalog {
       priceSliderMax.value = 500000;
     }
 
-    // ВСЕ чекбоксы категорий отключаем
     document.querySelectorAll('input[name="category"]').forEach((cb) => {
-      cb.checked = false; // ← ВСЕ false!
+      cb.checked = false;
     });
 
     document.querySelectorAll('input[name="brand"]').forEach((cb) => {
       cb.checked = false;
     });
 
-    // Сбрасываем сортировку
     const sortSelect = document.getElementById("sort-select");
     if (sortSelect) {
       sortSelect.value = "default";
       this.sortBy = "default";
     }
 
-    // Обновляем трек
     this.updatePriceRangeTrack();
-
-    // Применяем сброшенные фильтры
     this.applyFilters();
   }
 
-  // Инициализация сортировки
   initSorting() {
     const sortSelect = document.getElementById("sort-select");
     
     if (sortSelect) {
-      // Устанавливаем начальное значение
       sortSelect.value = this.sortBy;
 
       sortSelect.addEventListener("change", (e) => {
@@ -509,13 +435,11 @@ class Catalog {
         this.applySorting();
         this.renderProducts();
         this.updatePagination();
-        // Скроллим к заголовку каталога при сортировке
         this.scrollToCatalogTitle();
       });
     }
   }
 
-  // Применение сортировки
   applySorting() {
     switch (this.sortBy) {
       case "price-asc":
@@ -531,12 +455,10 @@ class Catalog {
         this.filteredProducts.sort((a, b) => b.title.localeCompare(a.title));
         break;
       default:
-        // По умолчанию - как загрузили
         break;
     }
   }
 
-  // Обновление счетчика товаров
   updateProductsCount() {
     const countElement = document.getElementById("products-count");
     if (countElement) {
@@ -544,37 +466,35 @@ class Catalog {
     }
   }
 
-  // Рендеринг товаров
   renderProducts() {
     const grid = document.getElementById("products-grid");
     if (!grid) return;
 
     grid.innerHTML = "";
 
-    // Вычисляем какие товары показывать на текущей странице
     const startIndex = (this.currentPage - 1) * this.productsPerPage;
     const endIndex = startIndex + this.productsPerPage;
     const productsToShow = this.filteredProducts.slice(startIndex, endIndex);
 
     if (productsToShow.length === 0) {
       grid.innerHTML = `
-                <div class="no-products">
-                    <h3>${
-                      this.searchQuery
-                        ? "По вашему запросу ничего не найдено"
-                        : this.filters.categories.length === 0
-                        ? "Выберите категории"
-                        : "Товары не найдены"
-                    }</h3>
-                    <p>${
-                      this.searchQuery
-                        ? "Попробуйте изменить поисковый запрос или параметры фильтрации"
-                        : this.filters.categories.length === 0
-                        ? "Выберите категории товаров для отображения"
-                        : "Попробуйте изменить параметры фильтрации"
-                    }</p>
-                </div>
-            `;
+        <div class="no-products">
+          <h3>${
+            this.searchQuery
+              ? "По вашему запросу ничего не найдено"
+              : this.filters.categories.length === 0
+              ? "Выберите категории"
+              : "Товары не найдены"
+          }</h3>
+          <p>${
+            this.searchQuery
+              ? "Попробуйте изменить поисковый запрос или параметры фильтрации"
+              : this.filters.categories.length === 0
+              ? "Выберите категории товаров для отображения"
+              : "Попробуйте изменить параметры фильтрации"
+          }</p>
+        </div>
+      `;
       return;
     }
 
@@ -584,82 +504,59 @@ class Catalog {
     });
   }
 
-  // Создание карточки товара
   createProductCard(product) {
-    const card = document.createElement("div");
-    card.className = "product-card";
-    
-    // ВСЕ НЕОБХОДИМЫЕ DATA-АТРИБУТЫ ДЛЯ КОРЗИНЫ:
-    card.dataset.id = product.id;
-    card.dataset.title = product.title;
-    card.dataset.price = product.price;
-    card.dataset.image = product.image;
-    card.dataset.category = product.category;
+  const card = document.createElement("div");
+  card.className = "product-card";
+  
+  card.dataset.id = product.id;
+  card.dataset.title = product.title;
+  card.dataset.price = product.price;
+  card.dataset.image = product.image;
+  card.dataset.category = product.category;
 
-    // Форматирование цены
-    const formattedPrice = product.price.toLocaleString("ru-RU");
+  const formattedPrice = product.price.toLocaleString("ru-RU");
+  const fullStars = Math.floor(product.rating || 4.0);
+  const emptyStars = 5 - fullStars;
+  const stars = "★".repeat(fullStars) + "☆".repeat(emptyStars);
+  const stock = product.stock || 0;
+  const availability = product.availability || (stock > 0 ? 'in-stock' : 'out-of-stock');
+  const isInStock = availability === 'in-stock';
+  
+  // ✅ ИСПРАВЛЕНО: data:image заглушка с названием товара (без onerror, без loading="lazy")
+  const imageSrc = product.image && product.image !== 'images/default.jpg' 
+    ? product.image 
+    : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f0f0f0'/%3E%3Ctext x='50' y='55' font-size='14' text-anchor='middle' fill='%23999' font-family='Arial'%3E${encodeURIComponent(product.title)}%3C/text%3E%3C/svg%3E`;
 
-    // Звезды рейтинга
-    const fullStars = Math.floor(product.rating || 4.0);
-    const emptyStars = 5 - fullStars;
-    const stars = "★".repeat(fullStars) + "☆".repeat(emptyStars);
-    
-    // Проверяем наличие
-    const stock = product.stock || 0;
-    const availability = product.availability || (stock > 0 ? 'in-stock' : 'out-of-stock');
-    const isInStock = availability === 'in-stock';
+  card.innerHTML = `
+    ${!isInStock ? '<div class="product-card__badge">Нет в наличии</div>' : ''}
+    <img src="${imageSrc}" 
+         alt="${product.title}" 
+         class="product-card__image">
+    <div class="product-card__content">
+      <div class="product-card__category">${this.getCategoryName(product.category)}</div>
+      <h3 class="product-card__title">${product.title}</h3>
+      <p class="product-card__description">${product.description || 'Описание товара'}</p>
+      <div class="product-card__rating">
+        <span class="product-card__stars">${stars}</span>
+        <span class="product-card__reviews">(${product.reviews || 0})</span>
+      </div>
+      <div class="product-card__availability product-card__availability--${availability}">
+        ${isInStock ? `✓ В наличии (${stock} шт.)` : '✗ Нет в наличии'}
+      </div>
+      <div class="product-card__footer">
+        <div>
+          <span class="product-card__price">${formattedPrice} ₽</span>
+        </div>
+        <button class="button product-card__button add-to-cart" ${!isInStock ? "disabled" : ""}>
+          ${isInStock ? "В корзину" : "Нет в наличии"}
+        </button>
+      </div>
+    </div>
+  `;
 
-    card.innerHTML = `
-            ${
-              !isInStock
-                ? '<div class="product-card__badge">Нет в наличии</div>'
-                : ""
-            }
-            <img src="${product.image}" alt="${
-      product.title
-    }" class="product-card__image">
-            <div class="product-card__content">
-                <div class="product-card__category">${this.getCategoryName(
-                  product.category
-                )}</div>
-                <h3 class="product-card__title">${product.title}</h3>
-                <p class="product-card__description">${product.description || 'Описание товара'}</p>
-                <div class="product-card__rating">
-                    <span class="product-card__stars">${stars}</span>
-                    <span class="product-card__reviews">(${
-                      product.reviews || 0
-                    })</span>
-                </div>
-                <div class="product-card__availability product-card__availability--${
-                  availability
-                }">
-                    ${
-                      isInStock
-                        ? `✓ В наличии (${stock} шт.)`
-                        : '✗ Нет в наличии'
-                    }
-                </div>
-                <div class="product-card__footer">
-                    <div>
-                        <span class="product-card__price">${formattedPrice} ₽</span>
-                    </div>
-                    <button class="button product-card__button add-to-cart" ${
-                      !isInStock ? "disabled" : ""
-                    }>
-                        ${
-                          isInStock
-                            ? "В корзину"
-                            : "Нет в наличии"
-                        }
-                    </button>
-                </div>
-            </div>
-        `;
+  return card;
+}
 
-    return card;
-  }
-
-  // Получение названия категории
   getCategoryName(category) {
     const categories = {
       smartphone: "Смартфоны",
@@ -674,7 +571,6 @@ class Catalog {
     return categories[category] || category;
   }
 
-  // Инициализация пагинации
   initPagination() {
     const prevBtn = document.querySelector(".pagination__button--prev");
     const nextBtn = document.querySelector(".pagination__button--next");
@@ -685,7 +581,7 @@ class Catalog {
         if (this.currentPage > 1) {
           this.currentPage--;
           this.renderProducts();
-          this.updatePagination(); // ВАЖНО: обновляем всю пагинацию
+          this.updatePagination();
           this.updatePaginationButtons();
           this.scrollToCatalogTitle();
         }
@@ -701,18 +597,16 @@ class Catalog {
         if (this.currentPage < totalPages) {
           this.currentPage++;
           this.renderProducts();
-          this.updatePagination(); // ВАЖНО: обновляем всю пагинацию
+          this.updatePagination();
           this.updatePaginationButtons();
           this.scrollToCatalogTitle();
         }
       });
     }
 
-    // Обновляем кнопки пагинации
     this.updatePagination();
   }
 
-  // Обновление пагинации - ИСПРАВЛЕННАЯ ВЕРСИЯ
   updatePagination() {
     const totalPages = Math.ceil(
       this.filteredProducts.length / this.productsPerPage
@@ -723,7 +617,6 @@ class Catalog {
 
     pagesContainer.innerHTML = "";
 
-    // Если нет товаров или только одна страница - скрываем пагинацию
     if (totalPages <= 1) {
       pagesContainer.style.display = "none";
       return;
@@ -731,7 +624,6 @@ class Catalog {
       pagesContainer.style.display = "flex";
     }
 
-    // Показываем максимум 5 страниц
     let startPage = Math.max(1, this.currentPage - 2);
     let endPage = Math.min(totalPages, startPage + 4);
 
@@ -744,7 +636,6 @@ class Catalog {
       pageBtn.type = "button";
       pageBtn.className = `pagination__page`;
       
-      // Добавляем активный класс если это текущая страница
       if (i === this.currentPage) {
         pageBtn.classList.add("pagination__page--active");
       }
@@ -752,7 +643,6 @@ class Catalog {
       pageBtn.textContent = i;
       pageBtn.dataset.page = i;
 
-      // Обработчик клика с правильным обновлением пагинации
       pageBtn.addEventListener("click", (e) => {
         e.preventDefault();
         const page = parseInt(e.target.dataset.page);
@@ -760,7 +650,7 @@ class Catalog {
         if (page && page !== this.currentPage) {
           this.currentPage = page;
           this.renderProducts();
-          this.updatePagination(); // ВАЖНО: перерисовываем всю пагинацию
+          this.updatePagination();
           this.updatePaginationButtons();
           this.scrollToCatalogTitle();
         }
@@ -772,7 +662,6 @@ class Catalog {
     this.updatePaginationButtons();
   }
 
-  // Обновление состояния кнопок пагинации
   updatePaginationButtons() {
     const prevBtn = document.querySelector(".pagination__button--prev");
     const nextBtn = document.querySelector(".pagination__button--next");
@@ -792,9 +681,20 @@ class Catalog {
   }
 }
 
-// Инициализация каталога при загрузке страницы
+// ========== ✅ ИСПРАВЛЕНО: Инициализация ТОЛЬКО на странице каталога ==========
 document.addEventListener("DOMContentLoaded", () => {
-  window.catalog = new Catalog();
+  // Проверяем что мы на странице каталога
+  const isCatalogPage = 
+    window.location.pathname.includes('catalog.html') || 
+    document.querySelector('.catalog__title') ||
+    document.getElementById('products-grid');
+  
+  if (isCatalogPage) {
+    window.catalog = new Catalog();
+    console.log('📦 Каталог инициализирован');
+  } else {
+    console.log('📦 Не страница каталога, пропускаем инициализацию');
+  }
 });
 
 // Вспомогательная функция для задержки

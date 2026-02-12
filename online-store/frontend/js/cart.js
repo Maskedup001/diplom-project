@@ -6,13 +6,12 @@ class CartPage {
     constructor() {
         console.log('CartPage: Инициализация для страницы корзины');
         
-        // ИСПРАВЛЕНО: Используем существующую корзину из script.js
         if (!window.cart) {
             console.error('CartPage: window.cart не найден! Проверь подключение script.js перед cart.js');
             return;
         }
         
-        this.cart = window.cart; // Используем уже существующую корзину
+        this.cart = window.cart;
         console.log('CartPage: Используем корзину из script.js');
         
         this.deliveryPrice = 300;
@@ -27,7 +26,7 @@ class CartPage {
         console.log('CartPage: Начало инициализации');
         
         this.renderCartItems();
-        this.updateSummary();
+        this.updateSummary(true);
         this.initEventListeners();
         
         console.log('CartPage: Инициализация завершена');
@@ -43,18 +42,14 @@ class CartPage {
             return;
         }
         
-        // Всегда скрываем сообщение о пустой корзине на время
         if (cartEmpty) {
             cartEmpty.style.display = 'none';
         }
         
-        // Очищаем список
         cartItemsList.innerHTML = '';
         
-        // Получаем товары из корзины (используем метод из script.js)
         const items = this.cart.items || [];
         
-        // ЕСЛИ КОРЗИНА ПУСТА - ПОКАЗЫВАЕМ СООБЩЕНИЕ
         if (items.length === 0) {
             console.log('CartPage: Корзина пуста, показываем сообщение');
             
@@ -70,7 +65,6 @@ class CartPage {
             
             cartItemsList.appendChild(emptyMessage);
             
-            // Обновляем счетчик товаров
             const cartTotalCount = document.getElementById('cart-total-count');
             if (cartTotalCount) {
                 cartTotalCount.textContent = '0';
@@ -81,14 +75,12 @@ class CartPage {
         
         console.log('CartPage: Отображаем', items.length, 'товаров');
         
-        // Обновляем счетчик товаров
         const totalItems = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
         const cartTotalCount = document.getElementById('cart-total-count');
         if (cartTotalCount) {
             cartTotalCount.textContent = totalItems;
         }
         
-        // Создаем элементы для каждого товара
         items.forEach(item => {
             const cartItemElement = this.createCartItemElement(item);
             cartItemsList.appendChild(cartItemElement);
@@ -103,8 +95,13 @@ class CartPage {
         const quantity = item.quantity || 1;
         const totalPrice = item.price * quantity;
         
+        // ✅ ИСПРАВЛЕНО: data:image заглушка с названием товара (без onerror, без loading="lazy")
+        const imageSrc = item.image && item.image !== 'images/default.jpg' 
+            ? item.image 
+            : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f0f0f0'/%3E%3Ctext x='50' y='55' font-size='14' text-anchor='middle' fill='%23999' font-family='Arial'%3E${encodeURIComponent(item.title)}%3C/text%3E%3C/svg%3E`;
+        
         cartItem.innerHTML = `
-            <img src="${item.image || 'images/no-image.jpg'}" alt="${item.title}" class="cart-item-card__image">
+            <img src="${imageSrc}" alt="${item.title}" class="cart-item-card__image">
             <div class="cart-item-card__info">
                 <h3 class="cart-item-card__title">${item.title}</h3>
                 <div class="cart-item-card__price">${item.price.toLocaleString()} ₽</div>
@@ -123,12 +120,10 @@ class CartPage {
         return cartItem;
     }
     
-    // Инициализация обработчиков событий
     initEventListeners() {
         console.log('CartPage: Инициализация обработчиков событий');
         
-        // Обработчик для кнопок на странице корзины
-        document.addEventListener('click', (e) => {
+        document.addEventListener('click', async (e) => {
             const action = e.target.getAttribute('data-page-action');
             const id = e.target.getAttribute('data-page-id');
             
@@ -137,38 +132,51 @@ class CartPage {
                 e.preventDefault();
                 e.stopPropagation();
                 
-                switch(action) {
-                    case 'increase':
-                        // Используем метод из корзины script.js
-                        this.cart.updateQuantity(id, 1);
-                        this.renderCartItems();
-                        this.updateSummary();
-                        break;
-                    case 'decrease':
-                        this.cart.updateQuantity(id, -1);
-                        this.renderCartItems();
-                        this.updateSummary();
-                        break;
-                    case 'remove':
-                        if (confirm('Удалить товар из корзины?')) {
-                            this.cart.removeItem(id);
-                            this.renderCartItems();
-                            this.updateSummary();
-                        }
-                        break;
+                const button = e.target;
+                if (button && button.classList) {
+                    button.classList.add('button--loading');
+                    button.disabled = true;
                 }
+                
+                try {
+                    switch(action) {
+                        case 'increase':
+                            await this.cart.updateQuantity(id, 1);
+                            break;
+                        case 'decrease':
+                            await this.cart.updateQuantity(id, -1);
+                            break;
+                        case 'remove':
+                            if (confirm('Удалить товар из корзины?')) {
+                                await this.cart.removeItem(id);
+                            } else {
+                                return;
+                            }
+                            break;
+                    }
+                    
+                    this.renderCartItems();
+                    this.updateSummary(false);
+                    
+                } catch (error) {
+                    console.error('Ошибка при обновлении корзины:', error);
+                } finally {
+                    if (button && button.classList) {
+                        button.classList.remove('button--loading');
+                        button.disabled = false;
+                    }
+                }
+                
                 return false;
             }
         });
         
-        // Обработчики доставки
         document.querySelectorAll('input[name="delivery"]').forEach(radio => {
             radio.addEventListener('change', () => {
-                this.updateSummary();
+                this.updateSummary(true);
             });
         });
         
-        // Промокоды
         const applyPromoBtn = document.getElementById('apply-promo');
         if (applyPromoBtn) {
             applyPromoBtn.addEventListener('click', (e) => {
@@ -187,7 +195,6 @@ class CartPage {
             });
         }
         
-        // Кнопка оформления заказа
         const checkoutButton = document.getElementById('checkout-button');
         if (checkoutButton) {
             checkoutButton.addEventListener('click', (e) => {
@@ -202,7 +209,6 @@ class CartPage {
             });
         }
         
-        // Отправка формы заказа
         const orderSubmit = document.getElementById('order-submit');
         if (orderSubmit) {
             orderSubmit.addEventListener('click', (e) => {
@@ -214,7 +220,7 @@ class CartPage {
         console.log('CartPage: Обработчики событий установлены');
     }
     
-    updateSummary() {
+    updateSummary(updateCartDisplay_ = true) {
         const items = this.cart.items || [];
         const totalItems = items.reduce((sum, item) => sum + (item.quantity || 1), 0);
         const itemsPrice = this.cart.getTotalPrice ? this.cart.getTotalPrice() : 
@@ -234,9 +240,8 @@ class CartPage {
         
         this.updateCheckoutButton(total, totalItems);
         
-        // Обновляем счетчик в хедере (через метод корзины)
-        if (this.cart.updateCartDisplay) {
-            this.cart.updateCartDisplay();
+        if (updateCartDisplay_ && this.cart.updateCartDisplay) {
+            this.cart.updateCartDisplay(false);
         }
     }
     
@@ -291,7 +296,7 @@ class CartPage {
             this.showPromoMessage('Неверный промокод', 'error');
         }
         
-        this.updateSummary();
+        this.updateSummary(true);
     }
     
     showPromoMessage(message, type = 'info') {
@@ -355,7 +360,7 @@ class CartPage {
             checkoutButton.classList.remove('button--outline');
         }
         
-        this.updateSummary();
+        this.updateSummary(true);
     }
     
     calculateTotal() {
@@ -369,14 +374,21 @@ class CartPage {
         return Math.max(0, subtotal - discount);
     }
     
-    submitOrder() {
+    async submitOrder() {
         if (!this.validateOrderForm()) {
             return;
         }
         
         const items = this.cart.items || [];
+        const user = JSON.parse(localStorage.getItem('user'));
+        
         const orderData = {
-            items: [...items], // копируем массив
+            items: items.map(item => ({
+                id: item.id,
+                title: item.title,
+                price: item.price,
+                quantity: item.quantity
+            })),
             total: this.calculateTotal(),
             customer: {
                 name: document.getElementById('order-name').value.trim(),
@@ -391,21 +403,49 @@ class CartPage {
             date: new Date().toISOString()
         };
         
-        this.showOrderConfirmation(orderData);
-        
-        // Очищаем корзину через метод из script.js
-        this.cart.items = [];
-        if (this.cart.saveCart) {
-            this.cart.saveCart();
+        if (user && user.id) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        items: orderData.items,
+                        total_amount: orderData.total,
+                        shipping_address: orderData.customer.address,
+                        phone: orderData.customer.phone,
+                        email: orderData.customer.email,
+                        notes: orderData.customer.comment
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    this.showOrderConfirmation({
+                        ...orderData,
+                        order_number: data.order.order_number,
+                        order_id: data.order.id
+                    });
+                } else {
+                    alert('Ошибка при создании заказа. Попробуйте позже.');
+                    return;
+                }
+            } catch (error) {
+                console.error('Ошибка отправки заказа:', error);
+                alert('Ошибка соединения с сервером');
+                return;
+            }
         } else {
-            localStorage.setItem('cart', JSON.stringify([]));
+            this.showOrderConfirmation(orderData);
         }
         
-        // Перерисовываем корзину после оформления заказа
+        await this.cart.clearCart();
         this.renderCartItems();
-        this.updateSummary();
+        this.updateSummary(false);
         this.toggleOrderForm();
-        
         this.clearOrderForm();
     }
     
@@ -450,27 +490,37 @@ class CartPage {
     
     showOrderConfirmation(orderData) {
         const totalItems = orderData.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
-        const orderNumber = Math.floor(Math.random() * 9000) + 1000;
+        const orderNumber = orderData.order_number || Math.floor(Math.random() * 9000) + 1000;
         
-        const confirmationMessage = `
+        let message = `
 ✅ ЗАКАЗ УСПЕШНО ОФОРМЛЕН!
 
 📋 Номер заказа: #${orderNumber}
 📦 Товаров: ${totalItems} шт.
 💰 Сумма: ${orderData.total.toLocaleString()} ₽
-${orderData.promoCode ? `🎁 Промокод: ${orderData.promoCode} (скидка ${orderData.promoDiscount}%)` : ''}
-📞 Способ доставки: ${orderData.delivery === 'courier' ? 'Курьером' : 'Самовывоз'}
+        `;
+        
+        if (orderData.promoCode) {
+            message += `🎁 Промокод: ${orderData.promoCode} (скидка ${orderData.promoDiscount}%)\n`;
+        }
+        
+        message += `📞 Способ доставки: ${orderData.delivery === 'courier' ? 'Курьером' : 'Самовывоз'}
 
 👤 Данные клиента:
    • Имя: ${orderData.customer.name}
    • Телефон: ${orderData.customer.phone}
-   ${orderData.customer.email ? `• Email: ${orderData.customer.email}` : ''}
-   ${orderData.customer.address ? `• Адрес: ${orderData.customer.address}` : ''}
-
-Благодарим за покупку! Наш менеджер свяжется с вами в течение 30 минут.
         `;
         
-        alert(confirmationMessage);
+        if (orderData.customer.email) {
+            message += `   • Email: ${orderData.customer.email}\n`;
+        }
+        if (orderData.customer.address) {
+            message += `   • Адрес: ${orderData.customer.address}\n`;
+        }
+        
+        message += `\nБлагодарим за покупку! Наш менеджер свяжется с вами в течение 30 минут.`;
+        
+        alert(message);
     }
 }
 
@@ -478,7 +528,6 @@ ${orderData.promoCode ? `🎁 Промокод: ${orderData.promoCode} (скид
 document.addEventListener('DOMContentLoaded', () => {
     console.log('cart.js загружен');
     
-    // Проверяем что мы на странице корзины
     const isCartPage = window.location.pathname.includes('cart.html') || 
                        document.querySelector('.cart-page') ||
                        document.querySelector('.cart__content') ||
@@ -487,7 +536,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isCartPage) {
         console.log('На странице корзины, инициализируем CartPage...');
         
-        // Ждем пока script.js загрузит window.cart
         if (window.cart) {
             window.cartPage = new CartPage();
         } else {
