@@ -7,17 +7,6 @@ class Cart {
 
     // Добавить товар в корзину
     addItem(product) {
-        // ========== ДОБАВЛЕННАЯ ПРОВЕРКА АВТОРИЗАЦИИ ==========
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (!user) {
-            const result = confirm('Для добавления товаров в корзину необходимо авторизоваться. Перейти на страницу входа?');
-            if (result) {
-                window.location.href = 'login.html';
-            }
-            return false; // Возвращаем false если нажали "Отмена"
-        }
-        // ========== КОНЕЦ ПРОВЕРКИ ==========
-        
         // Преобразуем ID в строку для надежности
         const productId = String(product.id);
         
@@ -28,7 +17,7 @@ class Cart {
         } else {
             this.items.push({
                 ...product,
-                id: productId, // Сохраняем как строку
+                id: productId,
                 quantity: product.quantity || 1
             });
         }
@@ -49,17 +38,6 @@ class Cart {
 
     // Удалить товар из корзины
     removeItem(productId) {
-        // ========== ДОБАВЛЕННАЯ ПРОВЕРКА АВТОРИЗАЦИИ ==========
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (!user) {
-            const result = confirm('Для изменения корзины необходимо авторизоваться. Перейти на страницу входа?');
-            if (result) {
-                window.location.href = 'login.html';
-            }
-            return false; // Возвращаем false если нажали "Отмена"
-        }
-        // ========== КОНЕЦ ПРОВЕРКИ ==========
-        
         this.items = this.items.filter(item => String(item.id) !== String(productId));
         this.saveCart();
         this.updateCartDisplay();
@@ -68,17 +46,6 @@ class Cart {
 
     // Изменить количество
     updateQuantity(productId, change) {
-        // ========== ДОБАВЛЕННАЯ ПРОВЕРКА АВТОРИЗАЦИИ ==========
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (!user) {
-            const result = confirm('Для изменения корзины необходимо авторизоваться. Перейти на страницу входа?');
-            if (result) {
-                window.location.href = 'login.html';
-            }
-            return false; // Возвращаем false если нажали "Отмена"
-        }
-        // ========== КОНЕЦ ПРОВЕРКИ ==========
-        
         const item = this.items.find(item => String(item.id) === String(productId));
         
         if (item) {
@@ -123,10 +90,8 @@ class Cart {
         const cartItemsContainer = document.getElementById('cart-items');
         const cartTotal = document.getElementById('cart-total');
         
-        // Если модального окна нет на странице - выходим
         if (!cartItemsContainer || !cartTotal) return;
 
-        // Получаем или создаем элемент сообщения о пустой корзине
         let cartEmpty = document.getElementById('cart-empty');
         if (!cartEmpty) {
             cartEmpty = document.createElement('div');
@@ -137,11 +102,10 @@ class Cart {
         }
 
         if (this.items.length === 0) {
-            // Корзина пуста - показываем сообщение и скрываем блок с товарами
             cartEmpty.style.display = 'block';
-            cartTotal.querySelector('.cart-total__price').textContent = '0';
+            const totalPriceSpan = cartTotal.querySelector('.cart-total__price');
+            if (totalPriceSpan) totalPriceSpan.textContent = '0';
             
-            // Удаляем все товары кроме сообщения о пустой корзине
             Array.from(cartItemsContainer.children).forEach(child => {
                 if (child !== cartEmpty && child.classList.contains('cart-item')) {
                     child.remove();
@@ -150,17 +114,14 @@ class Cart {
             return;
         }
 
-        // Корзина не пуста - скрываем сообщение
         cartEmpty.style.display = 'none';
         
-        // Очищаем контейнер (но оставляем сообщение о пустой корзине)
         Array.from(cartItemsContainer.children).forEach(child => {
             if (child.classList.contains('cart-item')) {
                 child.remove();
             }
         });
 
-        // Добавляем каждый товар
         this.items.forEach(item => {
             const cartItem = document.createElement('div');
             cartItem.className = 'cart-item';
@@ -168,7 +129,7 @@ class Cart {
                 <img src="${item.image}" alt="${item.title}" class="cart-item__image">
                 <div class="cart-item__info">
                     <div class="cart-item__title">${item.title}</div>
-                    <div class="cart-item__price">${item.price} ₽ × ${item.quantity} = <strong>${item.price * item.quantity} ₽</strong></div>
+                    <div class="cart-item__price">${item.price.toLocaleString()} ₽ × ${item.quantity} = <strong>${(item.price * item.quantity).toLocaleString()} ₽</strong></div>
                 </div>
                 <div class="cart-item__quantity">
                     <button class="quantity-btn" data-action="decrease" data-id="${item.id}">-</button>
@@ -180,8 +141,10 @@ class Cart {
             cartItemsContainer.appendChild(cartItem);
         });
 
-        // Обновляем итоговую сумму
-        cartTotal.querySelector('.cart-total__price').textContent = this.getTotalPrice();
+        const totalPriceSpan = cartTotal.querySelector('.cart-total__price');
+        if (totalPriceSpan) {
+            totalPriceSpan.textContent = this.getTotalPrice().toLocaleString();
+        }
     }
 
     // Показать уведомление
@@ -193,12 +156,13 @@ class Cart {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: var(--color-success);															
+            background: var(--color-success);
             color: white;
             padding: 15px 25px;
             border-radius: 6px;
             z-index: 9999;
             animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         `;
         
         document.body.appendChild(notification);
@@ -221,7 +185,6 @@ class ModalManager {
     }
 
     init() {
-        // Закрытие по кнопке
         document.querySelectorAll('[data-modal-close]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const modalId = e.target.dataset.modalClose;
@@ -229,12 +192,10 @@ class ModalManager {
             });
         });
 
-        // Закрытие по клику на overlay
         this.overlay.addEventListener('click', () => {
             this.closeAllModals();
         });
 
-        // Закрытие по Escape
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 this.closeAllModals();
@@ -249,7 +210,6 @@ class ModalManager {
             this.overlay.classList.add('overlay--active');
             document.body.style.overflow = 'hidden';
             
-            // При открытии модального окна корзины обновляем его содержимое
             if (modalId === 'cart-modal' && window.cart) {
                 window.cart.renderCartModal();
             }
@@ -276,16 +236,11 @@ class ModalManager {
 
 // ========== ОБРАБОТЧИК ДЛЯ КНОПОК "В КОРЗИНУ" ==========
 function handleAddToCartClick(e) {
-    // ПРОВЕРЯЕМ, что клик по кнопке "В корзину" 
-    // И мы не на странице корзины
-    // И не в модальном окне корзины
     if (e.target.classList.contains('add-to-cart') && window.cart) {
-        // Проверяем, где мы
         const isCartPage = window.location.href.includes('cart.html');
         const isCartModal = e.target.closest('#cart-modal');
         
         if (isCartPage || isCartModal) {
-            // Не обрабатываем клики на странице корзины или в модальном окне
             e.preventDefault();
             e.stopPropagation();
             return false;
@@ -294,19 +249,16 @@ function handleAddToCartClick(e) {
         const productCard = e.target.closest('.product-card');
         
         if (productCard && !e.target.disabled) {
-            // Защита от быстрых повторных кликов
             if (e.target.hasAttribute('data-adding')) {
                 return;
             }
             e.target.setAttribute('data-adding', 'true');
             
-            // Получаем данные из data-атрибутов
             const productId = productCard.dataset.id;
             const productTitle = productCard.dataset.title;
             const productPrice = parseInt(productCard.dataset.price);
-            const productImage = productCard.dataset.image || 'images/no-image.jpg';
+            const productImage = productCard.dataset.image || 'images/default.jpg';
             
-            // Проверяем, что все данные есть
             if (!productId || !productTitle || isNaN(productPrice)) {
                 console.error('Недостаточно данных для добавления в корзину:', {
                     id: productId,
@@ -327,21 +279,34 @@ function handleAddToCartClick(e) {
             };
             
             console.log('Добавляем товар в корзину:', product);
-            const added = window.cart.addItem(product); // Получаем результат
+            window.cart.addItem(product);
             
-            // Открываем модальное окно корзины, если оно есть И товар был успешно добавлен
-            if (added && window.modals && document.getElementById('cart-modal')) {
+            if (window.modals && document.getElementById('cart-modal')) {
                 window.modals.openModal('cart-modal');
             }
             
-            // Предотвращаем всплытие события
             e.stopPropagation();
             
-            // Через секунду разрешаем снова кликать
             setTimeout(() => {
                 e.target.removeAttribute('data-adding');
             }, 1000);
         }
+    }
+}
+
+// ========== ОБРАБОТЧИК ДЛЯ КОРЗИНЫ В ШАПКЕ ==========
+function handleCartClick(e) {
+    e.preventDefault();
+    
+    // Просто открываем корзину без проверки авторизации
+    if (window.cart) {
+        window.cart.renderCartModal();
+    }
+    
+    if (window.modals && document.getElementById('cart-modal')) {
+        window.modals.openModal('cart-modal');
+    } else {
+        window.location.href = 'cart.html';
     }
 }
 
@@ -350,66 +315,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Инициализируем корзину
     window.cart = new Cart();
     
-    // Инициализируем модальные окна (если есть overlay)
+    // Инициализируем модальные окна
     if (document.getElementById('overlay')) {
         window.modals = new ModalManager();
     }
 
-    // Открытие корзины по клику (с проверкой)
-    const cartButton = document.querySelector('.header__cart');
+    // Открытие корзины по клику
+    const cartButton = document.querySelector('.header__cart, .cart');
     if (cartButton) {
-        cartButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            
-            // ========== ДОБАВЛЕННАЯ ПРОВЕРКА ПРИ ОТКРЫТИИ КОРЗИНЫ ==========
-            const user = JSON.parse(localStorage.getItem('user'));
-            if (!user) {
-                const result = confirm('Для просмотра корзины необходимо авторизоваться. Перейти на страницу входа?');
-                if (result) {
-                    window.location.href = 'login.html';
-                }
-                return; // Выходим если нажали "Отмена"
-            }
-            // ========== КОНЕЦ ПРОВЕРКИ ==========
-            
-            // Если есть корзина - обновляем и открываем
-            if (window.cart) {
-                window.cart.renderCartModal();
-            }
-            
-            // Если есть менеджер модалок - открываем
-            if (window.modals && document.getElementById('cart-modal')) {
-                window.modals.openModal('cart-modal');
-            } else {
-                // Иначе просто переходим на страницу корзины
-                window.location.href = 'cart.html';
-            }
-        });
+        cartButton.addEventListener('click', handleCartClick);
     }
 
-    // Обработка событий корзины в МОДАЛЬНОМ ОКНЕ (делегирование)
+    // Обработка событий корзины в МОДАЛЬНОМ ОКНЕ
     document.addEventListener('click', (e) => {
         const action = e.target.dataset.action;
         const id = e.target.dataset.id;
 
-        // Проверяем, что клик внутри модального окна корзины
         const isInCartModal = e.target.closest('#cart-modal');
-        
-        // ДОБАВЛЯЕМ ПРОВЕРКУ: если мы на странице корзины - не обрабатываем
         const isOnCartPage = window.location.pathname.includes('cart.html');
         
         if (action && id && window.cart && isInCartModal && !isOnCartPage) {
-            // ========== ДОБАВЛЕННАЯ ПРОВЕРКА ПРИ ИЗМЕНЕНИИ КОРЗИНЫ ==========
-            const user = JSON.parse(localStorage.getItem('user'));
-            if (!user) {
-                const result = confirm('Для изменения корзины необходимо авторизоваться. Перейти на страницу входа?');
-                if (result) {
-                    window.location.href = 'login.html';
-                }
-                return; // Выходим если нажали "Отмена"
-            }
-            // ========== КОНЕЦ ПРОВЕРКИ ==========
-            
             switch(action) {
                 case 'increase':
                     window.cart.updateQuantity(id, 1);
@@ -421,14 +346,39 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.cart.removeItem(id);
                     break;
             }
-            
-            // Предотвращаем всплытие
             e.stopPropagation();
         }
     });
 
-    // Добавляем глобальный обработчик для кнопок "В корзину" на ВСЕХ страницах
+    // Обработчик для кнопок "В корзину"
     document.addEventListener('click', handleAddToCartClick);
 
-    console.log('Скрипт инициализирован');
+    console.log('✅ Скрипт корзины инициализирован');
 });
+
+// ========== АНИМАЦИИ ДЛЯ УВЕДОМЛЕНИЙ ==========
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
