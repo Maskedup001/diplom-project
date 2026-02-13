@@ -26,6 +26,9 @@ class Catalog {
     // Проверяем поисковый запрос
     this.checkSearchQuery();
     
+    // ✅ НОВОЕ: Проверяем фильтр по категории из URL
+    this.checkCategoryFilter();
+    
     // Инициализируем фильтры
     this.initFilters();
 
@@ -44,18 +47,14 @@ class Catalog {
 
   // Проверяем поисковый запрос
   checkSearchQuery() {
-    // Проверяем параметр в URL
     const urlParams = new URLSearchParams(window.location.search);
     const searchParam = urlParams.get('search');
-    
-    // Проверяем localStorage
     const savedQuery = localStorage.getItem('searchQuery');
     
     if (searchParam || savedQuery) {
       this.searchQuery = searchParam || savedQuery;
       this.filterBySearch(this.searchQuery);
       
-      // Устанавливаем значение в поле поиска в хедере
       const searchInput = document.querySelector('.search__input');
       if (searchInput) {
         searchInput.value = this.searchQuery;
@@ -63,17 +62,57 @@ class Catalog {
     }
   }
 
+  // ✅ НОВЫЙ МЕТОД: Проверяем фильтр по категории из URL
+  checkCategoryFilter() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const categoryParam = urlParams.get('category');
+    
+    if (categoryParam) {
+      console.log(`📁 Фильтр по категории: ${categoryParam}`);
+      
+      const categoryCheckbox = document.querySelector(`input[name="category"][value="${categoryParam}"]`);
+      
+      if (categoryCheckbox) {
+        // Отмечаем чекбокс
+        categoryCheckbox.checked = true;
+        
+        // Добавляем категорию в фильтры
+        this.filters.categories = [categoryParam];
+        
+        // Применяем фильтры
+        this.applyFilters();
+        
+        // Скроллим к товарам
+        this.scrollToProducts();
+      }
+    }
+  }
+
+  // ✅ НОВЫЙ МЕТОД: Скролл к товарам
+  scrollToProducts() {
+    setTimeout(() => {
+      const productsGrid = document.getElementById('products-grid');
+      if (productsGrid) {
+        const headerHeight = 80;
+        const gridPosition = productsGrid.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+        
+        window.scrollTo({
+          top: gridPosition,
+          behavior: 'smooth'
+        });
+      }
+    }, 300);
+  }
+
   // Фильтрация по поиску
   filterBySearch(query) {
     if (!query || query.trim() === '') {
-      // Если запрос пустой, сбрасываем поиск
       this.clearSearch();
       return;
     }
     
     this.searchQuery = query.toLowerCase().trim();
     
-    // Фильтруем товары по поисковому запросу
     this.filteredProducts = this.products.filter(product => {
       return product.title.toLowerCase().includes(this.searchQuery) ||
              product.description.toLowerCase().includes(this.searchQuery) ||
@@ -81,13 +120,10 @@ class Catalog {
              this.getCategoryName(product.category).toLowerCase().includes(this.searchQuery);
     });
     
-    // Обновляем интерфейс
     this.currentPage = 1;
     this.updateProductsCount();
     this.renderProducts();
     this.updatePagination();
-    
-    // Показываем сообщение о поиске
     this.showSearchMessage(query);
   }
 
@@ -96,7 +132,6 @@ class Catalog {
     const grid = document.getElementById("products-grid");
     if (!grid) return;
     
-    // Удаляем предыдущее сообщение если есть
     const existingMessage = document.querySelector('.search-message');
     if (existingMessage) {
       existingMessage.remove();
@@ -104,7 +139,6 @@ class Catalog {
     
     const resultsCount = this.filteredProducts.length;
     
-    // Добавляем сообщение о поиске
     const searchMessage = document.createElement('div');
     searchMessage.className = 'search-message';
     searchMessage.innerHTML = `
@@ -113,10 +147,8 @@ class Catalog {
       <button class="button button--outline" id="clear-search">Очистить поиск</button>
     `;
     
-    // Вставляем перед списком товаров
     grid.parentNode.insertBefore(searchMessage, grid);
     
-    // Обработчик кнопки очистки
     const clearBtn = document.getElementById('clear-search');
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
@@ -130,24 +162,20 @@ class Catalog {
     this.searchQuery = '';
     localStorage.removeItem('searchQuery');
     
-    // Очищаем URL без перезагрузки
     const url = new URL(window.location);
     url.searchParams.delete('search');
     window.history.replaceState({}, '', url);
     
-    // Очищаем поле ввода в хедере
     const searchInput = document.querySelector('.search__input');
     if (searchInput) {
       searchInput.value = '';
     }
     
-    // Удаляем сообщение о поиске
     const searchMessage = document.querySelector('.search-message');
     if (searchMessage) {
       searchMessage.remove();
     }
     
-    // Сбрасываем фильтры
     this.resetFilters();
   }
 
@@ -277,7 +305,10 @@ class Catalog {
     }
 
     document.querySelectorAll('input[name="category"]').forEach((checkbox) => {
-      checkbox.checked = false;
+      // ✅ НЕ СБРАСЫВАЕМ, если уже отмечен из URL
+      if (!checkbox.checked) {
+        checkbox.checked = false;
+      }
       
       checkbox.addEventListener("change", () => {
         const checkedCategories = Array.from(
@@ -505,57 +536,54 @@ class Catalog {
   }
 
   createProductCard(product) {
-  const card = document.createElement("div");
-  card.className = "product-card";
-  
-  card.dataset.id = product.id;
-  card.dataset.title = product.title;
-  card.dataset.price = product.price;
-  card.dataset.image = product.image;
-  card.dataset.category = product.category;
+    const card = document.createElement("div");
+    card.className = "product-card";
+    
+    card.dataset.id = product.id;
+    card.dataset.title = product.title;
+    card.dataset.price = product.price;
+    card.dataset.image = product.image;
+    card.dataset.category = product.category;
 
-  const formattedPrice = product.price.toLocaleString("ru-RU");
-  const fullStars = Math.floor(product.rating || 4.0);
-  const emptyStars = 5 - fullStars;
-  const stars = "★".repeat(fullStars) + "☆".repeat(emptyStars);
-  const stock = product.stock || 0;
-  const availability = product.availability || (stock > 0 ? 'in-stock' : 'out-of-stock');
-  const isInStock = availability === 'in-stock';
-  
-  // ✅ ИСПРАВЛЕНО: data:image заглушка с названием товара (без onerror, без loading="lazy")
-  const imageSrc = product.image && product.image !== 'images/default.jpg' 
-    ? product.image 
-    : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f0f0f0'/%3E%3Ctext x='50' y='55' font-size='14' text-anchor='middle' fill='%23999' font-family='Arial'%3E${encodeURIComponent(product.title)}%3C/text%3E%3C/svg%3E`;
+    const formattedPrice = product.price.toLocaleString("ru-RU");
+    const fullStars = Math.floor(product.rating || 4.0);
+    const emptyStars = 5 - fullStars;
+    const stars = "★".repeat(fullStars) + "☆".repeat(emptyStars);
+    const stock = product.stock || 0;
+    const availability = product.availability || (stock > 0 ? 'in-stock' : 'out-of-stock');
+    const isInStock = availability === 'in-stock';
+    
+    const imageSrc = product.image && product.image !== 'images/default.jpg'
+      ? product.image
+      : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f0f0f0'/%3E%3Ctext x='50' y='55' font-size='14' text-anchor='middle' fill='%23999' font-family='Arial'%3E${encodeURIComponent(product.title)}%3C/text%3E%3C/svg%3E`;
 
-  card.innerHTML = `
-    ${!isInStock ? '<div class="product-card__badge">Нет в наличии</div>' : ''}
-    <img src="${imageSrc}" 
-         alt="${product.title}" 
-         class="product-card__image">
-    <div class="product-card__content">
-      <div class="product-card__category">${this.getCategoryName(product.category)}</div>
-      <h3 class="product-card__title">${product.title}</h3>
-      <p class="product-card__description">${product.description || 'Описание товара'}</p>
-      <div class="product-card__rating">
-        <span class="product-card__stars">${stars}</span>
-        <span class="product-card__reviews">(${product.reviews || 0})</span>
-      </div>
-      <div class="product-card__availability product-card__availability--${availability}">
-        ${isInStock ? `✓ В наличии (${stock} шт.)` : '✗ Нет в наличии'}
-      </div>
-      <div class="product-card__footer">
-        <div>
-          <span class="product-card__price">${formattedPrice} ₽</span>
+    card.innerHTML = `
+      ${!isInStock ? '<div class="product-card__badge">Нет в наличии</div>' : ''}
+      <img src="${imageSrc}" alt="${product.title}" class="product-card__image">
+      <div class="product-card__content">
+        <div class="product-card__category">${this.getCategoryName(product.category)}</div>
+        <h3 class="product-card__title">${product.title}</h3>
+        <p class="product-card__description">${product.description || 'Описание товара'}</p>
+        <div class="product-card__rating">
+          <span class="product-card__stars">${stars}</span>
+          <span class="product-card__reviews">(${product.reviews || 0})</span>
         </div>
-        <button class="button product-card__button add-to-cart" ${!isInStock ? "disabled" : ""}>
-          ${isInStock ? "В корзину" : "Нет в наличии"}
-        </button>
+        <div class="product-card__availability product-card__availability--${availability}">
+          ${isInStock ? `✓ В наличии (${stock} шт.)` : '✗ Нет в наличии'}
+        </div>
+        <div class="product-card__footer">
+          <div>
+            <span class="product-card__price">${formattedPrice} ₽</span>
+          </div>
+          <button class="button product-card__button add-to-cart" ${!isInStock ? "disabled" : ""}>
+            ${isInStock ? "В корзину" : "Нет в наличии"}
+          </button>
+        </div>
       </div>
-    </div>
-  `;
+    `;
 
-  return card;
-}
+    return card;
+  }
 
   getCategoryName(category) {
     const categories = {
@@ -567,6 +595,7 @@ class Catalog {
       monitor: "Мониторы",
       smartwatch: "Смарт-часы",
       tablet: "Планшеты",
+      appliances: "Бытовая техника"
     };
     return categories[category] || category;
   }
@@ -681,9 +710,8 @@ class Catalog {
   }
 }
 
-// ========== ✅ ИСПРАВЛЕНО: Инициализация ТОЛЬКО на странице каталога ==========
+// ========== Инициализация ТОЛЬКО на странице каталога ==========
 document.addEventListener("DOMContentLoaded", () => {
-  // Проверяем что мы на странице каталога
   const isCatalogPage = 
     window.location.pathname.includes('catalog.html') || 
     document.querySelector('.catalog__title') ||
@@ -697,7 +725,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// Вспомогательная функция для задержки
 function debounce(func, wait) {
   let timeout;
   return function executedFunction(...args) {
