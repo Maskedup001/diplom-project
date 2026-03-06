@@ -738,6 +738,188 @@ app.delete('/api/cart', authenticateToken, async (req, res) => {
     }
 });
 
+// ========== ЗАКАЗЫ ==========
+
+// Создать новый заказ
+app.post('/api/orders', authenticateToken, async (req, res) => {
+    try {
+        const { items, total_amount, shipping_address, phone, email, notes } = req.body;
+        const userId = req.user.id;
+
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            return res.status(400).json({ error: 'Корзина пуста' });
+        }
+
+        if (!pool) await connectDB();
+        if (!pool) {
+            return res.status(500).json({ error: 'База данных недоступна' });
+        }
+
+        // Генерируем номер заказа
+        const orderNumber = 'ORD-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+
+        // Начинаем транзакцию
+        const transaction = new sql.Transaction(pool);
+        await transaction.begin();
+
+        try {
+            // Создаем заказ
+            const orderResult = await transaction.request()
+                .input('user_id', sql.Int, userId)
+                .input('order_number', sql.NVarChar, orderNumber)
+                .input('total_amount', sql.Decimal(10,2), total_amount)
+                .input('shipping_address', sql.NVarChar, shipping_address || null)
+                .input('phone', sql.NVarChar, phone)
+                .input('email', sql.NVarChar, email || null)
+                .input('notes', sql.NVarChar, notes || null)
+                .query(`
+                    INSERT INTO Orders (user_id, order_number, total_amount, shipping_address, phone, email, notes)
+                    OUTPUT INSERTED.id, INSERTED.order_number
+                    VALUES (@user_id, @order_number, @total_amount, @shipping_address, @phone, @email, @notes)
+                `);
+
+            const orderId = orderResult.recordset[0].id;
+            const orderNumber_ = orderResult.recordset[0].order_number;
+
+            // Добавляем товары в заказ
+            for (const item of items) {
+                await transaction.request()
+                    .input('order_id', sql.Int, orderId)
+                    .input('product_id', sql.Int, item.id)
+                    .input('product_name', sql.NVarChar, item.title)
+                    .input('product_price', sql.Decimal(10,2), item.price)
+                    .input('quantity', sql.Int, item.quantity)
+                    .input('total_price', sql.Decimal(10,2), item.price * item.quantity)
+                    .query(`
+                        INSERT INTO OrderItems (order_id, product_id, product_name, product_price, quantity, total_price)
+                        VALUES (@order_id, @product_id, @product_name, @product_price, @quantity, @total_price)
+                    `);
+            }
+
+            // Очищаем корзину после оформления заказа
+            await transaction.request()
+                .input('user_id', sql.Int, userId)
+                .query('DELETE FROM Cart WHERE user_id = @user_id');
+
+            await transaction.commit();
+
+            res.json({
+                success: true,
+                message: 'Заказ успешно создан',
+                order: {
+                    id: orderId,
+                    order_number: orderNumber_
+                }
+            });
+
+        } catch (err) {
+            await transaction.rollback();
+            throw err;
+        }
+
+    } catch (err) {
+        console.error('Ошибка создания заказа:', err);
+        res.status(500).json({ error: 'Ошибка создания заказа' });
+    }
+});
+
+// Получить заказы пользователя
+app.get('/api/orders/my-orders', authenticateToken, async (req, res) => {
+    try {
+        if (!pool) await connectDB();
+        if (!pool) {
+            return res.status(500).json({ error: 'База данных недоступна' });
+        }
+
+        const result = await pool.request()
+            .input('user_id', sql.Int, req.user.id)
+            .query(`
+                SELECT 
+                    o.id,
+                    o.order_number,
+                    o.total_amount,
+                    o.status,
+                    o.shipping_address,
+                    o.phone,
+                    o.email,
+                    o.created_at,
+                    (
+                        SELECT COUNT(*) 
+                        FROM OrderItems oi 
+                        WHERE oi.order_id = o.id
+                    ) as items_count
+                FROM Orders o
+                WHERE o.user_id = @user_id
+                ORDER BY o.created_at DESC
+            `);
+
+        res.json(result.recordset);
+
+    } catch (err) {
+        console.error('Ошибка получения заказов:', err);
+        res.status(500).json({ error: 'Ошибка получения заказов' });
+    }
+});
+
+// Получить детали заказа по ID
+app.get('/api/orders/:id', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!pool) await connectDB();
+        if (!pool) {
+            return res.status(500).json({ error: 'База данных недоступна' });
+        }
+
+        // Получаем информацию о заказе
+        const orderResult = await pool.request()
+            .input('id', sql.Int, id)
+            .input('user_id', sql.Int, req.user.id)
+            .query(`
+                SELECT 
+                    id,
+                    order_number,
+                    total_amount,
+                    status,
+                    shipping_address,
+                    phone,
+                    email,
+                    notes,
+                    created_at
+                FROM Orders 
+                WHERE id = @id AND user_id = @user_id
+            `);
+
+        if (orderResult.recordset.length === 0) {
+            return res.status(404).json({ error: 'Заказ не найден' });
+        }
+
+        // Получаем товары в заказе
+        const itemsResult = await pool.request()
+            .input('order_id', sql.Int, id)
+            .query(`
+                SELECT 
+                    id,
+                    product_id,
+                    product_name,
+                    product_price,
+                    quantity,
+                    total_price
+                FROM OrderItems 
+                WHERE order_id = @order_id
+            `);
+
+        const order = orderResult.recordset[0];
+        order.items = itemsResult.recordset;
+
+        res.json(order);
+
+    } catch (err) {
+        console.error('Ошибка получения деталей заказа:', err);
+        res.status(500).json({ error: 'Ошибка получения деталей заказа' });
+    }
+});
+
 // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 
 function getCategoryName(categoryId) {
@@ -792,6 +974,9 @@ app.listen(PORT, async () => {
     console.log(`✏️ Обновить количество: PUT http://localhost:${PORT}/api/cart/:cartId`);
     console.log(`❌ Удалить из корзины: DELETE http://localhost:${PORT}/api/cart/:cartId`);
     console.log(`🧹 Очистить корзину: DELETE http://localhost:${PORT}/api/cart`);
+    console.log(`📦 Создать заказ: POST http://localhost:${PORT}/api/orders`);
+    console.log(`📋 Мои заказы: GET http://localhost:${PORT}/api/orders/my-orders`);
+    console.log(`🔍 Детали заказа: GET http://localhost:${PORT}/api/orders/:id`);
     console.log('='.repeat(50));
     
     await connectDB();

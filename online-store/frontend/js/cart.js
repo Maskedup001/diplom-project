@@ -95,7 +95,6 @@ class CartPage {
         const quantity = item.quantity || 1;
         const totalPrice = item.price * quantity;
         
-        // ✅ ИСПРАВЛЕНО: data:image заглушка с названием товара (без onerror, без loading="lazy")
         const imageSrc = item.image && item.image !== 'images/default.jpg' 
             ? item.image 
             : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f0f0f0'/%3E%3Ctext x='50' y='55' font-size='14' text-anchor='middle' fill='%23999' font-family='Arial'%3E${encodeURIComponent(item.title)}%3C/text%3E%3C/svg%3E`;
@@ -195,15 +194,28 @@ class CartPage {
             });
         }
         
+        // ========== ИСПРАВЛЕНО: КНОПКА ОФОРМЛЕНИЯ ЗАКАЗА С ПРОВЕРКОЙ АВТОРИЗАЦИИ ==========
         const checkoutButton = document.getElementById('checkout-button');
         if (checkoutButton) {
             checkoutButton.addEventListener('click', (e) => {
                 e.preventDefault();
                 
+                // Проверка на пустую корзину
                 if (!this.cart.items || this.cart.items.length === 0) {
                     alert('Корзина пуста! Добавьте товары для оформления заказа.');
                     return;
                 }
+                
+                // ========== ПРОВЕРКА АВТОРИЗАЦИИ ==========
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (!user) {
+                    const confirmResult = confirm('Для оформления заказа необходимо авторизоваться. Перейти на страницу входа?');
+                    if (confirmResult) {
+                        window.location.href = 'login.html';
+                    }
+                    return;
+                }
+                // =========================================
                 
                 this.toggleOrderForm();
             });
@@ -382,6 +394,14 @@ class CartPage {
         const items = this.cart.items || [];
         const user = JSON.parse(localStorage.getItem('user'));
         
+        // ========== ПРОВЕРКА АВТОРИЗАЦИИ ПЕРЕД ОТПРАВКОЙ ==========
+        if (!user || !user.id) {
+            alert('Для оформления заказа необходимо авторизоваться');
+            window.location.href = 'login.html';
+            return;
+        }
+        // =========================================================
+        
         const orderData = {
             items: items.map(item => ({
                 id: item.id,
@@ -430,7 +450,8 @@ class CartPage {
                         order_id: data.order.id
                     });
                 } else {
-                    alert('Ошибка при создании заказа. Попробуйте позже.');
+                    const error = await response.json();
+                    alert('Ошибка при создании заказа: ' + (error.error || 'Неизвестная ошибка'));
                     return;
                 }
             } catch (error) {
@@ -439,6 +460,8 @@ class CartPage {
                 return;
             }
         } else {
+            // Этот блок уже не должен выполняться из-за проверки выше,
+            // но оставим на всякий случай
             this.showOrderConfirmation(orderData);
         }
         
@@ -492,33 +515,32 @@ class CartPage {
         const totalItems = orderData.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
         const orderNumber = orderData.order_number || Math.floor(Math.random() * 9000) + 1000;
         
-        let message = `
-✅ ЗАКАЗ УСПЕШНО ОФОРМЛЕН!
-
-📋 Номер заказа: #${orderNumber}
-📦 Товаров: ${totalItems} шт.
-💰 Сумма: ${orderData.total.toLocaleString()} ₽
-        `;
+        let message = "✅ ЗАКАЗ УСПЕШНО ОФОРМЛЕН!\n\n";
+        message += "══════════════════════════════\n";
+        message += "📋 Номер заказа: #" + orderNumber + "\n";
+        message += "📦 Товаров: " + totalItems + " шт.\n";
+        message += "💰 Сумма: " + orderData.total.toLocaleString() + " ₽\n";
         
         if (orderData.promoCode) {
-            message += `🎁 Промокод: ${orderData.promoCode} (скидка ${orderData.promoDiscount}%)\n`;
+            message += "🎁 Промокод: " + orderData.promoCode + " (скидка " + orderData.promoDiscount + "%)\n";
         }
         
-        message += `📞 Способ доставки: ${orderData.delivery === 'courier' ? 'Курьером' : 'Самовывоз'}
-
-👤 Данные клиента:
-   • Имя: ${orderData.customer.name}
-   • Телефон: ${orderData.customer.phone}
-        `;
+        message += "📞 Доставка: " + (orderData.delivery === 'courier' ? 'Курьером' : 'Самовывоз') + "\n";
+        message += "══════════════════════════════\n";
+        message += "👤 Данные клиента:\n";
+        message += "   • Имя: " + orderData.customer.name + "\n";
+        message += "   • Телефон: " + orderData.customer.phone + "\n";
         
         if (orderData.customer.email) {
-            message += `   • Email: ${orderData.customer.email}\n`;
+            message += "   • Email: " + orderData.customer.email + "\n";
         }
         if (orderData.customer.address) {
-            message += `   • Адрес: ${orderData.customer.address}\n`;
+            message += "   • Адрес: " + orderData.customer.address + "\n";
         }
         
-        message += `\nБлагодарим за покупку! Наш менеджер свяжется с вами в течение 30 минут.`;
+        message += "══════════════════════════════\n";
+        message += "✅ Заказ передан в обработку\n";
+        message += "📞 Наш менеджер свяжется с вами в течение 30 минут";
         
         alert(message);
     }

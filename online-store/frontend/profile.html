@@ -80,7 +80,6 @@
 				<!-- Информация о пользователе -->
 				<div class="profile-card__section">
 					<h2 class="profile-card__subtitle">Данные профиля</h2>
-					<!-- В основном блоке информации о пользователе -->
 					<div class="profile-card__info">
 						<div class="profile-card__field">
 							<span class="profile-card__label">Имя пользователя:</span>
@@ -96,7 +95,7 @@
 						</div>
 						<div class="profile-card__field">
 							<span class="profile-card__label">Телефон:</span>
-							<span id="user-phone" class="profile-card__value">Не указан</span> <!-- ДОБАВИЛ ТЕЛЕФОН -->
+							<span id="user-phone" class="profile-card__value">Не указан</span>
 						</div>
 						<div class="profile-card__field">
 							<span class="profile-card__label">Дата регистрации:</span>
@@ -157,7 +156,6 @@
 		<div class="modal__content">
 			<button class="modal__close" data-modal-close="edit-modal">×</button>
 			<h2 class="modal__title">Редактировать профиль</h2>
-			<!-- В модальном окне редактирования -->
 			<form id="edit-profile-form" class="form">
 				<div class="form__group">
 					<label for="edit-username" class="form__label">Имя пользователя (логин):</label>
@@ -183,6 +181,21 @@
 			</form>
 		</div>
 	</div>
+
+	<!-- ========== ДОБАВЛЕНО: Модальное окно деталей заказа ========== -->
+	<div class="modal modal--order-details" id="order-details-modal">
+		<div class="modal__content">
+			<button class="modal__close" onclick="closeOrderDetailsModal()">×</button>
+			<h2 class="modal__title">Детали заказа</h2>
+			<div class="order-details">
+				<!-- Контент будет заполняться через JS -->
+			</div>
+			<div class="modal__buttons">
+				<button class="button button--primary" onclick="closeOrderDetailsModal()">Закрыть</button>
+			</div>
+		</div>
+	</div>
+	<!-- =========================================================== -->
 
 	<!-- Затемнение фона -->
 	<div class="overlay" id="overlay"></div>
