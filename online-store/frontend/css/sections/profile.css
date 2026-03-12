@@ -94,6 +94,44 @@
     width: 100%;
 }
 
+/* ========== КНОПКИ В ПРОФИЛЕ (ТОЛЬКО ЦВЕТА) ========== */
+
+/* Кнопка "Редактировать профиль" - СИНЯЯ, ЗАПОЛНЕННАЯ */
+.profile-card .button--primary {
+    background: var(--color-primary);
+    color: white;
+    border: 1px solid var(--color-primary);
+}
+
+.profile-card .button--primary:hover {
+    background: var(--color-primary-dark);
+    border-color: var(--color-primary-dark);
+}
+
+/* Кнопка "Выйти из аккаунта" - КРАСНАЯ, ПРОЗРАЧНАЯ */
+.profile-card .button--danger {
+    background: transparent;
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger);
+}
+
+.profile-card .button--danger:hover {
+    background: var(--color-danger);
+    color: white;
+}
+
+/* Кнопка "Удалить аккаунт" - КРАСНАЯ, ПРОЗРАЧНАЯ */
+.profile-card .button--outline {
+    background: transparent;
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger);
+}
+
+.profile-card .button--outline:hover {
+    background: var(--color-danger);
+    color: white;
+}
+
 /* ========== МОДАЛЬНОЕ ОКНО РЕДАКТИРОВАНИЯ ПРОФИЛЯ ========== */
 
 .modal--profile .modal__content {
@@ -134,9 +172,18 @@
     box-shadow: 0 0 0 3px var(--color-shadow);
 }
 
-.modal--profile .form__submit {
-    margin-top: var(--spacing-2);
+/* Кнопка "Сохранить изменения" - ЗЕЛЕНАЯ, ЗАПОЛНЕННАЯ */
+.modal--profile .button--primary {
+    background: var(--color-success);
+    color: white;
+    border: 1px solid var(--color-success);
     width: 100%;
+    margin-top: var(--spacing-2);
+}
+
+.modal--profile .button--primary:hover {
+    background: var(--color-success-dark);
+    border-color: var(--color-success-dark);
 }
 
 /* ========== ИСТОРИЯ ЗАКАЗОВ ========== */
@@ -252,6 +299,32 @@
     min-width: 120px;
 }
 
+/* ===== КНОПКИ В ЗАКАЗАХ (ТОЛЬКО ЦВЕТА) ===== */
+
+/* Кнопка "Подробнее" - СИНЯЯ, ПРОЗРАЧНАЯ */
+.order-card__actions .button--outline {
+    background: transparent;
+    color: var(--color-primary);
+    border: 1px solid var(--color-primary);
+}
+
+.order-card__actions .button--outline:hover {
+    background: var(--color-primary);
+    color: white;
+}
+
+/* Кнопка "Отменить" - КРАСНАЯ, ПРОЗРАЧНАЯ */
+.order-card__actions .button--danger {
+    background: transparent;
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger);
+}
+
+.order-card__actions .button--danger:hover {
+    background: var(--color-danger);
+    color: white;
+}
+
 /* Пустая история */
 .empty-orders {
     text-align: center;
@@ -300,7 +373,7 @@
     margin-bottom: var(--spacing-6);
 }
 
-/* ========== СТИЛИ ТОЛЬКО ДЛЯ СОДЕРЖИМОГО МОДАЛЬНОГО ОКНА ========== */
+/* ========== СТИЛИ ДЛЯ СОДЕРЖИМОГО МОДАЛЬНОГО ОКНА ========== */
 
 .order-details {
     max-height: 70vh;
@@ -497,7 +570,31 @@
     color: var(--color-success);
 }
 
+/* Кнопки в карточке заказа */
+.order-card__actions {
+    display: flex;
+    gap: var(--spacing-2);
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.order-card__actions .button {
+    min-width: 100px;
+}
+
 /* Адаптивность */
+@media (max-width: 768px) {
+    .order-card__actions {
+        flex-direction: column;
+        gap: var(--spacing-2);
+    }
+    
+    .order-card__actions .button {
+        width: 100%;
+        min-width: auto;
+    }
+}
+
 @media (max-width: 768px) {
     .order-card__header {
         flex-direction: column;

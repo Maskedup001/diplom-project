@@ -844,7 +844,7 @@ app.get('/api/orders/my-orders', authenticateToken, async (req, res) => {
                     o.email,
                     o.created_at,
                     (
-                        SELECT COUNT(*) 
+                        SELECT SUM(quantity) 
                         FROM OrderItems oi 
                         WHERE oi.order_id = o.id
                     ) as items_count
@@ -917,6 +917,69 @@ app.get('/api/orders/:id', authenticateToken, async (req, res) => {
     } catch (err) {
         console.error('Ошибка получения деталей заказа:', err);
         res.status(500).json({ error: 'Ошибка получения деталей заказа' });
+    }
+});
+
+// Отменить заказ (для пользователя)
+app.put('/api/orders/:id/cancel', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+        
+        console.log('========== ОТМЕНА ЗАКАЗА ==========');
+        console.log('ID заказа:', id);
+        console.log('ID пользователя:', userId);
+        
+        if (!pool) {
+            console.log('Подключаюсь к БД...');
+            await connectDB();
+        }
+        
+        if (!pool) {
+            console.log('❌ Нет подключения к БД');
+            return res.status(500).json({ error: 'Нет подключения к БД' });
+        }
+        
+        console.log('✅ Подключение к БД есть');
+
+        // Проверяем, что заказ принадлежит пользователю
+        const checkResult = await pool.request()
+            .input('id', sql.Int, id)
+            .input('user_id', sql.Int, userId)
+            .query('SELECT id, status FROM Orders WHERE id = @id AND user_id = @user_id');
+        
+        console.log('Результат проверки:', checkResult.recordset);
+
+        if (checkResult.recordset.length === 0) {
+            return res.status(404).json({ error: 'Заказ не найден' });
+        }
+        
+        const order = checkResult.recordset[0];
+        
+        // Нельзя отменить уже доставленный или отменённый заказ
+        if (order.status === 'delivered' || order.status === 'cancelled') {
+            return res.status(400).json({ error: 'Этот заказ нельзя отменить' });
+        }
+        
+        // Обновляем статус
+        await pool.request()
+            .input('id', sql.Int, id)
+            .input('status', sql.NVarChar, 'cancelled')
+            .query('UPDATE Orders SET status = @status WHERE id = @id');
+        
+        console.log('✅ Заказ успешно отменен');
+        
+        res.json({
+            success: true,
+            message: 'Заказ отменен'
+        });
+        
+    } catch (err) {
+        console.error('❌ ОШИБКА:', err);
+        res.status(500).json({ 
+            error: 'Ошибка отмены заказа',
+            details: err.message 
+        });
     }
 });
 

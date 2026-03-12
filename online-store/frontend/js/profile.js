@@ -179,7 +179,37 @@ function getStatusClass(status) {
     return classes[status] || 'status-pending';
 }
 
-// Отрисовка заказов
+// ========== ОТМЕНА ЗАКАЗА ==========
+async function cancelOrder(orderId) {
+    if (!confirm('Вы уверены, что хотите отменить заказ?')) {
+        return;
+    }
+    
+    const token = localStorage.getItem('token');
+    
+    try {
+        const response = await fetch(`${API_URL}/orders/${orderId}/cancel`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error || 'Ошибка отмены заказа');
+        }
+        
+        alert('✅ Заказ успешно отменен');
+        
+        // Перезагружаем список заказов
+        await loadOrders();
+        
+    } catch (error) {
+        console.error('Ошибка:', error);
+        alert(`❌ ${error.message}`);
+    }
+}
+
+// ========== ОТРИСОВКА ЗАКАЗОВ ==========
 function renderOrders(orders) {
     const ordersList = document.getElementById('orders-list');
     if (!ordersList) return;
@@ -197,6 +227,9 @@ function renderOrders(orders) {
         
         const statusRu = getStatusRu(order.status);
         const statusClass = getStatusClass(order.status);
+        
+        // Можно отменить только заказы в статусе pending или processing
+        const canCancel = ['pending', 'processing'].includes(order.status);
         
         html += `
             <div class="order-card" data-order-id="${order.id}">
@@ -230,6 +263,11 @@ function renderOrders(orders) {
                         <button class="button button--outline order-details-btn" data-order-id="${order.id}">
                             Подробнее
                         </button>
+                        ${canCancel ? `
+                        <button class="button button--danger order-cancel-btn" data-order-id="${order.id}">
+                            Отменить
+                        </button>
+                        ` : ''}
                     </div>
                 </div>
             </div>
@@ -244,6 +282,14 @@ function renderOrders(orders) {
         btn.addEventListener('click', async (e) => {
             const orderId = e.target.dataset.orderId;
             await showOrderDetails(orderId);
+        });
+    });
+    
+    // Добавляем обработчики для кнопок "Отменить"
+    document.querySelectorAll('.order-cancel-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            const orderId = e.target.dataset.orderId;
+            await cancelOrder(orderId);
         });
     });
 }
@@ -288,10 +334,13 @@ function showOrderDetailsModal(order) {
     const statusClass = getStatusClass(order.status);
     
     let itemsHtml = '';
-    let itemsTotal = 0;
+    let itemsSubtotal = 0;
+    let totalQuantity = 0;
     
     order.items.forEach(item => {
-        itemsTotal += item.total_price;
+        itemsSubtotal += item.total_price;
+        totalQuantity += item.quantity;
+        
         itemsHtml += `
             <div class="order-item">
                 <div class="order-item__info">
@@ -305,6 +354,11 @@ function showOrderDetailsModal(order) {
             </div>
         `;
     });
+    
+    // Проверяем, была ли применена скидка
+    const hasDiscount = itemsSubtotal > order.total_amount;
+    const discountAmount = itemsSubtotal - order.total_amount;
+    const discountPercent = hasDiscount ? Math.round((discountAmount / itemsSubtotal) * 100) : 0;
     
     const modalHtml = `
         <div class="modal modal--order-details" id="order-details-modal">
@@ -357,11 +411,24 @@ function showOrderDetailsModal(order) {
                         <div class="order-total">
                             <div class="order-total__row">
                                 <span class="order-total__label">Товаров:</span>
-                                <span class="order-total__value">${order.items.length} шт.</span>
+                                <span class="order-total__value">${totalQuantity} шт.</span>
                             </div>
+                            
+                            <div class="order-total__row">
+                                <span class="order-total__label">Сумма без скидки:</span>
+                                <span class="order-total__value">${itemsSubtotal.toLocaleString()} ₽</span>
+                            </div>
+                            
+                            ${hasDiscount ? `
+                            <div class="order-total__row order-total__row--discount">
+                                <span class="order-total__label">Скидка ${discountPercent}%:</span>
+                                <span class="order-total__value order-total__value--discount">-${discountAmount.toLocaleString()} ₽</span>
+                            </div>
+                            ` : ''}
+                            
                             <div class="order-total__row order-total__row--final">
-                                <span class="order-total__label">ИТОГО:</span>
-                                <span class="order-total__value order-total__value--final">${itemsTotal.toLocaleString()} ₽</span>
+                                <span class="order-total__label">ИТОГО К ОПЛАТЕ:</span>
+                                <span class="order-total__value order-total__value--final">${order.total_amount.toLocaleString()} ₽</span>
                             </div>
                         </div>
                     </div>
@@ -444,11 +511,9 @@ function setupAllEventListeners() {
     const deleteBtn = document.getElementById('delete-account-btn');
     if (deleteBtn) {
         deleteBtn.addEventListener('click', () => {
-            if (confirm('Удалить аккаунт? Это действие нельзя отменить.')) {
-                deleteAccount();
-            }
-        });
-    }
+            deleteAccount();
+      	});
+			}
     
     // 4. Модальное окно редактирования
     setupEditModalListeners();
