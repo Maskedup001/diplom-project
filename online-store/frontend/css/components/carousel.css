@@ -1,0 +1,214 @@
+/* ========== КАРУСЕЛЬ ДЛЯ КАРТОЧЕК ТОВАРОВ ========== */
+/* Стили в единой стилистике сайта с использованием переменных */
+
+.product-card__carousel-container {
+    position: relative;
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    background: var(--color-bg-card); /* Белый фон карточки */
+}
+
+.product-card__carousel-track {
+    display: flex;
+    height: 100%;
+    transition: transform var(--transition-normal) var(--transition-timing-ease);
+}
+
+.product-card__carousel-slide {
+    flex: 0 0 100%;
+    height: 100%;
+}
+
+.product-card__carousel-slide img {
+    width: 100%;
+    height: 200px;
+    object-fit: contain;
+    object-position: center;
+    display: block;
+    background: var(--color-bg-card); /* Белый фон */
+    padding: var(--spacing-6);
+}
+
+/* Кнопки навигации */
+.product-card__carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    cursor: pointer;
+    font-size: 22px;
+    font-weight: var(--font-weight-medium);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: all var(--transition-fast) var(--transition-timing-ease);
+    z-index: 10;
+    color: var(--color-text-primary);
+    box-shadow: var(--shadow-md);
+}
+
+.product-card:hover .product-card__carousel-btn {
+    opacity: 1;
+}
+
+.product-card__carousel-btn:hover {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-white);
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: var(--shadow-lg);
+}
+
+.product-card__carousel-btn--prev {
+    left: 10px;
+}
+
+.product-card__carousel-btn--next {
+    right: 10px;
+}
+
+/* Точки-индикаторы */
+.product-card__carousel-dots {
+    position: absolute;
+    bottom: 12px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    z-index: 10;
+}
+
+.product-card__carousel-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-border);
+    cursor: pointer;
+    transition: all var(--transition-fast) var(--transition-timing-ease);
+    border: 1px solid transparent;
+}
+
+.product-card__carousel-dot.active {
+    background: var(--color-primary);
+    transform: scale(1.3);
+    box-shadow: 0 0 0 2px var(--color-shadow);
+}
+
+.product-card__carousel-dot:hover {
+    background: var(--color-primary-light);
+    transform: scale(1.1);
+}
+
+/* Затемнение для лучшей видимости кнопок */
+.product-card__carousel-container::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: linear-gradient(to top, rgba(0,0,0,0.05), transparent);
+    pointer-events: none;
+    z-index: 5;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+}
+
+.product-card:hover .product-card__carousel-container::after {
+    opacity: 1;
+}
+
+/* Адаптивность */
+@media (max-width: 992px) {
+    .product-card__carousel-container {
+        height: 190px;
+    }
+    
+    .product-card__carousel-slide img {
+        height: 190px;
+        padding: var(--spacing-5);
+    }
+}
+
+@media (max-width: 768px) {
+    .product-card__carousel-container {
+        height: 180px;
+    }
+    
+    .product-card__carousel-slide img {
+        height: 180px;
+        padding: var(--spacing-5);
+    }
+    
+    .product-card__carousel-btn {
+        opacity: 0.8;
+        width: 32px;
+        height: 32px;
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .product-card__carousel-container {
+        height: 160px;
+    }
+    
+    .product-card__carousel-slide img {
+        height: 160px;
+        padding: var(--spacing-4);
+    }
+    
+    .product-card__carousel-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 18px;
+    }
+    
+    .product-card__carousel-dots {
+        bottom: 8px;
+        gap: 6px;
+    }
+    
+    .product-card__carousel-dot {
+        width: 6px;
+        height: 6px;
+    }
+}
+
+/* Поддержка темной темы (если есть) */
+@media (prefers-color-scheme: dark) {
+    .product-card__carousel-container {
+        background: var(--color-bg-card);
+    }
+    
+    .product-card__carousel-slide img {
+        background: var(--color-bg-card);
+    }
+    
+    .product-card__carousel-btn {
+        background: var(--color-bg-secondary);
+        border-color: var(--color-border-dark);
+        color: var(--color-text-primary);
+    }
+    
+    .product-card__carousel-btn:hover {
+        background: var(--color-primary);
+        color: var(--color-white);
+    }
+    
+    .product-card__carousel-dot {
+        background: var(--color-border-dark);
+    }
+    
+    .product-card__carousel-dot.active {
+        background: var(--color-primary-light);
+    }
+}

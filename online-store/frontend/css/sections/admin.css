@@ -1,0 +1,298 @@
+/* admin.css */
+
+/* Заголовок страницы */
+.page-title {
+    margin: 30px 0;
+    text-align: center;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-3xl);
+}
+
+/* Статистика */
+.admin-stats {
+    margin-bottom: 40px;
+}
+
+.admin-stats h2 {
+    font-size: var(--font-size-xl);
+    margin-bottom: 20px;
+    color: var(--color-text-primary);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.stat-card {
+    background: var(--color-bg-card);
+    padding: 25px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    text-align: center;
+    border: 1px solid var(--color-border);
+}
+
+.stat-value {
+    font-size: 32px;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+    margin-bottom: 10px;
+}
+
+.stat-label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Вкладки */
+.admin-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    border-bottom: 2px solid var(--color-border);
+}
+
+.admin-tab {
+    padding: 12px 24px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: var(--font-size-base);
+    color: var(--color-text-secondary);
+    position: relative;
+    font-weight: var(--font-weight-medium);
+    transition: all var(--transition-fast);
+}
+
+.admin-tab:hover {
+    color: var(--color-primary);
+}
+
+.admin-tab.active {
+    color: var(--color-primary);
+    font-weight: var(--font-weight-semibold);
+}
+
+.admin-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--color-primary);
+}
+
+/* Секции */
+.admin-section {
+    display: none;
+}
+
+.admin-section.active {
+    display: block;
+}
+
+/* Фильтры */
+.admin-filters {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.admin-filters input,
+.admin-filters select {
+    padding: 10px 15px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    min-width: 250px;
+    background: var(--color-bg-card);
+    color: var(--color-text-primary);
+}
+
+.admin-filters input:focus,
+.admin-filters select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-shadow);
+}
+
+/* Таблицы */
+.admin-table {
+    background: var(--color-bg-card);
+    border-radius: var(--radius-lg);
+    overflow-x: auto;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--color-border);
+}
+
+.orders-table,
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1000px;
+}
+
+.orders-table th,
+.users-table th {
+    background: var(--color-bg-secondary);
+    padding: 15px;
+    text-align: left;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    border-bottom: 2px solid var(--color-border);
+    font-size: var(--font-size-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.orders-table td,
+.users-table td {
+    padding: 15px;
+    border-bottom: 1px solid var(--color-border-light);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+}
+
+.orders-table tr:hover,
+.users-table tr:hover {
+    background: var(--color-bg-secondary);
+}
+
+/* Стили для выпадающего списка статусов */
+.status-select {
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: none;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    width: 140px;
+    transition: all 0.2s ease;
+}
+
+/* Цвета для каждого статуса */
+.status-select.status-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.status-select.status-processing {
+    background: #cce5ff;
+    color: #004085;
+}
+
+.status-select.status-shipped {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-select.status-delivered {
+    background: #d1e7dd;
+    color: #0f5132;
+}
+
+.status-select.status-cancelled {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Цвета для опций внутри select */
+.status-select option {
+    background: white;
+    color: #333;
+}
+
+/* Кнопка деталей */
+.view-order {
+    background: transparent;
+    color: var(--color-primary);
+    border: 1px solid var(--color-primary);
+    padding: 6px 12px;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-xs);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.view-order:hover {
+    background: var(--color-primary);
+    color: white;
+}
+
+/* Сообщение об ошибке */
+.error-message {
+    padding: 40px;
+    text-align: center;
+    color: var(--color-danger);
+    font-size: var(--font-size-base);
+}
+
+/* Загрузка */
+.loading {
+    padding: 40px;
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-base);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .stat-value {
+        font-size: 24px;
+    }
+    
+    .stat-label {
+        font-size: var(--font-size-xs);
+    }
+    
+    .admin-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .admin-tab {
+        flex: 1 1 auto;
+        text-align: center;
+        padding: 10px;
+        font-size: var(--font-size-sm);
+    }
+    
+    .admin-filters {
+        flex-direction: column;
+    }
+    
+    .admin-filters input,
+    .admin-filters select {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .status-select {
+        width: 120px;
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-card {
+        padding: 15px;
+    }
+    
+    .stat-value {
+        font-size: 20px;
+    }
+}

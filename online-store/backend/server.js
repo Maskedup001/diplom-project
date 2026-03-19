@@ -43,7 +43,6 @@ async function connectDB() {
         pool = await sql.connect(dbConfig);
         console.log('БД подключена успешно!');
         
-        // Проверяем и создаем таблицу корзины если её нет
         await createCartTable();
         
         return pool;
@@ -71,7 +70,6 @@ async function createCartTable() {
         `);
         console.log('Таблица Cart создана/проверена');
 
-        // Создаем индекс для быстрого поиска
         await pool.request().query(`
             IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Cart_user_id')
             CREATE INDEX IX_Cart_user_id ON Cart(user_id)
@@ -381,7 +379,7 @@ app.put('/api/profile', authenticateToken, async (req, res) => {
     }
 });
 
-// ========== УДАЛЕНИЕ АККАУНТА (С ПОЛНОЙ ОЧИСТКОЙ КОРЗИНЫ) ==========
+// ========== УДАЛЕНИЕ АККАУНТА ==========
 app.delete('/api/profile', authenticateToken, async (req, res) => {
     try {
         if (!pool) await connectDB();
@@ -391,19 +389,14 @@ app.delete('/api/profile', authenticateToken, async (req, res) => {
 
         const userId = req.user.id;
 
-        // Начинаем транзакцию
         const transaction = new sql.Transaction(pool);
         await transaction.begin();
 
         try {
-            // 1. Удаляем корзину пользователя (В БД)
             await transaction.request()
                 .input('user_id', sql.Int, userId)
                 .query('DELETE FROM Cart WHERE user_id = @user_id');
             
-            console.log(`Корзина пользователя ${userId} удалена из БД`);
-
-            // 2. Удаляем заказы пользователя
             await transaction.request()
                 .input('user_id', sql.Int, userId)
                 .query(`
@@ -416,15 +409,13 @@ app.delete('/api/profile', authenticateToken, async (req, res) => {
                 .input('user_id', sql.Int, userId)
                 .query('DELETE FROM Orders WHERE user_id = @user_id');
 
-            // 3. Удаляем самого пользователя
             await transaction.request()
                 .input('id', sql.Int, userId)
                 .query('DELETE FROM Users WHERE id = @id');
 
-            // Коммитим транзакцию
             await transaction.commit();
 
-            console.log(`Пользователь ${userId} удалил аккаунт (корзина полностью удалена)`);
+            console.log(`Пользователь ${userId} удалил аккаунт`);
 
             res.json({
                 success: true,
@@ -467,24 +458,42 @@ app.get('/api/products', async (req, res) => {
                 StockQuantity as stock,
                 Rating as rating,
                 Reviews as reviews,
-                ImageURL as image
+                ImageURL
             FROM Products
             ORDER BY ProductID
         `);
         
-        const products = result.recordset.map(item => ({
-            id: item.id,
-            title: item.title || 'Товар',
-            price: item.price || 0,
-            category: getCategoryName(item.categoryId),
-            brand: item.brand || 'unknown',
-            description: item.description || 'Описание товара',
-            stock: item.stock || 0,
-            rating: item.rating || 4.0,
-            reviews: item.reviews || 0,
-            availability: (item.stock || 0) > 0 ? 'in-stock' : 'out-of-stock',
-            image: item.image || getDefaultImage(item.categoryId)
-        }));
+        const products = result.recordset.map(item => {
+            let images = [];
+            try {
+                if (item.ImageURL) {
+                    images = JSON.parse(item.ImageURL);
+                }
+            } catch (e) {
+                if (item.ImageURL) {
+                    images = [item.ImageURL];
+                }
+            }
+            
+            if (images.length === 0) {
+                images = [getDefaultImage(item.categoryId)];
+            }
+            
+            return {
+                id: item.id,
+                title: item.title || 'Товар',
+                price: item.price || 0,
+                category: getCategoryName(item.categoryId),
+                brand: item.brand || 'unknown',
+                description: item.description || 'Описание товара',
+                stock: item.stock || 0,
+                rating: item.rating || 4.0,
+                reviews: item.reviews || 0,
+                availability: (item.stock || 0) > 0 ? 'in-stock' : 'out-of-stock',
+                images: images,
+                image: images[0]
+            };
+        });
         
         res.json(products);
         
@@ -517,7 +526,7 @@ app.get('/api/products/:id', async (req, res) => {
                     StockQuantity as stock,
                     Rating as rating,
                     Reviews as reviews,
-                    ImageURL as image
+                    ImageURL
                 FROM Products
                 WHERE ProductID = @id
             `);
@@ -527,6 +536,22 @@ app.get('/api/products/:id', async (req, res) => {
         }
 
         const item = result.recordset[0];
+        
+        let images = [];
+        try {
+            if (item.ImageURL) {
+                images = JSON.parse(item.ImageURL);
+            }
+        } catch (e) {
+            if (item.ImageURL) {
+                images = [item.ImageURL];
+            }
+        }
+        
+        if (images.length === 0) {
+            images = [getDefaultImage(item.categoryId)];
+        }
+        
         const product = {
             id: item.id,
             title: item.title || 'Товар',
@@ -538,7 +563,8 @@ app.get('/api/products/:id', async (req, res) => {
             rating: item.rating || 4.0,
             reviews: item.reviews || 0,
             availability: (item.stock || 0) > 0 ? 'in-stock' : 'out-of-stock',
-            image: item.image || getDefaultImage(item.categoryId)
+            images: images,
+            image: images[0]
         };
 
         res.json(product);
@@ -577,7 +603,12 @@ app.get('/api/cart', authenticateToken, async (req, res) => {
                 ORDER BY c.created_at DESC
             `);
 
-        res.json(result.recordset);
+        const cartItems = result.recordset.map(item => ({
+            ...item,
+            image: item.image ? (JSON.parse(item.image)[0] || item.image) : 'images/default.jpg'
+        }));
+
+        res.json(cartItems);
     } catch (err) {
         console.error('Ошибка получения корзины:', err);
         res.status(500).json({ error: 'Ошибка получения корзины' });
@@ -648,10 +679,15 @@ app.post('/api/cart', authenticateToken, async (req, res) => {
                 WHERE c.user_id = @user_id
             `);
 
+        const cartItems = updatedCart.recordset.map(item => ({
+            ...item,
+            image: item.image ? (JSON.parse(item.image)[0] || item.image) : 'images/default.jpg'
+        }));
+
         res.json({
             success: true,
             message: 'Товар добавлен в корзину',
-            cart: updatedCart.recordset
+            cart: cartItems
         });
 
     } catch (err) {
@@ -767,7 +803,6 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
             return res.status(500).json({ error: 'База данных недоступна' });
         }
 
-        // Проверка наличия товаров на складе
         for (const item of items) {
             const product = await pool.request()
                 .input('id', sql.Int, item.id)
@@ -784,15 +819,12 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
             }
         }
 
-        // Генерируем номер заказа
         const orderNumber = 'ORD-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
 
-        // Начинаем транзакцию
         const transaction = new sql.Transaction(pool);
         await transaction.begin();
 
         try {
-            // Создаем заказ
             const orderResult = await transaction.request()
                 .input('user_id', sql.Int, userId)
                 .input('order_number', sql.NVarChar, orderNumber)
@@ -802,15 +834,14 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
                 .input('email', sql.NVarChar, email || null)
                 .input('notes', sql.NVarChar, notes || null)
                 .query(`
-                    INSERT INTO Orders (user_id, order_number, total_amount, shipping_address, phone, email, notes)
+                    INSERT INTO Orders (user_id, order_number, total_amount, shipping_address, phone, email, notes, status)
                     OUTPUT INSERTED.id, INSERTED.order_number
-                    VALUES (@user_id, @order_number, @total_amount, @shipping_address, @phone, @email, @notes)
+                    VALUES (@user_id, @order_number, @total_amount, @shipping_address, @phone, @email, @notes, 'pending')
                 `);
 
             const orderId = orderResult.recordset[0].id;
             const orderNumber_ = orderResult.recordset[0].order_number;
 
-            // Добавляем товары в заказ и обновляем остатки
             for (const item of items) {
                 await transaction.request()
                     .input('order_id', sql.Int, orderId)
@@ -824,14 +855,12 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
                         VALUES (@order_id, @product_id, @product_name, @product_price, @quantity, @total_price)
                     `);
 
-                // Уменьшаем количество товара на складе
                 await transaction.request()
                     .input('id', sql.Int, item.id)
                     .input('quantity', sql.Int, item.quantity)
                     .query('UPDATE Products SET StockQuantity = StockQuantity - @quantity WHERE ProductID = @id');
             }
 
-            // Очищаем корзину после оформления заказа
             await transaction.request()
                 .input('user_id', sql.Int, userId)
                 .query('DELETE FROM Cart WHERE user_id = @user_id');
@@ -906,7 +935,6 @@ app.get('/api/orders/:id', authenticateToken, async (req, res) => {
             return res.status(500).json({ error: 'База данных недоступна' });
         }
 
-        // Получаем информацию о заказе
         const orderResult = await pool.request()
             .input('id', sql.Int, id)
             .input('user_id', sql.Int, req.user.id)
@@ -929,7 +957,6 @@ app.get('/api/orders/:id', authenticateToken, async (req, res) => {
             return res.status(404).json({ error: 'Заказ не найден' });
         }
 
-        // Получаем товары в заказе
         const itemsResult = await pool.request()
             .input('order_id', sql.Int, id)
             .query(`
@@ -955,62 +982,68 @@ app.get('/api/orders/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// Отменить заказ (для пользователя)
+// Отменить заказ (для пользователя) - ВОЗВРАЩАЕТ ТОВАРЫ НА СКЛАД
 app.put('/api/orders/:id/cancel', authenticateToken, async (req, res) => {
     try {
         const { id } = req.params;
         const userId = req.user.id;
         
-        console.log('Отмена заказа:');
-        console.log('ID заказа:', id);
-        console.log('ID пользователя:', userId);
-        
+        if (!pool) await connectDB();
         if (!pool) {
-            console.log('Подключаюсь к БД...');
-            await connectDB();
-        }
-        
-        if (!pool) {
-            console.log('Нет подключения к БД');
             return res.status(500).json({ error: 'Нет подключения к БД' });
         }
-        
-        console.log('Подключение к БД есть');
 
-        // Проверяем, что заказ принадлежит пользователю
-        const checkResult = await pool.request()
-            .input('id', sql.Int, id)
-            .input('user_id', sql.Int, userId)
-            .query('SELECT id, status FROM Orders WHERE id = @id AND user_id = @user_id');
-        
-        console.log('Результат проверки:', checkResult.recordset);
+        const transaction = new sql.Transaction(pool);
+        await transaction.begin();
 
-        if (checkResult.recordset.length === 0) {
-            return res.status(404).json({ error: 'Заказ не найден' });
+        try {
+            const checkResult = await transaction.request()
+                .input('id', sql.Int, id)
+                .input('user_id', sql.Int, userId)
+                .query('SELECT id, status FROM Orders WHERE id = @id AND user_id = @user_id');
+
+            if (checkResult.recordset.length === 0) {
+                await transaction.rollback();
+                return res.status(404).json({ error: 'Заказ не найден' });
+            }
+            
+            const order = checkResult.recordset[0];
+            
+            if (order.status === 'delivered' || order.status === 'cancelled') {
+                await transaction.rollback();
+                return res.status(400).json({ error: 'Этот заказ нельзя отменить' });
+            }
+            
+            const itemsResult = await transaction.request()
+                .input('order_id', sql.Int, id)
+                .query('SELECT product_id, quantity FROM OrderItems WHERE order_id = @order_id');
+            
+            for (const item of itemsResult.recordset) {
+                await transaction.request()
+                    .input('product_id', sql.Int, item.product_id)
+                    .input('quantity', sql.Int, item.quantity)
+                    .query('UPDATE Products SET StockQuantity = StockQuantity + @quantity WHERE ProductID = @product_id');
+            }
+            
+            await transaction.request()
+                .input('id', sql.Int, id)
+                .input('status', sql.NVarChar, 'cancelled')
+                .query('UPDATE Orders SET status = @status WHERE id = @id');
+            
+            await transaction.commit();
+            
+            res.json({
+                success: true,
+                message: 'Заказ отменен, товары возвращены на склад'
+            });
+            
+        } catch (err) {
+            await transaction.rollback();
+            throw err;
         }
-        
-        const order = checkResult.recordset[0];
-        
-        // Нельзя отменить уже доставленный или отменённый заказ
-        if (order.status === 'delivered' || order.status === 'cancelled') {
-            return res.status(400).json({ error: 'Этот заказ нельзя отменить' });
-        }
-        
-        // Обновляем статус
-        await pool.request()
-            .input('id', sql.Int, id)
-            .input('status', sql.NVarChar, 'cancelled')
-            .query('UPDATE Orders SET status = @status WHERE id = @id');
-        
-        console.log('Заказ успешно отменен');
-        
-        res.json({
-            success: true,
-            message: 'Заказ отменен'
-        });
         
     } catch (err) {
-        console.error('Ошибка:', err);
+        console.error('Ошибка отмены заказа:', err);
         res.status(500).json({ 
             error: 'Ошибка отмены заказа',
             details: err.message 
@@ -1020,7 +1053,7 @@ app.put('/api/orders/:id/cancel', authenticateToken, async (req, res) => {
 
 // ========== АДМИН-ПАНЕЛЬ ==========
 
-// Получить всех пользователей (только для админа)
+// Получить всех пользователей
 app.get('/api/admin/users', authenticateToken, isAdmin, async (req, res) => {
     try {
         if (!pool) await connectDB();
@@ -1049,7 +1082,7 @@ app.get('/api/admin/users', authenticateToken, isAdmin, async (req, res) => {
     }
 });
 
-// Получить все заказы (только для админа)
+// Получить все заказы (ДЛЯ АДМИНА) - ИСПРАВЛЕНО: SUM(quantity)
 app.get('/api/admin/orders', authenticateToken, isAdmin, async (req, res) => {
     try {
         if (!pool) await connectDB();
@@ -1070,7 +1103,7 @@ app.get('/api/admin/orders', authenticateToken, isAdmin, async (req, res) => {
                 u.username,
                 u.full_name,
                 (
-                    SELECT COUNT(*) 
+                    SELECT SUM(quantity) 
                     FROM OrderItems oi 
                     WHERE oi.order_id = o.id
                 ) as items_count
@@ -1087,7 +1120,7 @@ app.get('/api/admin/orders', authenticateToken, isAdmin, async (req, res) => {
     }
 });
 
-// Обновить статус заказа (только для админа)
+// Обновить статус заказа (для админа) - ИСПРАВЛЕНО С ВОЗВРАТОМ ТОВАРОВ
 app.put('/api/admin/orders/:id/status', authenticateToken, isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
@@ -1103,24 +1136,97 @@ app.put('/api/admin/orders/:id/status', authenticateToken, isAdmin, async (req, 
         if (!pool) {
             return res.status(500).json({ error: 'База данных недоступна' });
         }
-        
-        await pool.request()
-            .input('id', sql.Int, id)
-            .input('status', sql.NVarChar, status)
-            .query('UPDATE Orders SET status = @status WHERE id = @id');
-        
-        res.json({
-            success: true,
-            message: 'Статус заказа обновлен'
-        });
+
+        // Начинаем транзакцию
+        const transaction = new sql.Transaction(pool);
+        await transaction.begin();
+
+        try {
+            // Получаем текущий статус заказа
+            const orderResult = await transaction.request()
+                .input('id', sql.Int, id)
+                .query('SELECT status FROM Orders WHERE id = @id');
+
+            if (orderResult.recordset.length === 0) {
+                await transaction.rollback();
+                return res.status(404).json({ error: 'Заказ не найден' });
+            }
+
+            const currentStatus = orderResult.recordset[0].status;
+
+            // Получаем товары из заказа
+            const itemsResult = await transaction.request()
+                .input('order_id', sql.Int, id)
+                .query('SELECT product_id, quantity FROM OrderItems WHERE order_id = @order_id');
+
+            // ЕСЛИ СТАТУС МЕНЯЕТСЯ НА "cancelled" - ВОЗВРАЩАЕМ ТОВАРЫ
+            if (status === 'cancelled' && currentStatus !== 'cancelled') {
+                for (const item of itemsResult.recordset) {
+                    await transaction.request()
+                        .input('product_id', sql.Int, item.product_id)
+                        .input('quantity', sql.Int, item.quantity)
+                        .query('UPDATE Products SET StockQuantity = StockQuantity + @quantity WHERE ProductID = @product_id');
+                }
+            }
+            
+            // ЕСЛИ СТАТУС МЕНЯЕТСЯ С "cancelled" НА ДРУГОЙ - ВОССТАНАВЛИВАЕМ ТОВАРЫ (СПИСЫВАЕМ)
+            else if (currentStatus === 'cancelled' && status !== 'cancelled') {
+                for (const item of itemsResult.recordset) {
+                    // Проверяем наличие на складе
+                    const product = await transaction.request()
+                        .input('product_id', sql.Int, item.product_id)
+                        .query('SELECT StockQuantity FROM Products WHERE ProductID = @product_id');
+                    
+                    if (product.recordset[0].StockQuantity < item.quantity) {
+                        await transaction.rollback();
+                        return res.status(400).json({ 
+                            error: `Недостаточно товара на складе для восстановления заказа`,
+                            productId: item.product_id
+                        });
+                    }
+                    
+                    await transaction.request()
+                        .input('product_id', sql.Int, item.product_id)
+                        .input('quantity', sql.Int, item.quantity)
+                        .query('UPDATE Products SET StockQuantity = StockQuantity - @quantity WHERE ProductID = @product_id');
+                }
+            }
+
+            // Обновляем статус заказа
+            await transaction.request()
+                .input('id', sql.Int, id)
+                .input('status', sql.NVarChar, status)
+                .query('UPDATE Orders SET status = @status WHERE id = @id');
+
+            await transaction.commit();
+
+            let message = 'Статус заказа обновлен';
+            if (status === 'cancelled' && currentStatus !== 'cancelled') {
+                message = 'Заказ отменен, товары возвращены на склад';
+            } else if (currentStatus === 'cancelled' && status !== 'cancelled') {
+                message = 'Заказ восстановлен, товары списаны со склада';
+            }
+
+            res.json({
+                success: true,
+                message
+            });
+
+        } catch (err) {
+            await transaction.rollback();
+            throw err;
+        }
         
     } catch (err) {
         console.error('Ошибка обновления статуса:', err);
-        res.status(500).json({ error: 'Ошибка обновления статуса' });
+        res.status(500).json({ 
+            error: 'Ошибка обновления статуса',
+            details: err.message 
+        });
     }
 });
 
-// Получить статистику (только для админа)
+// Получить статистику
 app.get('/api/admin/stats', authenticateToken, isAdmin, async (req, res) => {
     try {
         if (!pool) await connectDB();
@@ -1128,19 +1234,15 @@ app.get('/api/admin/stats', authenticateToken, isAdmin, async (req, res) => {
             return res.status(500).json({ error: 'База данных недоступна' });
         }
 
-        // Общее количество заказов
         const totalOrders = await pool.request()
             .query('SELECT COUNT(*) as count FROM Orders');
         
-        // Общая выручка
         const totalRevenue = await pool.request()
             .query('SELECT ISNULL(SUM(total_amount), 0) as total FROM Orders WHERE status != \'cancelled\'');
         
-        // Количество пользователей
         const totalUsers = await pool.request()
             .query('SELECT COUNT(*) as count FROM Users');
         
-        // Количество товаров
         const totalProducts = await pool.request()
             .query('SELECT COUNT(*) as count FROM Products');
         

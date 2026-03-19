@@ -550,40 +550,74 @@ class Catalog {
     const emptyStars = 5 - fullStars;
     const stars = "★".repeat(fullStars) + "☆".repeat(emptyStars);
     const stock = product.stock || 0;
-    const availability = product.availability || (stock > 0 ? 'in-stock' : 'out-of-stock');
-    const isInStock = availability === 'in-stock';
+    const isInStock = stock > 0;
     
-    const imageSrc = product.image && product.image !== 'images/default.jpg'
-      ? product.image
-      : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f0f0f0'/%3E%3Ctext x='50' y='55' font-size='14' text-anchor='middle' fill='%23999' font-family='Arial'%3E${encodeURIComponent(product.title)}%3C/text%3E%3C/svg%3E`;
+    // ТЕСТОВЫЙ МАССИВ ИЗ 3 КАРТИНОК
+    // Берем картинки из данных с сервера
+		const images = product.images && product.images.length > 0 
+    ? product.images 
+    : [product.image || 'images/default.jpg'];
+
+    let imagesHtml = `
+        <div class="product-card__carousel-container">
+            <div class="product-card__carousel-track">
+    `;
+    
+    images.forEach((img, index) => {
+        imagesHtml += `
+            <div class="product-card__carousel-slide">
+                <img src="${img}" 
+                     alt="${product.title}" 
+                     loading="lazy">
+            </div>
+        `;
+    });
+    
+    imagesHtml += `</div>`;
+    
+    if (images.length > 1) {
+        imagesHtml += `
+            <button class="product-card__carousel-btn product-card__carousel-btn--prev">‹</button>
+            <button class="product-card__carousel-btn product-card__carousel-btn--next">›</button>
+            <div class="product-card__carousel-dots">
+        `;
+        
+        images.forEach((_, index) => {
+            imagesHtml += `
+                <span class="product-card__carousel-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>
+            `;
+        });
+        
+        imagesHtml += `</div>`;
+    }
+    
+    imagesHtml += `</div>`;
 
     card.innerHTML = `
-      ${!isInStock ? '<div class="product-card__badge">Нет в наличии</div>' : ''}
-      <img src="${imageSrc}" alt="${product.title}" class="product-card__image">
-      <div class="product-card__content">
-        <div class="product-card__category">${this.getCategoryName(product.category)}</div>
-        <h3 class="product-card__title">${product.title}</h3>
-        <p class="product-card__description">${product.description || 'Описание товара'}</p>
-        <div class="product-card__rating">
-          <span class="product-card__stars">${stars}</span>
-          <span class="product-card__reviews">(${product.reviews || 0})</span>
+        ${!isInStock ? '<div class="product-card__badge">Нет в наличии</div>' : ''}
+        ${imagesHtml}
+        <div class="product-card__content">
+            <div class="product-card__category">${this.getCategoryName(product.category)}</div>
+            <h3 class="product-card__title">${product.title}</h3>
+            <p class="product-card__description">${product.description || 'Описание товара'}</p>
+            <div class="product-card__rating">
+                <span class="product-card__stars">${stars}</span>
+                <span class="product-card__reviews">(${product.reviews || 0})</span>
+            </div>
+            <div class="product-card__availability product-card__availability--${isInStock ? 'in-stock' : 'out-of-stock'}">
+                ${isInStock ? `✓ В наличии (${stock} шт.)` : '✗ Нет в наличии'}
+            </div>
+            <div class="product-card__footer">
+                <span class="product-card__price">${formattedPrice} ₽</span>
+                <button class="button add-to-cart" ${!isInStock ? 'disabled' : ''}>
+                    ${isInStock ? 'В корзину' : 'Нет в наличии'}
+                </button>
+            </div>
         </div>
-        <div class="product-card__availability product-card__availability--${availability}">
-          ${isInStock ? `✓ В наличии (${stock} шт.)` : '✗ Нет в наличии'}
-        </div>
-        <div class="product-card__footer">
-          <div>
-            <span class="product-card__price">${formattedPrice} ₽</span>
-          </div>
-          <button class="button product-card__button add-to-cart" ${!isInStock ? "disabled" : ""}>
-            ${isInStock ? "В корзину" : "Нет в наличии"}
-          </button>
-        </div>
-      </div>
     `;
 
     return card;
-  }
+}
 
   getCategoryName(category) {
     const categories = {

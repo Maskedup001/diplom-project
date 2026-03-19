@@ -6,6 +6,7 @@
 /* Components */
 @import "components/button.css";
 @import "components/components.css";
+@import "components/carousel.css";
 
 /* Sections */
 @import "sections/header.css";
@@ -15,6 +16,8 @@
 @import "sections/cart.css";
 @import "sections/auth.css";
 @import "sections/profile.css";
+@import "sections/admin.css";
+
 
 
 

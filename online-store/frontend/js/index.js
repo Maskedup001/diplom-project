@@ -79,22 +79,59 @@ class HomePage {
     const stock = product.stock || 0;
     const isInStock = stock > 0;
     
-    // ✅ ИСПРАВЛЕНО: data:image заглушка с названием товара (без onerror, без loading="lazy")
-    const imageSrc = product.image && product.image !== 'images/default.jpg' 
-      ? product.image 
-      : `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23f0f0f0'/%3E%3Ctext x='50' y='55' font-size='14' text-anchor='middle' fill='%23999' font-family='Arial'%3E${encodeURIComponent(product.title)}%3C/text%3E%3C/svg%3E`;
+    // ТЕСТОВЫЙ МАССИВ ИЗ 3 КАРТИНОК (как в catalog.js)
+    // Берем картинки из данных с сервера
+		const images = product.images && product.images.length > 0 
+    ? product.images 
+    : [product.image || 'images/default.jpg'];
+
+    let imagesHtml = `
+        <div class="product-card__carousel-container">
+            <div class="product-card__carousel-track">
+    `;
+    
+    images.forEach((img, index) => {
+        imagesHtml += `
+            <div class="product-card__carousel-slide">
+                <img src="${img}" 
+                     alt="${product.title}" 
+                     loading="lazy">
+            </div>
+        `;
+    });
+    
+    imagesHtml += `</div>`;
+    
+    if (images.length > 1) {
+        imagesHtml += `
+            <button class="product-card__carousel-btn product-card__carousel-btn--prev">‹</button>
+            <button class="product-card__carousel-btn product-card__carousel-btn--next">›</button>
+            <div class="product-card__carousel-dots">
+        `;
+        
+        images.forEach((_, index) => {
+            imagesHtml += `
+                <span class="product-card__carousel-dot ${index === 0 ? 'active' : ''}" data-index="${index}"></span>
+            `;
+        });
+        
+        imagesHtml += `</div>`;
+    }
+    
+    imagesHtml += `</div>`;
 
     return `
       <div class="product-card" 
            data-id="${product.id}" 
            data-title="${product.title}" 
            data-price="${product.price}" 
-           data-image="${product.image || 'images/default.jpg'}"
+           data-image="${images[0]}"
            data-category="${product.category}">
+        
         ${!isInStock ? '<div class="product-card__badge">Нет в наличии</div>' : ''}
-        <img src="${imageSrc}" 
-             alt="${product.title}" 
-             class="product-card__image">
+        
+        ${imagesHtml}
+        
         <div class="product-card__content">
           <div class="product-card__category">${this.getCategoryName(product.category)}</div>
           <h3 class="product-card__title">${product.title}</h3>
