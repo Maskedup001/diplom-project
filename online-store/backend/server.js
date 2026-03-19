@@ -39,16 +39,16 @@ const dbConfig = {
 let pool;
 async function connectDB() {
     try {
-        console.log('🔗 Подключаюсь к SQL Server...');
+        console.log('Подключаюсь к SQL Server...');
         pool = await sql.connect(dbConfig);
-        console.log('✅ БД подключена успешно!');
+        console.log('БД подключена успешно!');
         
         // Проверяем и создаем таблицу корзины если её нет
         await createCartTable();
         
         return pool;
     } catch (err) {
-        console.error('❌ Ошибка подключения к БД:', err.message);
+        console.error('Ошибка подключения к БД:', err.message);
         return null;
     }
 }
@@ -69,16 +69,16 @@ async function createCartTable() {
                 FOREIGN KEY (product_id) REFERENCES Products(ProductID)
             )
         `);
-        console.log('✅ Таблица Cart создана/проверена');
+        console.log('Таблица Cart создана/проверена');
 
         // Создаем индекс для быстрого поиска
         await pool.request().query(`
             IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_Cart_user_id')
             CREATE INDEX IX_Cart_user_id ON Cart(user_id)
         `);
-        console.log('✅ Индекс для Cart создан/проверен');
+        console.log('Индекс для Cart создан/проверен');
     } catch (err) {
-        console.log('ℹ️ Таблица Cart уже существует или ошибка:', err.message);
+        console.log('Таблица Cart уже существует или ошибка:', err.message);
     }
 }
 
@@ -93,7 +93,7 @@ function authenticateToken(req, res, next) {
 
     jwt.verify(token, JWT_SECRET, (err, user) => {
         if (err) {
-            console.error('❌ Ошибка проверки токена:', err.message);
+            console.error('Ошибка проверки токена:', err.message);
             return res.status(403).json({ error: 'Неверный токен' });
         }
         req.user = user;
@@ -121,6 +121,14 @@ function optionalAuth(req, res, next) {
     });
 }
 
+// Middleware для проверки прав администратора
+function isAdmin(req, res, next) {
+    if (!req.user || !req.user.is_admin) {
+        return res.status(403).json({ error: 'Доступ запрещен. Требуются права администратора' });
+    }
+    next();
+}
+
 // ========== API МАРШРУТЫ ==========
 
 // Тест подключения к БД
@@ -132,11 +140,11 @@ app.get('/api/db-test', async (req, res) => {
             const result = await pool.request().query('SELECT @@VERSION as version');
             res.json({
                 success: true,
-                message: '✅ БД подключена',
+                message: 'БД подключена',
                 version: result.recordset[0].version.substring(0, 100)
             });
         } else {
-            res.json({ success: false, message: '❌ Не удалось подключиться к БД' });
+            res.json({ success: false, message: 'Не удалось подключиться к БД' });
         }
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -177,9 +185,9 @@ app.post('/api/auth/register', async (req, res) => {
             .input('full_name', sql.NVarChar, full_name || null)
             .input('phone', sql.NVarChar, phone || null)
             .query(`
-                INSERT INTO Users (username, email, password_hash, full_name, phone)
+                INSERT INTO Users (username, email, password_hash, full_name, phone, is_admin)
                 OUTPUT INSERTED.id, INSERTED.username, INSERTED.email, INSERTED.full_name, INSERTED.created_at
-                VALUES (@username, @email, @password_hash, @full_name, @phone)
+                VALUES (@username, @email, @password_hash, @full_name, @phone, 0)
             `);
 
         const user = result.recordset[0];
@@ -188,7 +196,8 @@ app.post('/api/auth/register', async (req, res) => {
             { 
                 id: user.id, 
                 username: user.username, 
-                email: user.email 
+                email: user.email,
+                is_admin: false
             }, 
             JWT_SECRET, 
             { expiresIn: '7d' }
@@ -203,7 +212,8 @@ app.post('/api/auth/register', async (req, res) => {
                 email: user.email,
                 full_name: user.full_name,
                 phone: user.phone,
-                created_at: user.created_at
+                created_at: user.created_at,
+                is_admin: false
             },
             token
         });
@@ -247,7 +257,8 @@ app.post('/api/auth/login', async (req, res) => {
             { 
                 id: user.id, 
                 username: user.username, 
-                email: user.email 
+                email: user.email,
+                is_admin: user.is_admin || false
             }, 
             JWT_SECRET, 
             { expiresIn: '7d' }
@@ -262,7 +273,8 @@ app.post('/api/auth/login', async (req, res) => {
                 email: user.email,
                 full_name: user.full_name,
                 phone: user.phone,
-                created_at: user.created_at
+                created_at: user.created_at,
+                is_admin: user.is_admin || false
             },
             token
         });
@@ -276,7 +288,7 @@ app.post('/api/auth/login', async (req, res) => {
 // Выход
 app.post('/api/auth/logout', authenticateToken, async (req, res) => {
     try {
-        console.log(`👋 Пользователь ${req.user.id} вышел из системы`);
+        console.log(`Пользователь ${req.user.id} вышел из системы`);
         res.json({
             success: true,
             message: 'Выход выполнен'
@@ -300,7 +312,7 @@ app.get('/api/profile', authenticateToken, async (req, res) => {
         const result = await pool.request()
             .input('id', sql.Int, req.user.id)
             .query(`
-                SELECT id, username, email, full_name, phone, created_at
+                SELECT id, username, email, full_name, phone, is_admin, created_at
                 FROM Users WHERE id = @id
             `);
 
@@ -384,12 +396,12 @@ app.delete('/api/profile', authenticateToken, async (req, res) => {
         await transaction.begin();
 
         try {
-            // ✅ 1. Удаляем корзину пользователя (В БД)
+            // 1. Удаляем корзину пользователя (В БД)
             await transaction.request()
                 .input('user_id', sql.Int, userId)
                 .query('DELETE FROM Cart WHERE user_id = @user_id');
             
-            console.log(`🗑️ Корзина пользователя ${userId} удалена из БД`);
+            console.log(`Корзина пользователя ${userId} удалена из БД`);
 
             // 2. Удаляем заказы пользователя
             await transaction.request()
@@ -412,7 +424,7 @@ app.delete('/api/profile', authenticateToken, async (req, res) => {
             // Коммитим транзакцию
             await transaction.commit();
 
-            console.log(`🗑️ Пользователь ${userId} удалил аккаунт (корзина полностью удалена)`);
+            console.log(`Пользователь ${userId} удалил аккаунт (корзина полностью удалена)`);
 
             res.json({
                 success: true,
@@ -755,6 +767,23 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
             return res.status(500).json({ error: 'База данных недоступна' });
         }
 
+        // Проверка наличия товаров на складе
+        for (const item of items) {
+            const product = await pool.request()
+                .input('id', sql.Int, item.id)
+                .query('SELECT StockQuantity FROM Products WHERE ProductID = @id');
+            
+            if (product.recordset.length === 0) {
+                return res.status(404).json({ error: `Товар "${item.title}" не найден` });
+            }
+            
+            if (product.recordset[0].StockQuantity < item.quantity) {
+                return res.status(400).json({ 
+                    error: `Товара "${item.title}" нет в нужном количестве. Доступно: ${product.recordset[0].StockQuantity}`
+                });
+            }
+        }
+
         // Генерируем номер заказа
         const orderNumber = 'ORD-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
 
@@ -781,7 +810,7 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
             const orderId = orderResult.recordset[0].id;
             const orderNumber_ = orderResult.recordset[0].order_number;
 
-            // Добавляем товары в заказ
+            // Добавляем товары в заказ и обновляем остатки
             for (const item of items) {
                 await transaction.request()
                     .input('order_id', sql.Int, orderId)
@@ -794,6 +823,12 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
                         INSERT INTO OrderItems (order_id, product_id, product_name, product_price, quantity, total_price)
                         VALUES (@order_id, @product_id, @product_name, @product_price, @quantity, @total_price)
                     `);
+
+                // Уменьшаем количество товара на складе
+                await transaction.request()
+                    .input('id', sql.Int, item.id)
+                    .input('quantity', sql.Int, item.quantity)
+                    .query('UPDATE Products SET StockQuantity = StockQuantity - @quantity WHERE ProductID = @id');
             }
 
             // Очищаем корзину после оформления заказа
@@ -926,7 +961,7 @@ app.put('/api/orders/:id/cancel', authenticateToken, async (req, res) => {
         const { id } = req.params;
         const userId = req.user.id;
         
-        console.log('========== ОТМЕНА ЗАКАЗА ==========');
+        console.log('Отмена заказа:');
         console.log('ID заказа:', id);
         console.log('ID пользователя:', userId);
         
@@ -936,11 +971,11 @@ app.put('/api/orders/:id/cancel', authenticateToken, async (req, res) => {
         }
         
         if (!pool) {
-            console.log('❌ Нет подключения к БД');
+            console.log('Нет подключения к БД');
             return res.status(500).json({ error: 'Нет подключения к БД' });
         }
         
-        console.log('✅ Подключение к БД есть');
+        console.log('Подключение к БД есть');
 
         // Проверяем, что заказ принадлежит пользователю
         const checkResult = await pool.request()
@@ -967,7 +1002,7 @@ app.put('/api/orders/:id/cancel', authenticateToken, async (req, res) => {
             .input('status', sql.NVarChar, 'cancelled')
             .query('UPDATE Orders SET status = @status WHERE id = @id');
         
-        console.log('✅ Заказ успешно отменен');
+        console.log('Заказ успешно отменен');
         
         res.json({
             success: true,
@@ -975,11 +1010,150 @@ app.put('/api/orders/:id/cancel', authenticateToken, async (req, res) => {
         });
         
     } catch (err) {
-        console.error('❌ ОШИБКА:', err);
+        console.error('Ошибка:', err);
         res.status(500).json({ 
             error: 'Ошибка отмены заказа',
             details: err.message 
         });
+    }
+});
+
+// ========== АДМИН-ПАНЕЛЬ ==========
+
+// Получить всех пользователей (только для админа)
+app.get('/api/admin/users', authenticateToken, isAdmin, async (req, res) => {
+    try {
+        if (!pool) await connectDB();
+        if (!pool) {
+            return res.status(500).json({ error: 'База данных недоступна' });
+        }
+
+        const result = await pool.request().query(`
+            SELECT 
+                id, 
+                username, 
+                email, 
+                full_name, 
+                phone, 
+                is_admin, 
+                created_at
+            FROM Users
+            ORDER BY id DESC
+        `);
+        
+        res.json(result.recordset);
+        
+    } catch (err) {
+        console.error('Ошибка получения пользователей:', err);
+        res.status(500).json({ error: 'Ошибка получения пользователей' });
+    }
+});
+
+// Получить все заказы (только для админа)
+app.get('/api/admin/orders', authenticateToken, isAdmin, async (req, res) => {
+    try {
+        if (!pool) await connectDB();
+        if (!pool) {
+            return res.status(500).json({ error: 'База данных недоступна' });
+        }
+
+        const result = await pool.request().query(`
+            SELECT 
+                o.id,
+                o.order_number,
+                o.total_amount,
+                o.status,
+                o.shipping_address,
+                o.phone,
+                o.email,
+                o.created_at,
+                u.username,
+                u.full_name,
+                (
+                    SELECT COUNT(*) 
+                    FROM OrderItems oi 
+                    WHERE oi.order_id = o.id
+                ) as items_count
+            FROM Orders o
+            LEFT JOIN Users u ON o.user_id = u.id
+            ORDER BY o.created_at DESC
+        `);
+        
+        res.json(result.recordset);
+        
+    } catch (err) {
+        console.error('Ошибка получения всех заказов:', err);
+        res.status(500).json({ error: 'Ошибка получения заказов' });
+    }
+});
+
+// Обновить статус заказа (только для админа)
+app.put('/api/admin/orders/:id/status', authenticateToken, isAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        
+        const validStatuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled'];
+        
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ error: 'Неверный статус' });
+        }
+        
+        if (!pool) await connectDB();
+        if (!pool) {
+            return res.status(500).json({ error: 'База данных недоступна' });
+        }
+        
+        await pool.request()
+            .input('id', sql.Int, id)
+            .input('status', sql.NVarChar, status)
+            .query('UPDATE Orders SET status = @status WHERE id = @id');
+        
+        res.json({
+            success: true,
+            message: 'Статус заказа обновлен'
+        });
+        
+    } catch (err) {
+        console.error('Ошибка обновления статуса:', err);
+        res.status(500).json({ error: 'Ошибка обновления статуса' });
+    }
+});
+
+// Получить статистику (только для админа)
+app.get('/api/admin/stats', authenticateToken, isAdmin, async (req, res) => {
+    try {
+        if (!pool) await connectDB();
+        if (!pool) {
+            return res.status(500).json({ error: 'База данных недоступна' });
+        }
+
+        // Общее количество заказов
+        const totalOrders = await pool.request()
+            .query('SELECT COUNT(*) as count FROM Orders');
+        
+        // Общая выручка
+        const totalRevenue = await pool.request()
+            .query('SELECT ISNULL(SUM(total_amount), 0) as total FROM Orders WHERE status != \'cancelled\'');
+        
+        // Количество пользователей
+        const totalUsers = await pool.request()
+            .query('SELECT COUNT(*) as count FROM Users');
+        
+        // Количество товаров
+        const totalProducts = await pool.request()
+            .query('SELECT COUNT(*) as count FROM Products');
+        
+        res.json({
+            totalOrders: totalOrders.recordset[0].count,
+            totalRevenue: totalRevenue.recordset[0].total,
+            totalUsers: totalUsers.recordset[0].count,
+            totalProducts: totalProducts.recordset[0].count
+        });
+        
+    } catch (err) {
+        console.error('Ошибка получения статистики:', err);
+        res.status(500).json({ error: 'Ошибка получения статистики' });
     }
 });
 
@@ -1021,25 +1195,30 @@ const PORT = 3000;
 
 app.listen(PORT, async () => {
     console.log('='.repeat(50));
-    console.log(`🚀 Сервер запущен на порту ${PORT}`);
-    console.log(`🌐 Сайт: http://localhost:${PORT}`);
+    console.log(`Сервер запущен на порту ${PORT}`);
+    console.log(`Сайт: http://localhost:${PORT}`);
     console.log('='.repeat(50));
-    console.log('📋 Доступные API:');
-    console.log(`🔐 Регистрация: POST http://localhost:${PORT}/api/auth/register`);
-    console.log(`🔑 Вход: POST http://localhost:${PORT}/api/auth/login`);
-    console.log(`🚪 Выход: POST http://localhost:${PORT}/api/auth/logout`);
-    console.log(`👤 Профиль: GET http://localhost:${PORT}/api/profile`);
-    console.log(`✏️ Обновить профиль: PUT http://localhost:${PORT}/api/profile`);
-    console.log(`🗑️ Удалить аккаунт: DELETE http://localhost:${PORT}/api/profile`);
-    console.log(`📦 Товары: GET http://localhost:${PORT}/api/products`);
-    console.log(`🛒 Получить корзину: GET http://localhost:${PORT}/api/cart`);
-    console.log(`➕ Добавить в корзину: POST http://localhost:${PORT}/api/cart`);
-    console.log(`✏️ Обновить количество: PUT http://localhost:${PORT}/api/cart/:cartId`);
-    console.log(`❌ Удалить из корзины: DELETE http://localhost:${PORT}/api/cart/:cartId`);
-    console.log(`🧹 Очистить корзину: DELETE http://localhost:${PORT}/api/cart`);
-    console.log(`📦 Создать заказ: POST http://localhost:${PORT}/api/orders`);
-    console.log(`📋 Мои заказы: GET http://localhost:${PORT}/api/orders/my-orders`);
-    console.log(`🔍 Детали заказа: GET http://localhost:${PORT}/api/orders/:id`);
+    console.log('Доступные API:');
+    console.log(`Регистрация: POST http://localhost:${PORT}/api/auth/register`);
+    console.log(`Вход: POST http://localhost:${PORT}/api/auth/login`);
+    console.log(`Выход: POST http://localhost:${PORT}/api/auth/logout`);
+    console.log(`Профиль: GET http://localhost:${PORT}/api/profile`);
+    console.log(`Обновить профиль: PUT http://localhost:${PORT}/api/profile`);
+    console.log(`Удалить аккаунт: DELETE http://localhost:${PORT}/api/profile`);
+    console.log(`Товары: GET http://localhost:${PORT}/api/products`);
+    console.log(`Получить корзину: GET http://localhost:${PORT}/api/cart`);
+    console.log(`Добавить в корзину: POST http://localhost:${PORT}/api/cart`);
+    console.log(`Обновить количество: PUT http://localhost:${PORT}/api/cart/:cartId`);
+    console.log(`Удалить из корзины: DELETE http://localhost:${PORT}/api/cart/:cartId`);
+    console.log(`Очистить корзину: DELETE http://localhost:${PORT}/api/cart`);
+    console.log(`Создать заказ: POST http://localhost:${PORT}/api/orders`);
+    console.log(`Мои заказы: GET http://localhost:${PORT}/api/orders/my-orders`);
+    console.log(`Детали заказа: GET http://localhost:${PORT}/api/orders/:id`);
+    console.log('--- АДМИН-ПАНЕЛЬ ---');
+    console.log(`Все пользователи: GET http://localhost:${PORT}/api/admin/users`);
+    console.log(`Все заказы: GET http://localhost:${PORT}/api/admin/orders`);
+    console.log(`Обновить статус заказа: PUT http://localhost:${PORT}/api/admin/orders/:id/status`);
+    console.log(`Статистика: GET http://localhost:${PORT}/api/admin/stats`);
     console.log('='.repeat(50));
     
     await connectDB();
@@ -1048,7 +1227,7 @@ app.listen(PORT, async () => {
 process.on('SIGINT', async () => {
     if (pool) {
         await pool.close();
-        console.log('🔌 Подключение к БД закрыто');
+        console.log('Подключение к БД закрыто');
     }
     process.exit(0);
 });
