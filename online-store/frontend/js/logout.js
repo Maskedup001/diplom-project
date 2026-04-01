@@ -4,7 +4,7 @@ function logoutUser() {
         return;
     }
     
-    console.log('🔄 Выход из аккаунта...');
+    console.log('Выход из аккаунта...');
     
     const token = localStorage.getItem('token');
     
@@ -18,15 +18,15 @@ function logoutUser() {
         })
         .then(response => {
             if (response.ok) {
-                console.log('✅ Запрос на выход отправлен');
+                console.log('Запрос на выход отправлен');
             }
         })
         .catch(err => {
-            console.log('⚠️ Сервер недоступен, выход выполнен локально');
+            console.log('Сервер недоступен, выход выполнен локально');
         });
     }
     
-    // ✅ ПРИ ВЫХОДЕ - УДАЛЯЕМ ВСЁ!
+    // При выходе - удаляем всё
     localStorage.removeItem('user');
     localStorage.removeItem('token');
     localStorage.removeItem('user_orders');
@@ -35,7 +35,7 @@ function logoutUser() {
     localStorage.removeItem('local_cart');
     localStorage.removeItem('remember_me');
     
-    console.log('✅ Все данные очищены, корзина удалена');
+    console.log('Все данные очищены, корзина удалена');
     
     if (typeof window.updateHeaderAuth === 'function') {
         window.updateHeaderAuth();
@@ -43,6 +43,7 @@ function logoutUser() {
         updateHeaderAuth();
     }
     
+    // Перезагружаем страницу чтобы сбросить все запросы
     window.location.href = 'index.html';
 }
 
@@ -52,4 +53,4 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = { logoutUser };
 }
 
-console.log('✅ logout.js загружен (ПРИ ВЫХОДЕ КОРЗИНА УДАЛЯЕТСЯ!)');
+console.log('logout.js загружен (при выходе корзина удаляется)');

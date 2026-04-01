@@ -43,7 +43,7 @@ function initMobileFilters() {
             overlay.classList.add('overlay--active');
             document.body.style.overflow = 'hidden';
             
-            console.log('✅ Модальное окно открыто');
+            console.log('Модальное окно открыто');
         }, 50);
     }
     
@@ -60,19 +60,19 @@ function initMobileFilters() {
             mobileFiltersContainer.innerHTML = '';
         }, 300);
         
-        console.log('✅ Модальное окно закрыто');
+        console.log('Модальное окно закрыто');
     }
     
     // 3. КОПИРОВАНИЕ ФИЛЬТРОВ В МОДАЛЬНОЕ ОКНО
     function copyFiltersToModal() {
-        console.log('📱 Копирую фильтры...');
+        console.log('Копирую фильтры...');
         
         // Очищаем контейнер
         mobileFiltersContainer.innerHTML = '';
         
         // Проверяем что есть что копировать
         if (!desktopFilters || desktopFilters.children.length === 0) {
-            console.error('❌ desktopFilters пустой или не найден');
+            console.error('desktopFilters пустой или не найден');
             mobileFiltersContainer.innerHTML = '<div class="no-filters">Фильтры не найдены</div>';
             return;
         }
@@ -95,7 +95,7 @@ function initMobileFilters() {
         // Добавляем обработчики
         addEventListenersToMobileFilters();
         
-        console.log('✅ Фильтры скопированы');
+        console.log('Фильтры скопированы');
     }
     
     // 4. СИНХРОНИЗАЦИЯ ЗНАЧЕНИЙ ИЗ ДЕСКТОПНЫХ ФИЛЬТРОВ
@@ -136,7 +136,7 @@ function initMobileFilters() {
         if (priceSliderMin && desktopSliderMin) priceSliderMin.value = desktopSliderMin.value;
         if (priceSliderMax && desktopSliderMax) priceSliderMax.value = desktopSliderMax.value;
         
-        console.log('✅ Значения синхронизированы');
+        console.log('Значения синхронизированы');
     }
     
     // 5. ИНИЦИАЛИЗАЦИЯ СЛАЙДЕРА ЦЕН (КАК В CATALOG.JS)
@@ -156,7 +156,7 @@ function initMobileFilters() {
         const desktopSliderMax = document.querySelector('#price-slider-max');
         
         if (!priceMinInput || !priceMaxInput || !priceSliderMin || !priceSliderMax) {
-            console.warn('❌ Элементы слайдера не найдены в мобильной версии');
+            console.warn('Элементы слайдера не найдены в мобильной версии');
             return;
         }
         
@@ -308,7 +308,7 @@ function initMobileFilters() {
         // Инициализация трека при загрузке
         setTimeout(updatePriceRangeTrack, 100);
         
-        console.log('✅ Слайдер цен инициализирован');
+        console.log('Слайдер цен инициализирован');
     }
     
     // 6. ДОБАВЛЕНИЕ ОБРАБОТЧИКОВ НА МОБИЛЬНЫЕ ФИЛЬТРЫ
@@ -344,7 +344,7 @@ function initMobileFilters() {
             });
         });
         
-        console.log('✅ Обработчики добавлены');
+        console.log('Обработчики добавлены');
     }
     
     // 7. ПРИМЕНЕНИЕ ФИЛЬТРОВ
@@ -386,46 +386,46 @@ function initMobileFilters() {
     
     // Открытие модального окна
     filtersToggle.addEventListener('click', openFiltersModal);
-    console.log('✅ Обработчик для кнопки фильтров добавлен');
+    console.log('Обработчик для кнопки фильтров добавлен');
     
     // Закрытие по крестику
     const closeBtn = filtersModal.querySelector('.modal__close');
     if (closeBtn) {
         closeBtn.addEventListener('click', closeFiltersModal);
-        console.log('✅ Обработчик для крестика добавлен');
+        console.log('Обработчик для крестика добавлен');
     }
     
     // Закрытие по кнопке "Отмена"
     const cancelBtn = filtersModal.querySelector('.button--outline');
     if (cancelBtn) {
         cancelBtn.addEventListener('click', closeFiltersModal);
-        console.log('✅ Обработчик для "Отмена" добавлен');
+        console.log('Обработчик для "Отмена" добавлен');
     }
     
     // Применение фильтров
     const applyBtn = document.getElementById('apply-filters');
     if (applyBtn) {
         applyBtn.addEventListener('click', applyFilters);
-        console.log('✅ Обработчик для "Применить" добавлен');
+        console.log('Обработчик для "Применить" добавлен');
     }
     
     // Сброс фильтров (в модальном окне)
     const mobileResetBtn = document.getElementById('mobile-reset-filters');
     if (mobileResetBtn) {
         mobileResetBtn.addEventListener('click', resetAllFilters);
-        console.log('✅ Обработчик для сброса в модальном окне добавлен');
+        console.log('Обработчик для сброса в модальном окне добавлен');
     }
     
     // Сброс фильтров (в десктопной версии)
     const desktopResetBtn = document.getElementById('reset-filters');
     if (desktopResetBtn) {
         desktopResetBtn.addEventListener('click', resetAllFilters);
-        console.log('✅ Обработчик для сброса в десктопе добавлен');
+        console.log('Обработчик для сброса в десктопе добавлен');
     }
     
     // Закрытие по клику на оверлей
     overlay.addEventListener('click', closeFiltersModal);
-    console.log('✅ Обработчик для overlay добавлен');
+    console.log('Обработчик для overlay добавлен');
     
     // Закрытие по ESC
     document.addEventListener('keydown', function(e) {
@@ -433,7 +433,7 @@ function initMobileFilters() {
             closeFiltersModal();
         }
     });
-    console.log('✅ Обработчик для ESC добавлен');
+    console.log('Обработчик для ESC добавлен');
     
     // Закрытие при переходе на десктоп
     window.addEventListener('resize', function() {
@@ -441,9 +441,9 @@ function initMobileFilters() {
             closeFiltersModal();
         }
     });
-    console.log('✅ Обработчик для resize добавлен');
+    console.log('Обработчик для resize добавлен');
     
-    console.log('🚀 Mobile filters успешно инициализированы!');
+    console.log('Mobile filters успешно инициализированы!');
     
     // Дебаг функции для консоли
     window.debugMobileFilters = {
@@ -453,5 +453,5 @@ function initMobileFilters() {
         sync: syncFiltersFromDesktop,
         initSlider: initPriceRangeSlider
     };
-    console.log('🔧 Для отладки в консоли используй: debugMobileFilters.open()');
+    console.log('Для отладки в консоли используй: debugMobileFilters.open()');
 }

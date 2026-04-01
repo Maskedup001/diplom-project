@@ -26,7 +26,7 @@ class Catalog {
     // Проверяем поисковый запрос
     this.checkSearchQuery();
     
-    // ✅ НОВОЕ: Проверяем фильтр по категории из URL
+    // НОВОЕ: Проверяем фильтр по категории из URL
     this.checkCategoryFilter();
     
     // Инициализируем фильтры
@@ -62,13 +62,13 @@ class Catalog {
     }
   }
 
-  // ✅ НОВЫЙ МЕТОД: Проверяем фильтр по категории из URL
+  // НОВЫЙ МЕТОД: Проверяем фильтр по категории из URL
   checkCategoryFilter() {
     const urlParams = new URLSearchParams(window.location.search);
     const categoryParam = urlParams.get('category');
     
     if (categoryParam) {
-      console.log(`📁 Фильтр по категории: ${categoryParam}`);
+      console.log(`Фильтр по категории: ${categoryParam}`);
       
       const categoryCheckbox = document.querySelector(`input[name="category"][value="${categoryParam}"]`);
       
@@ -88,7 +88,7 @@ class Catalog {
     }
   }
 
-  // ✅ НОВЫЙ МЕТОД: Скролл к товарам
+  // НОВЫЙ МЕТОД: Скролл к товарам
   scrollToProducts() {
     setTimeout(() => {
       const productsGrid = document.getElementById('products-grid');
@@ -181,7 +181,7 @@ class Catalog {
 
   // Загрузка товаров
   async loadProducts() {
-    console.log('🔄 Загружаю товары из API...');
+    console.log('Загружаю товары из API...');
     
     try {
       const response = await fetch('/api/products');
@@ -192,7 +192,7 @@ class Catalog {
       
       this.products = await response.json();
       
-      console.log(`✅ Загружено ${this.products.length} товаров из базы данных`);
+      console.log(`Загружено ${this.products.length} товаров из базы данных`);
       
       this.filteredProducts = [...this.products];
       
@@ -201,7 +201,7 @@ class Catalog {
       }
       
     } catch (error) {
-      console.error('❌ КРИТИЧЕСКАЯ ОШИБКА: Не удалось загрузить товары:', error.message);
+      console.error('КРИТИЧЕСКАЯ ОШИБКА: Не удалось загрузить товары:', error.message);
       
       this.products = [];
       this.filteredProducts = [];
@@ -210,7 +210,7 @@ class Catalog {
       if (grid) {
         grid.innerHTML = `
           <div class="no-products" style="text-align: center; padding: 50px; color: #d32f2f;">
-            <h3>❌ База данных недоступна</h3>
+            <h3>База данных недоступна</h3>
             <p>Не удалось загрузить товары. Пожалуйста, проверьте:</p>
             <ol style="text-align: left; display: inline-block;">
               <li>Запущен ли SQL Server</li>
@@ -305,7 +305,7 @@ class Catalog {
     }
 
     document.querySelectorAll('input[name="category"]').forEach((checkbox) => {
-      // ✅ НЕ СБРАСЫВАЕМ, если уже отмечен из URL
+      // НЕ СБРАСЫВАЕМ, если уже отмечен из URL
       if (!checkbox.checked) {
         checkbox.checked = false;
       }
@@ -552,9 +552,8 @@ class Catalog {
     const stock = product.stock || 0;
     const isInStock = stock > 0;
     
-    // ТЕСТОВЫЙ МАССИВ ИЗ 3 КАРТИНОК
-    // Берем картинки из данных с сервера
-		const images = product.images && product.images.length > 0 
+    // Карусель изображений
+    const images = product.images && product.images.length > 0 
     ? product.images 
     : [product.image || 'images/default.jpg'];
 
@@ -605,7 +604,7 @@ class Catalog {
                 <span class="product-card__reviews">(${product.reviews || 0})</span>
             </div>
             <div class="product-card__availability product-card__availability--${isInStock ? 'in-stock' : 'out-of-stock'}">
-                ${isInStock ? `✓ В наличии (${stock} шт.)` : '✗ Нет в наличии'}
+                ${isInStock ? `В наличии (${stock} шт.)` : 'Нет в наличии'}
             </div>
             <div class="product-card__footer">
                 <span class="product-card__price">${formattedPrice} ₽</span>
@@ -617,7 +616,7 @@ class Catalog {
     `;
 
     return card;
-}
+  }
 
   getCategoryName(category) {
     const categories = {
@@ -753,9 +752,9 @@ document.addEventListener("DOMContentLoaded", () => {
   
   if (isCatalogPage) {
     window.catalog = new Catalog();
-    console.log('📦 Каталог инициализирован');
+    console.log('Каталог инициализирован');
   } else {
-    console.log('📦 Не страница каталога, пропускаем инициализацию');
+    console.log('Не страница каталога, пропускаем инициализацию');
   }
 });
 

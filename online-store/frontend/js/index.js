@@ -9,7 +9,7 @@ class HomePage {
   }
 
   async init() {
-    console.log('🏠 Загружаю товары для главной страницы...');
+    console.log('Загружаю товары для главной страницы...');
     
     try {
       const response = await fetch('/api/products');
@@ -19,7 +19,7 @@ class HomePage {
       }
       
       this.products = await response.json();
-      console.log(`✅ Загружено ${this.products.length} товаров из базы данных`);
+      console.log(`Загружено ${this.products.length} товаров из базы данных`);
       
       // Хиты продаж - первые 6 товаров
       this.hitsProducts = this.products.slice(0, 6);
@@ -32,7 +32,7 @@ class HomePage {
       this.renderNew();
       
     } catch (error) {
-      console.error('❌ Ошибка загрузки товаров:', error);
+      console.error('Ошибка загрузки товаров:', error);
       this.showError();
     }
   }
@@ -50,7 +50,7 @@ class HomePage {
       this.createProductCard(product)
     ).join('');
     
-    console.log(`✅ Отображено ${this.hitsProducts.length} хитов продаж`);
+    console.log(`Отображено ${this.hitsProducts.length} хитов продаж`);
   }
 
   renderNew() {
@@ -68,7 +68,7 @@ class HomePage {
       this.createProductCard(product)
     ).join('');
     
-    console.log(`✅ Отображено ${this.newProducts.length} новинок`);
+    console.log(`Отображено ${this.newProducts.length} новинок`);
   }
 
   createProductCard(product) {
@@ -174,7 +174,7 @@ class HomePage {
     grids.forEach(grid => {
       grid.innerHTML = `
         <div class="no-products" style="grid-column: 1 / -1; text-align: center; padding: 50px;">
-          <h3>❌ Не удалось загрузить товары</h3>
+          <h3>Не удалось загрузить товары</h3>
           <p>Проверьте подключение к серверу</p>
           <button onclick="location.reload()" class="button">Повторить</button>
         </div>
@@ -195,9 +195,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Даем небольшую задержку для полной загрузки DOM
     setTimeout(() => {
       window.homePage = new HomePage();
-      console.log('🏠 Главная страница инициализирована');
+      console.log('Главная страница инициализирована');
     }, 50);
   } else {
-    console.log('🏠 Не главная страница, пропускаем инициализацию');
+    console.log('Не главная страница, пропускаем инициализацию');
   }
 });

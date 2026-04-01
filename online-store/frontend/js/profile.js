@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // 4. Настраиваем все обработчики
     setupAllEventListeners();
     
-    console.log('✅ profile.js инициализирован');
+    console.log('profile.js инициализирован');
 });
 
 // ========== АВТОРИЗАЦИЯ ==========
@@ -90,13 +90,13 @@ function updateUserDisplay(user) {
 
 // ========== ЗАГРУЗКА ИСТОРИИ ЗАКАЗОВ ==========
 async function loadOrders() {
-    console.log('📦 Загружаю историю заказов...');
+    console.log('Загружаю историю заказов...');
     
     const token = localStorage.getItem('token');
     const ordersList = document.getElementById('orders-list');
     
     if (!ordersList) {
-        console.error('❌ Не найден элемент #orders-list');
+        console.error('Не найден элемент #orders-list');
         return;
     }
     
@@ -110,7 +110,7 @@ async function loadOrders() {
         }
         
         const orders = await response.json();
-        console.log(`✅ Загружено ${orders.length} заказов`);
+        console.log(`Загружено ${orders.length} заказов`);
         
         if (orders.length === 0) {
             showEmptyOrders();
@@ -120,7 +120,7 @@ async function loadOrders() {
         renderOrders(orders);
         
     } catch (error) {
-        console.error('❌ Ошибка загрузки заказов:', error);
+        console.error('Ошибка загрузки заказов:', error);
         showOrdersError();
     }
 }
@@ -158,13 +158,13 @@ function showOrdersError() {
 // Функция для получения статуса на русском
 function getStatusRu(status) {
     const statuses = {
-        'pending': '🟡 В обработке',
-        'processing': '⚙️ Обрабатывается',
-        'shipped': '🚚 Отправлен',
-        'delivered': '✅ Доставлен',
-        'cancelled': '❌ Отменён'
+        'pending': 'В обработке',
+        'processing': 'Обрабатывается',
+        'shipped': 'Отправлен',
+        'delivered': 'Доставлен',
+        'cancelled': 'Отменён'
     };
-    return statuses[status] || status || '🟡 В обработке';
+    return statuses[status] || status || 'В обработке';
 }
 
 // Функция для получения цвета статуса
@@ -198,14 +198,14 @@ async function cancelOrder(orderId) {
             throw new Error(error.error || 'Ошибка отмены заказа');
         }
         
-        alert('✅ Заказ успешно отменен');
+        alert('Заказ успешно отменен');
         
         // Перезагружаем список заказов
         await loadOrders();
         
     } catch (error) {
         console.error('Ошибка:', error);
-        alert(`❌ ${error.message}`);
+        alert(`${error.message}`);
     }
 }
 
@@ -296,7 +296,7 @@ function renderOrders(orders) {
 
 // Показать детали заказа
 async function showOrderDetails(orderId) {
-    console.log(`🔍 Загружаю детали заказа #${orderId}`);
+    console.log(`Загружаю детали заказа #${orderId}`);
     
     const token = localStorage.getItem('token');
     
@@ -375,7 +375,10 @@ function showOrderDetailsModal(order) {
                     </div>
                     
                     <div class="order-details__customer">
-                        <h3>📞 Контактные данные</h3>
+                        <h3> 
+													<img src="images/icons/phone.svg" alt="Телефон" class="order-details__icon">
+													Контактные данные
+												</h3>
                         <div class="customer-info">
                             <div class="customer-info__row">
                                 <span class="customer-info__label">Телефон:</span>
@@ -403,7 +406,10 @@ function showOrderDetailsModal(order) {
                     </div>
                     
                     <div class="order-details__items">
-                        <h3>🛍️ Состав заказа</h3>
+                        <h3>
+													<img src="images/icons/order.svg" alt="Заказ" class="order-details__icon">
+													Состав заказа
+												</h3>
                         <div class="order-items-list">
                             ${itemsHtml}
                         </div>
@@ -522,7 +528,7 @@ function setupAllEventListeners() {
 // ========== РЕЗЕРВНЫЙ ВЫХОД ==========
 function logoutBackup() {
     if (confirm('Вы уверены, что хотите выйти?')) {
-        console.log('🔄 Резервный выход из аккаунта');
+        console.log('Резервный выход из аккаунта');
         
         localStorage.removeItem('user');
         localStorage.removeItem('token');
@@ -532,7 +538,7 @@ function logoutBackup() {
         localStorage.removeItem('local_cart');
         localStorage.removeItem('remember_me');
         
-        console.log('✅ Все данные очищены');
+        console.log('Все данные очищены');
         
         if (typeof updateHeaderAuth === 'function') {
             updateHeaderAuth();
@@ -551,7 +557,7 @@ function setupEditModalListeners() {
     const form = document.getElementById('edit-profile-form');
     
     if (!modal || !overlay || !form) {
-        console.error('❌ Не найдены элементы модального окна');
+        console.error('Не найдены элементы модального окна');
         return;
     }
     
@@ -581,14 +587,14 @@ function setupEditModalListeners() {
 
 // Открытие модального окна
 function openEditModal() {
-    console.log('🟢 ОТКРЫВАЮ МОДАЛЬНОЕ ОКНО');
+    console.log('ОТКРЫВАЮ МОДАЛЬНОЕ ОКНО');
     
     const modal = document.getElementById('edit-modal');
     const overlay = document.getElementById('overlay');
     const user = JSON.parse(localStorage.getItem('user'));
     
     if (!modal || !overlay || !user) {
-        console.error('❌ Не найдены элементы для открытия модального окна');
+        console.error('Не найдены элементы для открытия модального окна');
         return;
     }
     
@@ -601,12 +607,12 @@ function openEditModal() {
     overlay.classList.add('overlay--active');
     document.body.style.overflow = 'hidden';
     
-    console.log('✅ Модальное окно открыто');
+    console.log('Модальное окно открыто');
 }
 
 // Закрытие модального окна
 function closeEditModal() {
-    console.log('🔴 ЗАКРЫВАЮ МОДАЛЬНОЕ ОКНО');
+    console.log('ЗАКРЫВАЮ МОДАЛЬНОЕ ОКНО');
     
     const modal = document.getElementById('edit-modal');
     const overlay = document.getElementById('overlay');
@@ -618,7 +624,7 @@ function closeEditModal() {
 
 // Сохранение профиля
 async function saveProfile() {
-    console.log('💾 Сохраняю профиль...');
+    console.log('Сохраняю профиль...');
     
     const username = document.getElementById('edit-username').value.trim();
     const full_name = document.getElementById('edit-name').value.trim();
@@ -672,11 +678,11 @@ async function saveProfile() {
         updateUserDisplay(updatedUser);
         closeEditModal();
         
-        alert('✅ Профиль успешно обновлен!');
+        alert('Профиль успешно обновлен!');
         
     } catch (error) {
         console.error('Ошибка сохранения:', error);
-        alert(`❌ Ошибка: ${error.message}`);
+        alert(`Ошибка: ${error.message}`);
     }
 }
 
@@ -694,7 +700,7 @@ async function deleteAccount() {
     const token = localStorage.getItem('token');
     
     try {
-        console.log('🗑️ Удаление аккаунта...');
+        console.log('Удаление аккаунта...');
         
         const response = await fetch(`${API_URL}/profile`, {
             method: 'DELETE',
@@ -713,18 +719,18 @@ async function deleteAccount() {
         localStorage.removeItem('local_cart');
         localStorage.removeItem('remember_me');
         
-        console.log('✅ Аккаунт удален');
+        console.log('Аккаунт удален');
         
         if (typeof updateHeaderAuth === 'function') {
             updateHeaderAuth();
         }
         
-        alert('✅ Аккаунт успешно удален');
+        alert('Аккаунт успешно удален');
         window.location.href = 'index.html';
         
     } catch (error) {
-        console.error('❌ Ошибка удаления:', error);
-        alert('❌ Ошибка удаления аккаунта');
+        console.error('Ошибка удаления:', error);
+        alert('Ошибка удаления аккаунта');
     }
 }
 
@@ -738,4 +744,4 @@ window.debugProfile = {
     loadOrders: loadOrders
 };
 
-console.log('✅ profile.js полностью загружен');
+console.log('profile.js полностью загружен');

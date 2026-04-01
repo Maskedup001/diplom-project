@@ -7,20 +7,16 @@ class Cart {
     }
 
     async init() {
-        // Проверяем авторизован ли пользователь
         const user = JSON.parse(localStorage.getItem('user'));
         
         if (user && user.id) {
-            // Авторизован - загружаем корзину с сервера
             await this.loadCartFromServer();
         } else {
-            // Не авторизован - загружаем из localStorage
             this.items = JSON.parse(localStorage.getItem('local_cart')) || [];
             this.updateCartDisplay();
         }
     }
 
-    // Загрузка корзины с сервера
     async loadCartFromServer() {
         try {
             this.isLoading = true;
@@ -43,12 +39,9 @@ class Cart {
                     cart_id: item.cart_id
                 }));
                 
-                // Сохраняем корзину в local_cart
                 localStorage.setItem('local_cart', JSON.stringify(this.items));
-                
-                console.log('✅ Корзина загружена с сервера, local_cart обновлен');
+                console.log('Корзина загружена с сервера, local_cart обновлен');
             } else {
-                // Если ошибка - используем локальную корзину
                 this.items = JSON.parse(localStorage.getItem('local_cart')) || [];
             }
         } catch (error) {
@@ -60,21 +53,17 @@ class Cart {
         }
     }
 
-    // Добавить товар в корзину
     async addItem(product) {
         const user = JSON.parse(localStorage.getItem('user'));
         const productId = String(product.id);
         
         if (user && user.id) {
-            // Авторизован - отправляем на сервер
             return await this.addToServerCart(productId, product.quantity || 1);
         } else {
-            // Не авторизован - сохраняем локально
             return this.addToLocalCart(product);
         }
     }
 
-    // Добавление в локальную корзину
     addToLocalCart(product) {
         const productId = String(product.id);
         const existingItem = this.items.find(item => String(item.id) === productId);
@@ -95,7 +84,6 @@ class Cart {
         return true;
     }
 
-    // Добавление на сервер
     async addToServerCart(productId, quantity) {
         try {
             const token = localStorage.getItem('token');
@@ -119,9 +107,7 @@ class Cart {
                     cart_id: item.cart_id
                 }));
                 
-                // Сохраняем обновленную корзину в local_cart
                 localStorage.setItem('local_cart', JSON.stringify(this.items));
-                
                 this.updateCartDisplay();
                 
                 const productCard = document.querySelector(`.product-card[data-id="${productId}"]`);
@@ -135,21 +121,17 @@ class Cart {
         return false;
     }
 
-    // Удалить товар из корзины
     async removeItem(productId) {
         const user = JSON.parse(localStorage.getItem('user'));
         const item = this.items.find(item => String(item.id) === String(productId));
         
         if (user && user.id && item?.cart_id) {
-            // Авторизован - удаляем с сервера
             return await this.removeFromServerCart(item.cart_id, productId);
         } else {
-            // Не авторизован - удаляем из локальной
             return this.removeFromLocalCart(productId);
         }
     }
 
-    // Удаление из локальной корзины
     removeFromLocalCart(productId) {
         this.items = this.items.filter(item => String(item.id) !== String(productId));
         localStorage.setItem('local_cart', JSON.stringify(this.items));
@@ -157,7 +139,6 @@ class Cart {
         return true;
     }
 
-    // Удаление с сервера
     async removeFromServerCart(cartId, productId) {
         try {
             const token = localStorage.getItem('token');
@@ -170,10 +151,7 @@ class Cart {
 
             if (response.ok) {
                 this.items = this.items.filter(item => String(item.id) !== String(productId));
-                
-                // Сохраняем обновленную корзину в local_cart
                 localStorage.setItem('local_cart', JSON.stringify(this.items));
-                
                 this.updateCartDisplay();
                 return true;
             }
@@ -183,7 +161,6 @@ class Cart {
         return false;
     }
 
-    // Изменить количество
     async updateQuantity(productId, change) {
         const item = this.items.find(item => String(item.id) === String(productId));
         
@@ -198,15 +175,12 @@ class Cart {
         const user = JSON.parse(localStorage.getItem('user'));
         
         if (user && user.id && item.cart_id) {
-            // Авторизован - обновляем на сервере
             return await this.updateServerQuantity(item.cart_id, item.quantity, productId);
         } else {
-            // Не авторизован - обновляем локально
             return this.updateLocalQuantity(productId, item.quantity);
         }
     }
 
-    // Обновление локального количества
     updateLocalQuantity(productId, quantity) {
         const item = this.items.find(item => String(item.id) === String(productId));
         if (item) {
@@ -218,7 +192,6 @@ class Cart {
         return false;
     }
 
-    // Обновление на сервере
     async updateServerQuantity(cartId, quantity, productId) {
         try {
             const token = localStorage.getItem('token');
@@ -237,9 +210,7 @@ class Cart {
                     item.quantity = quantity;
                 }
                 
-                // Сохраняем обновленную корзину в local_cart
                 localStorage.setItem('local_cart', JSON.stringify(this.items));
-                
                 this.updateCartDisplay();
                 return true;
             }
@@ -249,7 +220,6 @@ class Cart {
         return false;
     }
 
-    // Очистить корзину
     async clearCart() {
         const user = JSON.parse(localStorage.getItem('user'));
         
@@ -267,7 +237,7 @@ class Cart {
                     this.items = [];
                     localStorage.setItem('local_cart', JSON.stringify([]));
                     this.updateCartDisplay();
-                    console.log('✅ Корзина на сервере очищена');
+                    console.log('Корзина на сервере очищена');
                 }
             } catch (error) {
                 console.error('Ошибка очистки корзины:', error);
@@ -279,19 +249,23 @@ class Cart {
         }
     }
 
-    // Общая стоимость
+    resetCart() {
+        this.items = [];
+        localStorage.removeItem('local_cart');
+        localStorage.removeItem('cart');
+        this.updateCartDisplay();
+        console.log('Корзина сброшена');
+    }
+
     getTotalPrice() {
         return this.items.reduce((total, item) => total + (item.price * item.quantity), 0);
     }
 
-    // Сохранить в localStorage
     saveCart() {
         localStorage.setItem('local_cart', JSON.stringify(this.items));
     }
 
-    // ✅ ИСПРАВЛЕНО: Обновить отображение корзины (без циклического вызова)
     updateCartDisplay(updateCartPage = true) {
-        // Обновить счетчик в шапке
         const cartCount = document.querySelector('.cart__count');
         const totalItems = this.items.reduce((sum, item) => sum + item.quantity, 0);
         
@@ -299,20 +273,16 @@ class Cart {
             cartCount.textContent = totalItems;
         }
 
-        // Обновить модальное окно корзины
         this.renderCartModal();
         
-        // Если мы на странице корзины, обновляем её (но без циклического вызова!)
         if (updateCartPage && window.cartPage && typeof window.cartPage.renderCartItems === 'function') {
             window.cartPage.renderCartItems();
-            window.cartPage.updateSummary(false); // false - не вызывать updateCartDisplay снова!
+            window.cartPage.updateSummary(false);
         }
         
-        // Всегда сохраняем в local_cart при обновлении
         this.saveCart();
     }
 
-    // Отрисовать содержимое корзины в модальном окне
     renderCartModal() {
         const cartItemsContainer = document.getElementById('cart-items');
         const cartTotal = document.getElementById('cart-total');
@@ -374,7 +344,6 @@ class Cart {
         }
     }
 
-    // Показать уведомление
     showNotification(message) {
         const notification = document.createElement('div');
         notification.className = 'notification';
@@ -538,21 +507,17 @@ function handleCartClick(e) {
 
 // ========== ИНИЦИАЛИЗАЦИЯ ==========
 document.addEventListener('DOMContentLoaded', () => {
-    // Инициализируем корзину
     window.cart = new Cart();
     
-    // Инициализируем модальные окна
     if (document.getElementById('overlay')) {
         window.modals = new ModalManager();
     }
 
-    // Открытие корзины по клику
     const cartButton = document.querySelector('.header__cart, .cart');
     if (cartButton) {
         cartButton.addEventListener('click', handleCartClick);
     }
 
-    // Обработка событий корзины в МОДАЛЬНОМ ОКНЕ
     document.addEventListener('click', (e) => {
         const action = e.target.dataset.action;
         const id = e.target.dataset.id;
@@ -576,10 +541,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Обработчик для кнопок "В корзину"
     document.addEventListener('click', handleAddToCartClick);
 
-    console.log('✅ Скрипт корзины инициализирован');
+    console.log('Скрипт корзины инициализирован');
 });
 
 // ========== АНИМАЦИИ ДЛЯ УВЕДОМЛЕНИЙ ==========

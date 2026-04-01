@@ -57,7 +57,7 @@ class CartPage {
             emptyMessage.className = 'cart-empty';
             emptyMessage.id = 'cart-empty';
             emptyMessage.innerHTML = `
-                <div class="cart-empty__icon">🛒</div>
+                <div class="cart-empty__icon"><img src="images/icons/empty.svg" alt="Корзина пуста"></div>
                 <h3 class="cart-empty__title">Ваша корзина пуста</h3>
                 <p class="cart-empty__text">Добавьте товары из каталога, чтобы сделать заказ</p>
                 <a href="catalog.html" class="button cart-empty__button">Перейти в каталог</a>
@@ -515,19 +515,19 @@ class CartPage {
         const totalItems = orderData.items.reduce((sum, item) => sum + (item.quantity || 1), 0);
         const orderNumber = orderData.order_number || Math.floor(Math.random() * 9000) + 1000;
         
-        let message = "✅ ЗАКАЗ УСПЕШНО ОФОРМЛЕН!\n\n";
+        let message = "ЗАКАЗ УСПЕШНО ОФОРМЛЕН!\n\n";
         message += "══════════════════════════════\n";
-        message += "📋 Номер заказа: #" + orderNumber + "\n";
-        message += "📦 Товаров: " + totalItems + " шт.\n";
-        message += "💰 Сумма: " + orderData.total.toLocaleString() + " ₽\n";
+        message += "Номер заказа: #" + orderNumber + "\n";
+        message += "Товаров: " + totalItems + " шт.\n";
+        message += "Сумма: " + orderData.total.toLocaleString() + " ₽\n";
         
         if (orderData.promoCode) {
             message += "🎁 Промокод: " + orderData.promoCode + " (скидка " + orderData.promoDiscount + "%)\n";
         }
         
-        message += "📞 Доставка: " + (orderData.delivery === 'courier' ? 'Курьером' : 'Самовывоз') + "\n";
+        message += "Доставка: " + (orderData.delivery === 'courier' ? 'Курьером' : 'Самовывоз') + "\n";
         message += "══════════════════════════════\n";
-        message += "👤 Данные клиента:\n";
+        message += "Данные клиента:\n";
         message += "   • Имя: " + orderData.customer.name + "\n";
         message += "   • Телефон: " + orderData.customer.phone + "\n";
         
@@ -539,8 +539,8 @@ class CartPage {
         }
         
         message += "══════════════════════════════\n";
-        message += "✅ Заказ передан в обработку\n";
-        message += "📞 Наш менеджер свяжется с вами в течение 30 минут";
+        message += "Заказ передан в обработку\n";
+        message += "Наш менеджер свяжется с вами в течение 30 минут";
         
         alert(message);
     }

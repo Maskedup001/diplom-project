@@ -1,0 +1,114 @@
+/* icons.css - стили для иконок */
+
+/* Общие стили для иконок в шапке */
+.header__phone-icon,
+.cart__icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    vertical-align: middle;
+    filter: brightness(0) invert(1);
+}
+
+/* Кнопка фильтров */
+.mobile-filters__icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 8px;
+    vertical-align: middle;
+    filter: brightness(0) invert(1);
+}
+
+/* Иконки в преимуществах */
+.feature__icon img {
+    width: 48px;
+    height: 48px;
+    display: block;
+}
+
+/* Пустая корзина */
+.empty-orders__icon img {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+/* Формы */
+.form__icon {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
+/* Адаптивность для иконок преимуществ */
+@media (max-width: 768px) {
+    .feature__icon img {
+        width: 40px;
+        height: 40px;
+    }
+}
+
+@media (max-width: 480px) {
+    .feature__icon img {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+/* ========== ПРЕИМУЩЕСТВА ========== */
+
+.features__list {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 30px;
+    margin: 40px 0;
+}
+
+.feature {
+    text-align: center;
+    padding: 20px;
+}
+
+.feature__icon {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+/* Убираем дублирование - этот блок уже есть выше, оставляем только один */
+/* .feature__icon img { ... } - УДАЛИТЬ ЭТОТ ДУБЛЬ */
+
+.feature__title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    color: var(--color-text-primary);
+}
+
+.feature__text {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    line-height: 1.5;
+}
+
+/* Адаптивность для сетки */
+@media (max-width: 992px) {
+    .features__list {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+}
+
+@media (max-width: 576px) {
+    .features__list {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    
+    .feature {
+        padding: 15px;
+    }
+}

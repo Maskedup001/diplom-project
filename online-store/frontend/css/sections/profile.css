@@ -582,6 +582,13 @@
     min-width: 100px;
 }
 
+.order-details__icon {
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+    filter: brightness(0) invert(0.4);
+}
+
 /* Адаптивность */
 @media (max-width: 768px) {
     .order-card__actions {

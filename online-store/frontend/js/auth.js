@@ -171,7 +171,7 @@ function initRegisterForm() {
                         await window.cart.loadCartFromServer();
                     }
                     
-                    console.log('✅ Новый пользователь зарегистрирован, корзина пуста');
+                    console.log('Новый пользователь зарегистрирован, корзина пуста');
                 }
                 
                 setTimeout(() => {
@@ -203,12 +203,12 @@ function initRegisterForm() {
 // ========== СИНХРОНИЗАЦИЯ КОРЗИНЫ ПОСЛЕ ВХОДА ==========
 async function syncCartAfterLogin(token) {
     try {
-        console.log('🔄 Синхронизация корзины после входа...');
+        console.log('Синхронизация корзины после входа...');
         
         const localCart = JSON.parse(localStorage.getItem('local_cart')) || [];
         
         if (localCart.length === 0) {
-            console.log('📭 Локальная корзина пуста');
+            console.log('Локальная корзина пуста');
             
             if (window.cart && typeof window.cart.loadCartFromServer === 'function') {
                 await window.cart.loadCartFromServer();
@@ -216,7 +216,7 @@ async function syncCartAfterLogin(token) {
             return;
         }
         
-        console.log(`📦 Переносим ${localCart.length} товаров из локальной корзины на сервер...`);
+        console.log(`Переносим ${localCart.length} товаров из локальной корзины на сервер...`);
         
         for (const item of localCart) {
             try {
@@ -231,9 +231,9 @@ async function syncCartAfterLogin(token) {
                         quantity: item.quantity || 1
                     })
                 });
-                console.log(`✅ Товар ${item.title || item.id} перенесен на сервер`);
+                console.log(`Товар ${item.title || item.id} перенесен на сервер`);
             } catch (error) {
-                console.error(`❌ Ошибка переноса товара ${item.id}:`, error);
+                console.error(`Ошибка переноса товара ${item.id}:`, error);
             }
             
             await new Promise(resolve => setTimeout(resolve, 50));
@@ -246,7 +246,7 @@ async function syncCartAfterLogin(token) {
         }
         
     } catch (error) {
-        console.error('❌ Ошибка синхронизации корзины:', error);
+        console.error('Ошибка синхронизации корзины:', error);
     }
 }
 
@@ -515,7 +515,7 @@ function showLoading(form, show) {
     }
 }
 
-// ========== ИСПРАВЛЕННЫЙ ВЫХОД ИЗ СИСТЕМЫ (КОРЗИНА УДАЛЯЕТСЯ!) ==========
+// ========== ИСПРАВЛЕННЫЙ ВЫХОД ИЗ СИСТЕМЫ ==========
 async function logout() {
     try {
         const token = localStorage.getItem('token');
@@ -525,12 +525,12 @@ async function logout() {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
-            }).catch(err => console.log('⚠️ Сервер недоступен при выходе'));
+            }).catch(err => console.log('Сервер недоступен при выходе'));
         }
     } catch (error) {
         console.error('Ошибка при выходе:', error);
     } finally {
-        // ✅ УДАЛЯЕМ ВСЁ!
+        // УДАЛЯЕМ ВСЁ!
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         localStorage.removeItem('remember_me');
@@ -539,7 +539,7 @@ async function logout() {
         localStorage.removeItem('user_orders');
         localStorage.removeItem('searchQuery');
         
-        console.log('👋 Пользователь вышел из системы (корзина удалена)');
+        console.log('Пользователь вышел из системы (корзина удалена)');
         
         if (window.cart && typeof window.cart.loadCartFromServer === 'function') {
             window.cart.items = [];
@@ -575,4 +575,4 @@ window.authModule = {
     syncCartAfterLogin
 };
 
-console.log('✅ auth.js загружен (ПРИ ВЫХОДЕ КОРЗИНА УДАЛЯЕТСЯ!)');
+console.log('auth.js загружен (при выходе корзина удаляется)');

@@ -7,7 +7,7 @@
     height: 200px;
     overflow: hidden;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    background: var(--color-bg-card); /* Белый фон карточки */
+    background: var(--color-bg-card);
 }
 
 .product-card__carousel-track {
@@ -27,7 +27,7 @@
     object-fit: contain;
     object-position: center;
     display: block;
-    background: var(--color-bg-card); /* Белый фон */
+    background: var(--color-bg-card);
     padding: var(--spacing-6);
 }
 
@@ -48,10 +48,14 @@
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transition: all var(--transition-fast) var(--transition-timing-ease);
+    transition: opacity var(--transition-fast) var(--transition-timing-ease),
+                background var(--transition-fast) var(--transition-timing-ease),
+                border-color var(--transition-fast) var(--transition-timing-ease);
     z-index: 10;
     color: var(--color-text-primary);
     box-shadow: var(--shadow-md);
+    line-height: 1;
+    padding: 0;
 }
 
 .product-card:hover .product-card__carousel-btn {
@@ -62,7 +66,6 @@
     background: var(--color-primary);
     border-color: var(--color-primary);
     color: var(--color-white);
-    transform: translateY(-50%) scale(1.1);
     box-shadow: var(--shadow-lg);
 }
 
