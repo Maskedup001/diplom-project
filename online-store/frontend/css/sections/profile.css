@@ -334,9 +334,16 @@
 }
 
 .empty-orders__icon {
-    font-size: var(--font-size-4xl);
-    margin-bottom: var(--spacing-5);
-    opacity: 0.5;
+   	display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: var(--spacing-4);
+}
+
+.empty-orders__icon img {
+    width: 80px;
+    height: 80px;
+    opacity: 0.6;
 }
 
 .empty-orders__title {

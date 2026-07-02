@@ -5,30 +5,41 @@
     position: relative;
     width: 100%;
     height: 200px;
+    min-height: 200px;
+    max-height: 200px;
     overflow: hidden;
     border-radius: var(--radius-lg) var(--radius-lg) 0 0;
     background: var(--color-bg-card);
+    flex-shrink: 0;
 }
 
 .product-card__carousel-track {
     display: flex;
     height: 100%;
     transition: transform var(--transition-normal) var(--transition-timing-ease);
+    will-change: transform;
 }
 
 .product-card__carousel-slide {
     flex: 0 0 100%;
     height: 100%;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .product-card__carousel-slide img {
-    width: 100%;
-    height: 200px;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 180px;
     object-fit: contain;
     object-position: center;
     display: block;
     background: var(--color-bg-card);
-    padding: var(--spacing-6);
+    padding: var(--spacing-4);
+    margin: 0 auto;
 }
 
 /* Кнопки навигации */
@@ -131,24 +142,28 @@
 
 /* Адаптивность */
 @media (max-width: 992px) {
-    .product-card__carousel-container {
+    .product-card__carousel-container,
+    .product-card__carousel-slide {
         height: 190px;
+        min-height: 190px;
     }
     
     .product-card__carousel-slide img {
-        height: 190px;
-        padding: var(--spacing-5);
+        max-height: 170px;
+        padding: var(--spacing-3);
     }
 }
 
 @media (max-width: 768px) {
-    .product-card__carousel-container {
+    .product-card__carousel-container,
+    .product-card__carousel-slide {
         height: 180px;
+        min-height: 180px;
     }
     
     .product-card__carousel-slide img {
-        height: 180px;
-        padding: var(--spacing-5);
+        max-height: 160px;
+        padding: var(--spacing-3);
     }
     
     .product-card__carousel-btn {
@@ -160,13 +175,15 @@
 }
 
 @media (max-width: 480px) {
-    .product-card__carousel-container {
+    .product-card__carousel-container,
+    .product-card__carousel-slide {
         height: 160px;
+        min-height: 160px;
     }
     
     .product-card__carousel-slide img {
-        height: 160px;
-        padding: var(--spacing-4);
+        max-height: 140px;
+        padding: var(--spacing-2);
     }
     
     .product-card__carousel-btn {

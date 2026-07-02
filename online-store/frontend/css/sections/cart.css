@@ -108,8 +108,10 @@
 .cart-item-card__image {
     width: 100px;
     height: 100px;
-    object-fit: cover;
+    object-fit: contain;  /* ← МЕНЯЕМ с cover на contain */
     border-radius: var(--radius-md);
+    background: var(--color-bg-secondary);
+    padding: var(--spacing-1);
 }
 
 .cart-item-card__info {
@@ -174,22 +176,33 @@
     color: var(--color-text-primary);
 }
 
-.cart-item-card__remove {
-    background: none;
-    border: none;
-    color: var(--color-danger);
+/* Новая кнопка удаления (как quantity-btn) */
+.cart-item-card__remove-btn {
+    width: 64px;
+    height: 32px;
+    border: 1px solid var(--color-border);
+    background: var(--color-bg-primary);
+    border-radius: var(--radius-sm);
     cursor: pointer;
-    font-size: var(--font-size-sm);
-    padding: var(--spacing-1) var(--spacing-2);
-    transition: all var(--transition-normal);
     display: flex;
     align-items: center;
-    gap: var(--spacing-1);
+    justify-content: center;
+    transition: all var(--transition-normal);
 }
 
-.cart-item-card__remove:hover {
-    color: var(--color-danger-dark);
-    text-decoration: underline;
+.cart-item-card__remove-btn:hover {
+    background: var(--color-danger);
+    border-color: var(--color-danger);
+}
+
+.cart-item-card__remove-icon {
+    width: 16px;
+    height: 16px;
+    filter: brightness(0) saturate(100%) invert(27%) sepia(89%) saturate(2348%) hue-rotate(346deg) brightness(94%) contrast(97%);
+}
+
+.cart-item-card__remove-btn:hover .cart-item-card__remove-icon {
+    filter: brightness(0) invert(1);
 }
 
 .cart-item-card__total {

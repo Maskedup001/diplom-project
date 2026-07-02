@@ -112,7 +112,9 @@ class CartPage {
                     <span class="quantity-value">${quantity}</span>
                     <button type="button" class="quantity-btn" data-page-action="increase" data-page-id="${item.id}">+</button>
                 </div>
-                <button type="button" class="cart-item-card__remove" data-page-action="remove" data-page-id="${item.id}">🗑️ Удалить</button>
+                <button type="button" class="quantity-btn cart-item-card__remove-btn" data-page-action="remove" data-page-id="${item.id}">
+                    <img src="images/icons/trash.svg" alt="Удалить" class="cart-item-card__remove-icon">
+                </button>
             </div>
         `;
         
@@ -120,55 +122,57 @@ class CartPage {
     }
     
     initEventListeners() {
-        console.log('CartPage: Инициализация обработчиков событий');
+    console.log('CartPage: Инициализация обработчиков событий');
+    
+    document.addEventListener('click', async (e) => {
+        // ✅ ИСПРАВЛЕНО: ищем ближайший элемент с data-page-action (кнопку)
+        const targetButton = e.target.closest('[data-page-action]');
+        const action = targetButton ? targetButton.getAttribute('data-page-action') : null;
+        const id = targetButton ? targetButton.getAttribute('data-page-id') : null;
         
-        document.addEventListener('click', async (e) => {
-            const action = e.target.getAttribute('data-page-action');
-            const id = e.target.getAttribute('data-page-id');
+        if (action && id) {
+            console.log('CartPage: Обработка действия', action, 'для товара', id);
+            e.preventDefault();
+            e.stopPropagation();
             
-            if (action && id) {
-                console.log('CartPage: Обработка действия', action, 'для товара', id);
-                e.preventDefault();
-                e.stopPropagation();
-                
-                const button = e.target;
-                if (button && button.classList) {
-                    button.classList.add('button--loading');
-                    button.disabled = true;
-                }
-                
-                try {
-                    switch(action) {
-                        case 'increase':
-                            await this.cart.updateQuantity(id, 1);
-                            break;
-                        case 'decrease':
-                            await this.cart.updateQuantity(id, -1);
-                            break;
-                        case 'remove':
-                            if (confirm('Удалить товар из корзины?')) {
-                                await this.cart.removeItem(id);
-                            } else {
-                                return;
-                            }
-                            break;
-                    }
-                    
-                    this.renderCartItems();
-                    this.updateSummary(false);
-                    
-                } catch (error) {
-                    console.error('Ошибка при обновлении корзины:', error);
-                } finally {
-                    if (button && button.classList) {
-                        button.classList.remove('button--loading');
-                        button.disabled = false;
-                    }
-                }
-                
-                return false;
+            // Находим кнопку для блокировки
+            const button = targetButton.closest('button');
+            if (button && button.classList) {
+                button.classList.add('button--loading');
+                button.disabled = true;
             }
-        });
+            
+            try {
+                switch(action) {
+                    case 'increase':
+                        await this.cart.updateQuantity(id, 1);
+                        break;
+                    case 'decrease':
+                        await this.cart.updateQuantity(id, -1);
+                        break;
+                    case 'remove':
+                        if (confirm('Удалить товар из корзины?')) {
+                            await this.cart.removeItem(id);
+                        }
+                        break;
+                }
+                
+                this.renderCartItems();
+                this.updateSummary(false);
+                
+            } catch (error) {
+                console.error('Ошибка при обновлении корзины:', error);
+            } finally {
+                if (button && button.classList) {
+                    button.classList.remove('button--loading');
+                    button.disabled = false;
+                }
+            }
+            
+            return false;
+        }
+    });
+    
         
         document.querySelectorAll('input[name="delivery"]').forEach(radio => {
             radio.addEventListener('change', () => {
@@ -460,8 +464,6 @@ class CartPage {
                 return;
             }
         } else {
-            // Этот блок уже не должен выполняться из-за проверки выше,
-            // но оставим на всякий случай
             this.showOrderConfirmation(orderData);
         }
         
@@ -522,7 +524,7 @@ class CartPage {
         message += "Сумма: " + orderData.total.toLocaleString() + " ₽\n";
         
         if (orderData.promoCode) {
-            message += "🎁 Промокод: " + orderData.promoCode + " (скидка " + orderData.promoDiscount + "%)\n";
+            message += "Промокод: " + orderData.promoCode + " (скидка " + orderData.promoDiscount + "%)\n";
         }
         
         message += "Доставка: " + (orderData.delivery === 'courier' ? 'Курьером' : 'Самовывоз') + "\n";

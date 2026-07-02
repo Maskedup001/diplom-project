@@ -131,13 +131,15 @@ function showEmptyOrders() {
     if (!ordersList) return;
     
     ordersList.innerHTML = `
-        <div class="empty-orders">
-            <div class="empty-orders__icon">📭</div>
-            <h3 class="empty-orders__title">У вас пока нет заказов</h3>
-            <p class="empty-orders__text">Перейдите в каталог, чтобы выбрать товары</p>
-            <a href="catalog.html" class="button button--primary">Перейти в каталог</a>
+    <div class="empty-orders">
+        <div class="empty-orders__icon">
+            <img src="images/icons/orders.svg" alt="Нет заказов">
         </div>
-    `;
+        <h3 class="empty-orders__title">У вас пока нет заказов</h3>
+        <p class="empty-orders__text">Перейдите в каталог, чтобы выбрать товары</p>
+        <a href="catalog.html" class="button button--primary">Перейти в каталог</a>
+    </div>
+`;
 }
 
 // Отображение ошибки

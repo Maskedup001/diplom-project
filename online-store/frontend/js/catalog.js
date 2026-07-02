@@ -517,13 +517,13 @@ class Catalog {
               ? "Выберите категории"
               : "Товары не найдены"
           }</h3>
-          <p>${
+          <p>${(
             this.searchQuery
               ? "Попробуйте изменить поисковый запрос или параметры фильтрации"
               : this.filters.categories.length === 0
               ? "Выберите категории товаров для отображения"
               : "Попробуйте изменить параметры фильтрации"
-          }</p>
+          )}</p>
         </div>
       `;
       return;
@@ -552,7 +552,7 @@ class Catalog {
     const stock = product.stock || 0;
     const isInStock = stock > 0;
     
-    // Карусель изображений
+    // Карусель изображений (БЕЗ loading="lazy")
     const images = product.images && product.images.length > 0 
     ? product.images 
     : [product.image || 'images/default.jpg'];
@@ -566,8 +566,7 @@ class Catalog {
         imagesHtml += `
             <div class="product-card__carousel-slide">
                 <img src="${img}" 
-                     alt="${product.title}" 
-                     loading="lazy">
+                     alt="${product.title}">
             </div>
         `;
     });
