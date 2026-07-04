@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const sql = require('mssql');
@@ -19,10 +21,10 @@ const JWT_SECRET = 'technomir_secret_key_2024';
 
 // КОНФИГ ДЛЯ SQL SERVER
 const dbConfig = {
-    server: 'localhost',
-    database: 'OnlineShopDB',
-    user: 'shop_user',
-    password: 'shop123',
+    server: process.env.DB_SERVER,
+    database: process.env.DB_DATABASE,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
     options: {
         encrypt: false,
         trustServerCertificate: true,
